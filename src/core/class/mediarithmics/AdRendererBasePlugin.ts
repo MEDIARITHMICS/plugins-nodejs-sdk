@@ -15,10 +15,15 @@ import { AdRendererBaseInstanceContext } from "../../interfaces/mediarithmics/pl
 
 import { BasePlugin } from "./BasePlugin";
 
-export class AdRendererBasePlugin extends BasePlugin {
+export type AdContentHandler <T extends AdRendererBaseInstanceContext> = (
+    request: AdRendererRequest,
+    instanceContext: T
+) => Promise<string>
+
+export class AdRendererBasePlugin<T extends AdRendererBaseInstanceContext> extends BasePlugin {
   INSTANCE_CONTEXT_CACHE_EXPIRATION: number = 3000;
 
-  instanceContext: Promise<AdRendererBaseInstanceContext>;
+  instanceContext: Promise<T>;
 
   // Helper to fetch the creative resource with caching
   fetchCreative(creativeId: string): Promise<Creative> {
@@ -65,7 +70,7 @@ export class AdRendererBasePlugin extends BasePlugin {
   setInstanceContextBuilder(
     instanceContextBuilder: (
       creativeId: string
-    ) => Promise<AdRendererBaseInstanceContext>
+    ) => Promise<T>
   ): void {
     this.buildInstanceContext = instanceContextBuilder;
   }
@@ -73,12 +78,9 @@ export class AdRendererBasePlugin extends BasePlugin {
   // Method to build an instance context
   private buildInstanceContext: (
     creativeId: string
-  ) => Promise<AdRendererBaseInstanceContext>;
+  ) => Promise<T>;
 
-  private onAdContents: (
-    request: AdRendererRequest,
-    instanceContext: AdRendererBaseInstanceContext
-  ) => string;
+  private onAdContents: AdContentHandler<T>;
 
   private initAdContentsRoute(): void {
     this.app.post(
@@ -113,14 +115,14 @@ export class AdRendererBasePlugin extends BasePlugin {
 
           cache
             .get(adRendererRequest.creative_id)
-            .then((instanceContext: AdRendererBaseInstanceContext) => {
-              const adRendererResponse = this.onAdContents(
+            .then((instanceContext: T) =>
+               this.onAdContents(
                 adRendererRequest,
-                instanceContext as AdRendererBaseInstanceContext
-              );
-              res.status(200).send(adRendererResponse);
-            })
-            .catch((error: Error) => {
+                instanceContext as T
+                ))
+            .then((adRendererResponse: string) =>
+                   res.status(200).send(adRendererResponse)
+            ).catch((error: Error) => {
               this.logger.error(
                 `Something bad happened : ${error.message} - ${error.stack}`
               );
@@ -135,12 +137,7 @@ export class AdRendererBasePlugin extends BasePlugin {
         this.initAdContentsRoute();
   }
 
-  constructor(
-    adContentsHandler: (
-      request: AdRendererRequest,
-      instanceContext: AdRendererBaseInstanceContext
-    ) => string
-  ) {
+  constructor(adContentsHandler: AdContentHandler<T>) {
     super();
 
     this.onAdContents = adContentsHandler;
@@ -158,7 +155,7 @@ export class AdRendererBasePlugin extends BasePlugin {
       const context = {
         creative: creative,
         creativeProperties: creativeProps
-      } as AdRendererBaseInstanceContext;
+      } as T;
 
       return context;
     });

@@ -1,16 +1,12 @@
-import {
-  AdRendererBasePlugin,
-  AdRendererRequest,
-  AdRendererBaseInstanceContext
-} from "@mediarithmics/plugins-nodejs-sdk";
+import { core } from "@mediarithmics/plugins-nodejs-sdk";
 
-// All the magic is here
-const plugin = new AdRendererBasePlugin(
+//All the magic is here
+const plugin = new core.AdRendererBasePlugin(
   (
-    request: AdRendererRequest,
-    instanceContext: AdRendererBaseInstanceContext
-  ) => {
-    let html = `<html>
+    request: core.AdRendererRequest,
+    instanceContext: core.AdRendererBaseInstanceContext
+  ) => Promise.resolve(
+    `<html>
     <body>
     <h1>Creative: ${instanceContext.creative.name}</h1>
     <br/>
@@ -23,10 +19,8 @@ const plugin = new AdRendererBasePlugin(
     <!-- We always need to include the mediarithmics impression tracking pixel -->
     <img src="${request.display_tracking_url}" />
     </body>
-    </html>`;
-
-    return html;
-  }
+    </html>`
+  )
 );
 
 plugin.start();

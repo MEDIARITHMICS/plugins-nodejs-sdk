@@ -1,0 +1,116 @@
+"use strict";
+
+const plugin = require('mediarithmics-plugin-core');
+const handlebars = require('mediarithmics-handlebars');
+const logger = plugin.logger;
+const _ = require('lodash');
+
+const gatewayHost = process.env.GATEWAY_HOST || "plugin-gateway.platform";
+const gatewayPort = process.env.GATEWAY_PORT || 8080;
+
+const displayContextHeader = "x-mics-display-context";
+
+
+
+// local cache
+let cache = {};
+
+// caches expiration
+setInterval(function () {
+  logger.silly("Invalidating cache");
+  cache = {};
+}, 30000);
+
+
+
+function loadInstanceContext(adRenderRequest) {
+  logger.info("Loading instance context.");
+  return fetch.creative(adRenderRequest.creative_id).then(creative => {
+    logger.info("Loaded creative %d => %j", adRenderRequest.creative_id, JSON.stringify(creative));
+    return fetch.creativeProperties(adRenderRequest.creative_id).then(creativeProperties => {
+      logger.info("Loaded renderer properties of creative %d => %j", adRenderRequest.creative_id, JSON.stringify(creativeProperties));
+
+      const adLayoutProperty = _.find(creativeProperties.data, p => p.property_type === 'AD_LAYOUT');
+
+      const urlProperty = _.find(creativeProperties.data, p => p.property_type === 'URL');
+
+      const recommenderProperty = _.find(creativeProperties.data, p => p.technical_name === 'recommender_id');
+
+      if (!adLayoutProperty) {
+        logger.error('Ad layout undefined');
+      }
+
+      if (!urlProperty) {
+        logger.error('url property is undefined');
+      }
+
+      const urls = adRenderRequest.click_urls;
+      //urls[urls.length] = urlProperty.value.url;
+      handlebars.setEncodeClickUrls(urls);
+
+      return fetch.templateProperties(creative.data.organisation_id, adLayoutProperty.value.id, adLayoutProperty.value.version).then(
+        (templateProperties) => {
+          logger.info("Loaded template properties %d %d => %j", adLayoutProperty.value.id, adLayoutProperty.value.version, JSON.stringify(templateProperties));
+          const tmpPath = templateProperties.data;
+
+          return fetch.templateContent(tmpPath.template).then(content => {
+            logger.info("Loaded template content %s => %j", tmpPath.template, JSON.stringify(content));
+
+            /* Helpers */
+            const compiledTemplate = handlebars.engine.compile(content);
+
+            return fetch.creative(adRenderRequest.creative_id).then(creative => ({
+              click_urls: urls ? urls : null,
+              creative: creative ? creative : null,
+              creative_click_url: urlProperty.value.url ? urlProperty.value.url : null,
+              recommender_id: recommenderProperty ? recommenderProperty.value.value : null,
+              restrictions: adRenderRequest ? adRenderRequest.restrictions : null,
+              ad_layout_id: adLayoutProperty.value.id ? adLayoutProperty.value.id : null,
+              ad_layout_version: adLayoutProperty.value.version ? adLayoutProperty.value.version : null,
+              compiled_template: compiledTemplate ? compiledTemplate : null
+            }));
+          });
+        });
+    });
+  });
+}
+
+
+plugin.post('/v1/ad_contents', function (req, res) {
+  if (!req.body || _.isEmpty(req.body)) {
+    const msg = {
+      error: "Missing request body"
+    };
+    logger.error('POST /v1/ad_contents : %s', msg);
+    res.status(500).json(msg);
+  } else {
+
+    const adRenderRequest = req.body;
+
+    logger.info('POST /v1/ad_contents ', JSON.stringify(adRenderRequest));
+
+    if (!cache[adRenderRequest.creative_id] || adRenderRequest.context === "PREVIEW") {
+      cache[adRenderRequest.creative_id] = loadInstanceContext(adRenderRequest);
+    }
+
+    cache[adRenderRequest.creative_id].then(instanceContext => {
+      logger.debug(`Fetching User Campaign with campaignId: ${adRenderRequest.campaign_id} - userCampaignId: ${adRenderRequest.user_campaign_id}`);
+      return fetch.userCampaign(adRenderRequest.campaign_id, adRenderRequest.user_campaign_id).catch(userCampaignFetchErrorHandler).then(userCampaign => {
+        logger.debug(`Received UserCampaign: ${JSON.stringify(userCampaign)}`);
+        return fetch.recommendations(instanceContext, userCampaign.user_agent_id).then(recommendations => {
+          return handlebarsEngine(instanceContext, adRenderRequest, recommendations);
+          }
+        )
+      }).then(result =>
+        res.append(displayContextHeader, JSON.stringify(result.displayContext))
+        .status(200).send(result.html)
+      ).catch(reason => {
+        logger.error(`Something bad happened : ${reason.message} - ${reason.stack}`);
+        res.status(500).send(reason.message + "\n" + reason.stack);
+        return Promise.resolve(null);
+      });
+    });
+  }
+});
+
+plugin.start();

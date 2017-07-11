@@ -9,11 +9,6 @@ export interface AdRendererBaseInstanceContext {
     creativeProperties: CreativeProperty[];
 }
 
-export interface AdRendererHandlebarTemplateInstanceContext {
-    creative: Creative;
-    creativeProperties: CreativeProperty[];
-}
-
 export interface ActivityAnalyzerBaseInstanceContext {
     activityAnalyzer: ActivityAnalyzer;
     activityAnalyzerProperties: ActivityAnalyzerProperty[];
