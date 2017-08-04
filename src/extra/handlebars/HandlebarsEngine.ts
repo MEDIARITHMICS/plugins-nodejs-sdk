@@ -6,7 +6,6 @@ const handlebars = require('handlebars');
 const numeral = require('numeral');
 const _ = require('lodash');
 
-
 export interface ClickableContent {
   item_id: number;
   $content_id: number;

@@ -1,43 +1,17 @@
-import * as _ from "lodash";
-
-import { AdRendererRequest } from "../../core/interfaces/mediarithmics/api/AdRendererRequestInterface";
-import { Creative } from "../../core/interfaces/mediarithmics/api/CreativeInterface";
-import { CreativeProperty } from "../../core/interfaces/mediarithmics/api/CreativePropertyInterface";
-
-import { AdRendererBaseInstanceContext } from "../../core/interfaces/mediarithmics/plugin/InstanceContextInterface";
-
-import { HandlebarsEngineContext } from ".";
-
-import { AdRendererBasePlugin } from "../../core/class/mediarithmics/AdRendererBasePlugin";
+import { AdRendererBasePlugin, AdContentHandler } from "./AdRendererBasePlugin";
+import { AdRendererRecoTemplateInstanceContext } from '../../interfaces/mediarithmics/plugin/InstanceContextInterface';
 import {
-  ItemProposal,
-  UserCampaignResource
-} from "../../core/interfaces/mediarithmics/api/UserCampaignInterface";
+  UserCampaignResource,
+  ItemProposal
+} from "../../interfaces/mediarithmics/api/UserCampaignInterface";
+import * as _ from "lodash";
+import { Creative } from "../../interfaces/mediarithmics/api/CreativeInterface";
+import { CreativeProperty } from "../../interfaces/mediarithmics/api/CreativePropertyInterface";
 
-export interface AdRendererHandlebarsTemplateInstanceContext
-  extends AdRendererBaseInstanceContext {
-  recommender_id: string;
-  creative_click_url: string;
-  ad_layout_id: string;
-  ad_layout_version: string;
-  template: any;
-  plugin: HandlebarsAdRendererPlugin;
-}
-
-export type HandlebarsAdsContentBuilder = (
-  request: AdRendererRequest,
-  instanceContext: AdRendererHandlebarsTemplateInstanceContext
-) => Promise<string>;
-
-export type HandlebarsEngineBuilder = (
-  request: AdRendererRequest,
-  instanceContext: AdRendererHandlebarsTemplateInstanceContext
-) => typeof Handlebars;
-
-export class HandlebarsAdRendererPlugin extends AdRendererBasePlugin<
-  AdRendererHandlebarsTemplateInstanceContext
+export class AdRendererRecoTemplatePlugin extends AdRendererBasePlugin <
+  AdRendererRecoTemplateInstanceContext
 > {
-  // Helper to fetch the creative resource with caching
+
   fetchTemplateContent(templatePath: string): Promise<any> {
     return super.requestGatewayHelper(
       "GET",
@@ -87,7 +61,7 @@ export class HandlebarsAdRendererPlugin extends AdRendererBasePlugin<
   }
 
   fetchRecommendations(
-    instanceContext: AdRendererHandlebarsTemplateInstanceContext,
+    instanceContext: AdRendererRecoTemplateInstanceContext,
     userAgentId: string
   ): Promise<Array<ItemProposal>> {
     const getRecommendations = (recommenderId: string) => {
@@ -118,16 +92,13 @@ export class HandlebarsAdRendererPlugin extends AdRendererBasePlugin<
       : Promise.resolve([]);
   }
 
-  engineBuilder: HandlebarsEngineBuilder; //adRenderRequest => new HandlebarsEngine(adRenderRequest.click_urls).engine
-
   constructor(
-    adContentsHandler: HandlebarsAdsContentBuilder,
-    engineBuilder: HandlebarsEngineBuilder
+    adContentsHandler: AdContentHandler<AdRendererRecoTemplateInstanceContext>,
   ) {
+    // Set the AdContentsHandler
     super(adContentsHandler);
-    this.engineBuilder = engineBuilder;
 
-    // Default Instance context builder
+    // Default Instance context builder, as no engine is provided, the template is returned without any compilation
     this.setInstanceContextBuilder((creativeId: string) => {
       const creativeP = this.fetchCreative(creativeId);
       const creativePropsP = this.fetchCreativeProperties(creativeId);
@@ -181,7 +152,7 @@ export class HandlebarsAdRendererPlugin extends AdRendererBasePlugin<
               JSON.stringify(template)
             );
 
-            const context = {
+            const context: AdRendererRecoTemplateInstanceContext = {
               creative: creative,
               creativeProperties: creativeProperties,
               recommender_id: recommenderProperty
@@ -196,9 +167,7 @@ export class HandlebarsAdRendererPlugin extends AdRendererBasePlugin<
               ad_layout_version: adLayoutProperty.value.version
                 ? adLayoutProperty.value.version
                 : null,
-              template: template,
-              plugin: this
-            } as AdRendererHandlebarsTemplateInstanceContext;
+              compiled_template: template            };
 
             return context;
           });

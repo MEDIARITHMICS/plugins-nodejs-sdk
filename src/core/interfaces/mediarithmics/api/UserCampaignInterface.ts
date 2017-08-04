@@ -1,3 +1,5 @@
+import { UserIdentifierInfo } from "./UserIdentifierInterface";
+
 export interface UserCampaignResource {
     user_account_id: string;
     user_campaign_id: string;
@@ -20,7 +22,7 @@ export interface UserCampaignResource {
 export interface RecommenderRequest {
     recommender_id: string;
     datamart_id: string;
-    user_identifiers:Array<>
+    user_identifiers: UserIdentifierInfo[];
 
     //Customizable
     [propsName: string]: any;

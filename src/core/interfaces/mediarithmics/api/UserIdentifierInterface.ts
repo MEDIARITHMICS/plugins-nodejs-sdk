@@ -1,9 +1,10 @@
 export type UserIdentifierInfoType = 'USER_POINT' | 'USER_ACCOUNT' | 'USER_EMAIL' | 'USER_AGENT';
 
 export type UUID = string;
-export type UserAgentId {
+export interface UserAgentId {
     value: String;
 }
+
 export type VectorId = string;
 export type TimeStamp = number; //long
 export type UserEmailIdentifierProviderResource = any; //TODO

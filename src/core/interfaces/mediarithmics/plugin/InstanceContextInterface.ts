@@ -5,11 +5,20 @@ import { ActivityAnalyzerProperty } from "../api/ActivityAnalyzerPropertyInterfa
 
 // AdRenderer Instance Contexts
 export interface AdRendererBaseInstanceContext {
-    creative: Creative;
-    creativeProperties: CreativeProperty[];
+  creative: Creative;
+  creativeProperties: CreativeProperty[];
 }
 
 export interface ActivityAnalyzerBaseInstanceContext {
-    activityAnalyzer: ActivityAnalyzer;
-    activityAnalyzerProperties: ActivityAnalyzerProperty[];
+  activityAnalyzer: ActivityAnalyzer;
+  activityAnalyzerProperties: ActivityAnalyzerProperty[];
+}
+
+export interface AdRendererRecoTemplateInstanceContext
+  extends AdRendererBaseInstanceContext {
+  recommender_id: string;
+  creative_click_url: string;
+  ad_layout_id: string;
+  ad_layout_version: string;
+  compiled_template: any;
 }
