@@ -6,13 +6,11 @@ import { CreativeProperty } from "../../core/interfaces/mediarithmics/api/Creati
 
 import { AdRendererBaseInstanceContext } from "../../core/interfaces/mediarithmics/plugin/InstanceContextInterface";
 
-import { HandlebarsEngineContext } from ".";
-
 import { AdRendererBasePlugin } from "../../core/class/mediarithmics/AdRendererBasePlugin";
 import {
-  ItemProposal,
   UserCampaignResource
 } from "../../core/interfaces/mediarithmics/api/UserCampaignInterface";
+import { ItemProposal } from "../../core/interfaces/mediarithmics/api/RecommenderInterface";
 
 export interface AdRendererHandlebarsTemplateInstanceContext
   extends AdRendererBaseInstanceContext {

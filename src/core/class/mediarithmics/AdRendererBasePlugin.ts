@@ -14,6 +14,7 @@ import {
 import { AdRendererBaseInstanceContext } from "../../interfaces/mediarithmics/plugin/InstanceContextInterface";
 
 import { BasePlugin } from "./BasePlugin";
+import { TemplatingEngine } from "../../interfaces/mediarithmics/plugin/TemplatingEngineInterface";
 
 export type AdContentHandler <T extends AdRendererBaseInstanceContext> = (
     request: AdRendererRequest,
@@ -69,7 +70,8 @@ export class AdRendererBasePlugin<T extends AdRendererBaseInstanceContext> exten
   // How to bind the main function of the plugin
   setInstanceContextBuilder(
     instanceContextBuilder: (
-      creativeId: string
+      creativeId: string,
+      templatingEngine?: TemplatingEngine
     ) => Promise<T>
   ): void {
     this.buildInstanceContext = instanceContextBuilder;

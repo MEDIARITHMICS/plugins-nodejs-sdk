@@ -2,11 +2,11 @@ import { AdRendererBasePlugin, AdContentHandler } from "./AdRendererBasePlugin";
 import { AdRendererRecoTemplateInstanceContext } from '../../interfaces/mediarithmics/plugin/InstanceContextInterface';
 import {
   UserCampaignResource,
-  ItemProposal
 } from "../../interfaces/mediarithmics/api/UserCampaignInterface";
 import * as _ from "lodash";
 import { Creative } from "../../interfaces/mediarithmics/api/CreativeInterface";
 import { CreativeProperty } from "../../interfaces/mediarithmics/api/CreativePropertyInterface";
+import { ItemProposal } from "../../interfaces/mediarithmics/api/RecommenderInterface";
 
 export class AdRendererRecoTemplatePlugin extends AdRendererBasePlugin <
   AdRendererRecoTemplateInstanceContext

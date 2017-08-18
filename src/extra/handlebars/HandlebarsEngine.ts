@@ -1,19 +1,33 @@
-
 import * as Handlebars from "handlebars";
-import {ItemProposal} from "../../core/interfaces/mediarithmics/api/UserCampaignInterface";
+import { TemplatingEngine } from "../../core/interfaces/mediarithmics/plugin/TemplatingEngineInterface";
+import {
+  AdRendererBaseInstanceContext,
+  AdRendererRequest
+} from "../../core/index";
+import { Creative } from "../../core/interfaces/mediarithmics/api/CreativeInterface";
+import { ItemProposal } from "../../core/interfaces/mediarithmics/api/RecommenderInterface";
 
-const handlebars = require('handlebars');
-const numeral = require('numeral');
-const _ = require('lodash');
+const handlebars = require("handlebars");
+const numeral = require("numeral");
+const _ = require("lodash");
 
 export interface ClickableContent {
-  item_id: number;
+  item_id: string;
+  catalog_token: any;
   $content_id: number;
 }
 
-export interface HandlebarsEngineContext {
-    clickableContents: Array<ClickableContent>;
-    recommendations: Array<ItemProposal>;
+export interface HandleBarRootContext {
+  redirectUrls: string[];
+  clickableContents: ClickableContent[];
+  request: AdRendererRequest;
+  creative: HandleBarRootContextCreative;
+  recommendations: ItemProposal[];
+}
+
+export interface HandleBarRootContextCreative {
+  properties: Creative;
+  click_url: string;
 }
 
 function formatPrice(price: string, pattern: string) {
@@ -21,52 +35,99 @@ function formatPrice(price: string, pattern: string) {
   return number.format(pattern);
 }
 
-const encodeClickUrl = (redirectUrls: Array<string>) => (clickUrl: string) => {
-  let urls = redirectUrls.slice(0);
+const encodeClickUrl = () => (
+  rootContext: HandleBarRootContext,
+  clickUrl: string
+) => {
+  let urls = rootContext.redirectUrls.slice(0);
   urls.push(clickUrl);
 
-  return urls.reduceRight((acc: string, current: string) => current + encodeURIComponent(acc), '');
+  return urls.reduceRight(
+    (acc: string, current: string) => current + encodeURIComponent(acc),
+    ""
+  );
 };
 
-const placeHolder = '{{MICS_AD_CONTENT_ID}}';
+const placeHolder = "{{MICS_AD_CONTENT_ID}}";
 const uriEncodePlaceHolder = encodeURI(placeHolder);
+const doubleEncodedUriPlaceHolder = encodeURI(encodeURI(placeHolder));
 
-const encodeRecoClickUrlHelper = (redirectUrls: Array<string>) => (idx: number, rootContext: any, recommendation: any) => {
-  // recommendation.url replace placeHolder by idx
+// Encode recommendation click url => contains the contentId of the recommendation that will be
+// insrted into the campaign log
+const encodeRecoClickUrlHelper = () => (
+  idx: number,
+  rootContext: HandleBarRootContext,
+  recommendation: ItemProposal
+) => {
   rootContext.clickableContents.push({
     item_id: recommendation.$id,
-    catalog_token: recommendation.catalog_token,
+    catalog_token: recommendation.$catalog_token,
     $content_id: idx
   });
-  const filledRedirectUrls = redirectUrls.map( (url: string) => {
+
+  // recommendation.url replace placeHolder by idx
+  const filledRedirectUrls = rootContext.redirectUrls.map((url: string) => {
     const url1 = _.replace(url, placeHolder, idx);
-    return _.replace(url1, uriEncodePlaceHolder, idx);
+    const url2 = _.replace(url1, uriEncodePlaceHolder, idx);
+    return _.replace(url2, doubleEncodedUriPlaceHolder, idx);
   });
 
-  console.log("URL : " + encodeClickUrl(filledRedirectUrls)(recommendation.$url));
-  return encodeClickUrl(filledRedirectUrls)(recommendation.$url);
+  console.log("URL : " + encodeClickUrl()(rootContext, recommendation.$url));
+  return encodeClickUrl()(rootContext, recommendation.$url);
 };
 
-const encodeRecoClickUrlPartial = "{{encodeRecoClickUrlInternal @index @root this}}";
+export class HandlebarsEngine implements TemplatingEngine {
+  engine: typeof Handlebars;
 
+  // Initialisation of the engine. Done once at every InstanceContext rebuild.
+  init(): void {
+    this.engine = Handlebars.create();
 
-export class HandlebarsEngine {
-    engine: typeof Handlebars;
+    /* Generic Helpers */
+    this.engine.registerHelper("formatPrice", formatPrice);
+    this.engine.registerHelper("toJson", (object: any) =>
+      JSON.stringify(object)
+    );
 
-    private setEncodeClickUrls(urls: Array<string>){
-        this.engine.registerHelper('encodeClickUrl', encodeClickUrl(urls));
-        this.engine.registerHelper('encodeRecoClickUrlInternal', encodeRecoClickUrlHelper(urls));
-    };
+    /* URL Encoding witchcraft */
 
-    constructor(urls: Array<string>) {
-        this.engine = Handlebars.create();
-        /* Helpers */
-        this.engine.registerHelper('formatPrice', formatPrice);
-        this.engine.registerHelper('toJson', (object: any) => JSON.stringify(object));
+    // We need to have 2 elements when doing the URL encoding:
+    // 1. The "click tracking" array passed in the rootContext (for click tracking)
+    // 2. The final URL (landing page, etc.) passed as a parameter of the helper
+    //
+    // In order to have both, we need to play smart and use an Handlebar partial
+    // This handlebar partial is just a way to add "@root" as a parameter of the helper before calling it
+    //
+    // This is how the encodeClickUrl partial should be used in templates:
+    // {{> encodeClickUrl url="http://www.mediarithmics.com/en/"}}
+    const encodeClickUrlPartial = "{{encodeClickUrlInternal @root url}}";
+    this.engine.registerPartial("encodeClickUrl", encodeClickUrlPartial);
+    this.engine.registerHelper("encodeClickUrlInternal", encodeClickUrl());
 
-        this.engine.registerPartial('encodeRecoClickUrl', encodeRecoClickUrlPartial);
+    // Same story than previously but this time the partial will inject:
+    // @index -> the index of the recommendation, which is used to include it in the URL
+    // @root -> the root context
+    // this -> the recommendation item
+    // Warning, this partial should only be used in a {{#each recommendations}}{{/each}} block
+    // The $url field of the recommendation will be used as the final URL
+    //
+    // This is how the partial should be used in templates:
+    // {{> encodeRecoClickUrl}}
+    const encodeRecoClickUrlPartial =
+    "{{encodeRecoClickUrlInternal @index @root this}}";
+    this.engine.registerPartial(
+      "encodeRecoClickUrl",
+      encodeRecoClickUrlPartial
+    );
+    this.engine.registerHelper(
+      "encodeRecoClickUrlInternal",
+      encodeRecoClickUrlHelper()
+    );
+  }
 
-        this.setEncodeClickUrls(urls); //init with empty env
-    }
+  compile(template: string) {
+    return this.engine.compile(template);
+  }
 
+  constructor() {}
 }

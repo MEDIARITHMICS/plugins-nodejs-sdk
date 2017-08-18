@@ -4,9 +4,8 @@ import {
 
 function adContentsHandler(
   adRenderRequest: core.AdRendererRequest,
-  instanceContext: core.AdRendererHandlebarsTemplateInstanceContext
+  instanceContext: core.AdRendererRecoTemplateInstanceContext
 ): Promise<string> {
-  const { plugin } = instanceContext;
   this.logger.debug(
     `Fetching User Campaign with campaignId: ${adRenderRequest.campaign_id} - userCampaignId: ${adRenderRequest.user_campaign_id}`
   );
@@ -31,7 +30,7 @@ function adContentsHandler(
         .then((recommendations: Array<ItemProposal>) => {
           const engine = plugin.engineBuilder(adRenderRequest, instanceContext);
 
-          const properties = {
+          const properties: HandlebarsEngineContext = {
             request: adRenderRequest,
             creative: {
               properties: instanceContext.creative,
@@ -39,13 +38,13 @@ function adContentsHandler(
             },
             recommendations: recommendations,
             clickableContents: []
-          } as HandlebarsEngineContext;
+          };
 
           const template = engine.compile(instanceContext.template);
 
           this.logger.debug(
             `Loading template with properties: ${JSON.stringify(
-              properties,0173043158
+              properties,
               null,
               4
             )}`
