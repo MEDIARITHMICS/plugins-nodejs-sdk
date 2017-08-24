@@ -1,17 +1,15 @@
 import { AdRendererBasePlugin, AdContentHandler } from "./AdRendererBasePlugin";
-import { AdRendererRecoTemplateInstanceContext } from '../../interfaces/mediarithmics/plugin/InstanceContextInterface';
-import {
-  UserCampaignResource,
-} from "../../interfaces/mediarithmics/api/UserCampaignInterface";
+import { AdRendererRecoTemplateInstanceContext } from "../../interfaces/mediarithmics/plugin/InstanceContextInterface";
+import { UserCampaignResource } from "../../interfaces/mediarithmics/api/UserCampaignInterface";
 import * as _ from "lodash";
 import { Creative } from "../../interfaces/mediarithmics/api/CreativeInterface";
 import { CreativeProperty } from "../../interfaces/mediarithmics/api/CreativePropertyInterface";
 import { ItemProposal } from "../../interfaces/mediarithmics/api/RecommenderInterface";
+import { TemplatingEngine } from "../../interfaces/mediarithmics/plugin/TemplatingEngineInterface";
 
-export class AdRendererRecoTemplatePlugin extends AdRendererBasePlugin <
+export class AdRendererRecoTemplatePlugin extends AdRendererBasePlugin<
   AdRendererRecoTemplateInstanceContext
 > {
-
   fetchTemplateContent(templatePath: string): Promise<any> {
     return super.requestGatewayHelper(
       "GET",
@@ -41,11 +39,11 @@ export class AdRendererRecoTemplatePlugin extends AdRendererBasePlugin <
       "GET",
       `${this
         .outboundPlatformUrl}/v1/display_campaigns/${campaignId}/user_campaigns/${userCampaignId}`
-    );
+    ).catch(this.userCampaignFetchErrorHandler);
   }
 
-  // If the timeline is not loading (shit happens), we fake it
-  userCampaignFetchErrorHandler(error: Error) {
+  // If the user campaign is not loading (shit happens), we fake it
+  private userCampaignFetchErrorHandler(error: Error) {
     this.logger.error(
       `Can't fecth userCampaign because of: ${error.message} - ${error.stack}`
     );
@@ -67,16 +65,17 @@ export class AdRendererRecoTemplatePlugin extends AdRendererBasePlugin <
     const getRecommendations = (recommenderId: string) => {
       const uri = `${this
         .outboundPlatformUrl}/v1/recommenders/${recommenderId}/recommendations`;
-      const body = JSON.stringify({
+
+      const body = {
         recommender_id: recommenderId,
         input_data: {
           user_agent_id: userAgentId
         }
-      });
+      };
 
-      this.logger.error(`POST: ${uri} - ${body}`);
-
-      return super.requestGatewayHelper("POST", uri, body).then(response => {
+      this.logger.debug(`POST: ${uri} - ${JSON.stringify(body)}`);
+      
+      return super.requestGatewayHelper("POST", uri, body).then((response: any) => {
         this.logger.debug(
           `Recommender ${recommenderId} response : ${JSON.stringify(response)}`
         );
@@ -92,14 +91,26 @@ export class AdRendererRecoTemplatePlugin extends AdRendererBasePlugin <
       : Promise.resolve([]);
   }
 
-  constructor(
-    adContentsHandler: AdContentHandler<AdRendererRecoTemplateInstanceContext>,
-  ) {
-    // Set the AdContentsHandler
-    super(adContentsHandler);
+  // The engineBuilder that can be used to compile the template
+  // during the InstanceContext building
+  private engineBuilder: TemplatingEngine;
+
+  setTemplateEngineBuilder(engineBuilder: TemplatingEngine) {
+    this.engineBuilder = engineBuilder;
+  }
+
+  getEngineBuilder() {
+    return this.engineBuilder;
+  }
+
+  constructor() {
+    super();
 
     // Default Instance context builder, as no engine is provided, the template is returned without any compilation
     this.setInstanceContextBuilder((creativeId: string) => {
+      console.warn(`You are using the default InstanceContextBuilder of AdRendererRecoTemplatePlugin
+      Is it really what you want to do?
+      `)
       const creativeP = this.fetchCreative(creativeId);
       const creativePropsP = this.fetchCreativeProperties(creativeId);
 
@@ -167,7 +178,8 @@ export class AdRendererRecoTemplatePlugin extends AdRendererBasePlugin <
               ad_layout_version: adLayoutProperty.value.version
                 ? adLayoutProperty.value.version
                 : null,
-              compiled_template: template            };
+              template: template
+            };
 
             return context;
           });

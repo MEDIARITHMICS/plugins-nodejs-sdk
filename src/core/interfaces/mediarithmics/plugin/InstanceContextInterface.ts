@@ -20,5 +20,8 @@ export interface AdRendererRecoTemplateInstanceContext
   creative_click_url: string;
   ad_layout_id: string;
   ad_layout_version: string;
-  compiled_template: any;
+  // Raw template to be compiled
+  template: any;
+  // Compiled tempalte
+  compiled_template?: any;
 }

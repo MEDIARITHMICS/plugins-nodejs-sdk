@@ -11,122 +11,30 @@ import {
   UserCampaignResource
 } from "../../core/interfaces/mediarithmics/api/UserCampaignInterface";
 import { ItemProposal } from "../../core/interfaces/mediarithmics/api/RecommenderInterface";
+import { AdRendererRecoTemplateInstanceContext } from "../../core/index";
+import { AdRendererRecoTemplatePlugin } from "../../core/class/mediarithmics/AdRendererRecoTemplatePlugin";
 
-export interface AdRendererHandlebarsTemplateInstanceContext
-  extends AdRendererBaseInstanceContext {
-  recommender_id: string;
-  creative_click_url: string;
-  ad_layout_id: string;
-  ad_layout_version: string;
-  template: any;
-  plugin: HandlebarsAdRendererPlugin;
-}
 
 export type HandlebarsAdsContentBuilder = (
   request: AdRendererRequest,
-  instanceContext: AdRendererHandlebarsTemplateInstanceContext
+  instanceContext: AdRendererRecoTemplateInstanceContext
 ) => Promise<string>;
 
 export type HandlebarsEngineBuilder = (
   request: AdRendererRequest,
-  instanceContext: AdRendererHandlebarsTemplateInstanceContext
+  instanceContext: AdRendererRecoTemplateInstanceContext
 ) => typeof Handlebars;
 
-export class HandlebarsAdRendererPlugin extends AdRendererBasePlugin<
-  AdRendererHandlebarsTemplateInstanceContext
-> {
-  // Helper to fetch the creative resource with caching
-  fetchTemplateContent(templatePath: string): Promise<any> {
-    return super.requestGatewayHelper(
-      "GET",
-      `${this.outboundPlatformUrl}/v1/data_file/data?uri=${encodeURIComponent(
-        templatePath
-      )}`
-    );
-  }
+export class HandlebarsAdRendererPlugin extends AdRendererRecoTemplatePlugin {
 
-  fetchTemplateProperties(
-    organisationId: string,
-    adLayoutId: string,
-    versionId: string
-  ): Promise<any> {
-    return super.requestGatewayHelper(
-      "GET",
-      `${this
-        .outboundPlatformUrl}/v1/ad_layouts/${adLayoutId}/versions/${versionId}?organisation_id=${organisationId}`
-    );
-  }
-
-  fetchUserCampaign(
-    campaignId: string,
-    userCampaignId: string
-  ): Promise<UserCampaignResource> {
-    return super.requestGatewayHelper(
-      "GET",
-      `${this
-        .outboundPlatformUrl}/v1/display_campaigns/${campaignId}/user_campaigns/${userCampaignId}`
-    );
-  }
-
-  // If the timeline is not loading (shit happens), we fake it
-  userCampaignFetchErrorHandler(error: Error) {
-    this.logger.error(
-      `Can't fecth userCampaign because of: ${error.message} - ${error.stack}`
-    );
-    const userCampaign = {
-      status: "ok",
-      data: {
-        user_agent_id: "null"
-      },
-      count: 0
-    };
-
-    return JSON.stringify(userCampaign);
-  }
-
-  fetchRecommendations(
-    instanceContext: AdRendererHandlebarsTemplateInstanceContext,
-    userAgentId: string
-  ): Promise<Array<ItemProposal>> {
-    const getRecommendations = (recommenderId: string) => {
-      const uri = `${this
-        .outboundPlatformUrl}/v1/recommenders/${recommenderId}/recommendations`;
-      const body = JSON.stringify({
-        recommender_id: recommenderId,
-        input_data: {
-          user_agent_id: userAgentId
-        }
-      });
-
-      this.logger.error(`POST: ${uri} - ${body}`);
-
-      return super.requestGatewayHelper("POST", uri, body).then(response => {
-        this.logger.debug(
-          `Recommender ${recommenderId} response : ${JSON.stringify(response)}`
-        );
-        return response.data.proposals as Array<ItemProposal>;
-      });
-    };
-
-    const recommenderId = instanceContext.recommender_id
-      ? instanceContext.recommender_id
-      : null;
-    return recommenderId
-      ? getRecommendations(recommenderId)
-      : Promise.resolve([]);
-  }
-
-  engineBuilder: HandlebarsEngineBuilder; //adRenderRequest => new HandlebarsEngine(adRenderRequest.click_urls).engine
-
-  constructor(
-    adContentsHandler: HandlebarsAdsContentBuilder,
-    engineBuilder: HandlebarsEngineBuilder
-  ) {
-    super(adContentsHandler);
-    this.engineBuilder = engineBuilder;
+  constructor() {
+    super();
 
     // Default Instance context builder
     this.setInstanceContextBuilder((creativeId: string) => {
+      console.warn(`You are using the default InstanceContectBuilder of HandlebarsAdRendererPlugin
+      Is it really what you want to do?
+      `)
       const creativeP = this.fetchCreative(creativeId);
       const creativePropsP = this.fetchCreativeProperties(creativeId);
 
@@ -179,7 +87,7 @@ export class HandlebarsAdRendererPlugin extends AdRendererBasePlugin<
               JSON.stringify(template)
             );
 
-            const context = {
+            const context: AdRendererRecoTemplateInstanceContext = {
               creative: creative,
               creativeProperties: creativeProperties,
               recommender_id: recommenderProperty
@@ -194,9 +102,8 @@ export class HandlebarsAdRendererPlugin extends AdRendererBasePlugin<
               ad_layout_version: adLayoutProperty.value.version
                 ? adLayoutProperty.value.version
                 : null,
-              template: template,
-              plugin: this
-            } as AdRendererHandlebarsTemplateInstanceContext;
+              template: template
+              };
 
             return context;
           });

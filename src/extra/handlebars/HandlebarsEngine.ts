@@ -36,16 +36,15 @@ function formatPrice(price: string, pattern: string) {
 }
 
 const encodeClickUrl = () => (
-  rootContext: HandleBarRootContext,
+  redirectUrls: string[],
   clickUrl: string
 ) => {
-  let urls = rootContext.redirectUrls.slice(0);
+  let urls = redirectUrls.slice(0);
   urls.push(clickUrl);
 
-  return urls.reduceRight(
-    (acc: string, current: string) => current + encodeURIComponent(acc),
-    ""
-  );
+  return urls.reduceRight((acc: string, current: string) => {
+    return current + encodeURIComponent(acc);
+  }, "");
 };
 
 const placeHolder = "{{MICS_AD_CONTENT_ID}}";
@@ -72,8 +71,8 @@ const encodeRecoClickUrlHelper = () => (
     return _.replace(url2, doubleEncodedUriPlaceHolder, idx);
   });
 
-  console.log("URL : " + encodeClickUrl()(rootContext, recommendation.$url));
-  return encodeClickUrl()(rootContext, recommendation.$url);
+  console.log("URL : " + encodeClickUrl()(filledRedirectUrls, recommendation.$url));
+  return encodeClickUrl()(filledRedirectUrls, recommendation.$url);
 };
 
 export class HandlebarsEngine implements TemplatingEngine {
@@ -100,7 +99,7 @@ export class HandlebarsEngine implements TemplatingEngine {
     //
     // This is how the encodeClickUrl partial should be used in templates:
     // {{> encodeClickUrl url="http://www.mediarithmics.com/en/"}}
-    const encodeClickUrlPartial = "{{encodeClickUrlInternal @root url}}";
+    const encodeClickUrlPartial = "{{encodeClickUrlInternal @root.redirectUrls url}}";
     this.engine.registerPartial("encodeClickUrl", encodeClickUrlPartial);
     this.engine.registerHelper("encodeClickUrlInternal", encodeClickUrl());
 
@@ -114,7 +113,7 @@ export class HandlebarsEngine implements TemplatingEngine {
     // This is how the partial should be used in templates:
     // {{> encodeRecoClickUrl}}
     const encodeRecoClickUrlPartial =
-    "{{encodeRecoClickUrlInternal @index @root this}}";
+      "{{encodeRecoClickUrlInternal @index @root this}}";
     this.engine.registerPartial(
       "encodeRecoClickUrl",
       encodeRecoClickUrlPartial

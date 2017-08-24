@@ -85,7 +85,7 @@ export class ActivityAnalyzerPlugin extends BasePlugin {
           const msg = {
             error: "Missing request body"
           };
-          this.logger.error("POST /v1/activity_analysis : %s", msg);
+          this.logger.error("POST /v1/activity_analysis : %s", JSON.stringify(msg));
           res.status(500).json(msg);
         } else {
           this.logger.debug(
@@ -95,7 +95,7 @@ export class ActivityAnalyzerPlugin extends BasePlugin {
           const activityAnalyzerRequest = req.body as ActivityAnalyzerRequest;
 
           if (!this.onActivityAnalysis) {
-            throw new Error("No AdContents listener registered!");
+            throw new Error("No Activity Analyzer listener registered!");
           }
 
           if (!cache.get(activityAnalyzerRequest.activity_analyzer_id)) {
@@ -131,16 +131,16 @@ export class ActivityAnalyzerPlugin extends BasePlugin {
   start() {
     this.initActivityAnalysis();
   }
-  
-  constructor(
-    activityAnalysisHandler: (
-      request: ActivityAnalyzerRequest,
-      instanceContext: ActivityAnalyzerBaseInstanceContext
-    ) => ActivityAnalyzerPluginResponse
-  ) {
-    super();
 
-    this.onActivityAnalysis = activityAnalysisHandler;
+  setOnActivityAnalysis(activityAnalysisHandler: (
+    request: ActivityAnalyzerRequest,
+    instanceContext: ActivityAnalyzerBaseInstanceContext
+  ) => ActivityAnalyzerPluginResponse) {
+    this.onActivityAnalysis = activityAnalysisHandler
+  }
+  
+  constructor() {
+    super();
 
     // Default Instance context builder
     this.setInstanceContextBuilder(async (activityAnalyzerId: string) => {

@@ -10,6 +10,7 @@ const app = express();
 app.use(bodyParser.json({
   type: '*/*'
 }));
+
 app.get('/v1/creatives/:creativeId', function (req, res) {
   var json = `
 {
@@ -184,7 +185,7 @@ app.get('/v1/data_file/data?:dataFilePath', function (req, res) {
             <div class="background1"></div>
             {{#each recommendations}}
             <div id="product1" class="product " onmouseout="enableHighlights()" onmouseover="disableHighlights()">
-               <a href="{{> encodeRecoClickUrl }}" target="_blank">
+               <a href='{{> encodeRecoClickUrl }}' target="_blank">
                   <div class="picture-container"> <img class="product-picture" src="//catalog.mediarithmics.com/v1/datamarts/1089/{{this.$catalog_id}}/{{this.$item_id}}/image/small"> </div>
                   <div class="product-info">
                      <div class="product-title">{{this.$name}}</div>
@@ -206,59 +207,59 @@ app.get('/v1/data_file/data?:dataFilePath', function (req, res) {
 });
 
 const recommendations = `{
-  "status": "ok",
-  "data": {
-  "ts": 1496939189652,
-  "proposals": [
-    {
-      "$type": "ITEM_PROPOSAL",
-      "$item_id": "8",
-      "$id": "8",
-      "$catalog_id": "16",
-      "$name": "Résidence Les Terrasses de Veret***",
-      "$brand": "Madame Vacance",
-      "$url": "https://www.madamevacances.com/locations/france/alpes-du-nord/flaine/residence-les-terrasses-de-veret/",
-      "$image_url": "http://hbs.madamevacances.com/photos/etab/87/235x130/residence_les_terrasses_de_veret_piscine.jpg",
-      "$price": 160.3,
-      "$sale_price": null,
-      "city": "Flaine",
-      "country": "France",
-      "region": "Alpes du Nord",
-      "zip_code": "74300"
-    },
-    {
-      "$type": "ITEM_PROPOSAL",
-      "$item_id": "7",
-      "$id": "7",
-      "$catalog_id": "16",
-      "$name": "Le Chalet Altitude*****",
-      "$brand": "Madame Vacance",
-      "$url": "https://www.madamevacances.com/locations/france/alpes-du-nord/val-thorens/le-chalet-altitude/",
-      "$image_url": "http://hbs.madamevacances.com/photos/etab/335/235x130/chalet_altitude_exterieure_2.jpg",
-      "$price": null,
-      "$sale_price": null,
-      "city": "Val Thorens",
-      "country": "France",
-      "region": "Alpes du Nord",
-      "zip_code": "73440"
-    },
-    {
-      "$type": "ITEM_PROPOSAL",
-      "$item_id": "6",
-      "$id": "6",
-      "$catalog_id": "16",
-      "$name": "Les Chalets du Thabor***",
-      "$brand": "Madame Vacance",
-      "$url": "https://www.madamevacances.com/locations/france/alpes-du-nord/valfrejus/les-chalets-du-thabor/",
-      "$image_url": "http://hbs.madamevacances.com/photos/etab/65/235x130/valfrejus_chalet_thabor_exterieure_2.jpg",
-      "$price": 143.2,
-      "$sale_price": null,
-      "city": "Valfréjus",
-      "country": "France",
-      "region": "Alpes du Nord",
-      "zip_code": "73500"
-    }]
-  }
+	"status": "ok",
+	"data": {
+		"ts": 1496939189652,
+		"proposals": [{
+				"$type": "ITEM_PROPOSAL",
+				"$item_id": "8",
+				"$id": "8",
+				"$catalog_id": "16",
+				"$name": "Résidence Les Terrasses de Veret***",
+				"$brand": "Madame Vacance",
+				"$url": "https://www.madamevacances.com/locations/france/alpes-du-nord/flaine/residence-les-terrasses-de-veret/",
+				"$image_url": "http://hbs.madamevacances.com/photos/etab/87/235x130/residence_les_terrasses_de_veret_piscine.jpg",
+				"$price": 160.3,
+				"$sale_price": null,
+				"city": "Flaine",
+				"country": "France",
+				"region": "Alpes du Nord",
+				"zip_code": "74300"
+			},
+			{
+				"$type": "ITEM_PROPOSAL",
+				"$item_id": "7",
+				"$id": "7",
+				"$catalog_id": "16",
+				"$name": "Le Chalet Altitude*****",
+				"$brand": "Madame Vacance",
+				"$url": "https://www.madamevacances.com/locations/france/alpes-du-nord/val-thorens/le-chalet-altitude/",
+				"$image_url": "http://hbs.madamevacances.com/photos/etab/335/235x130/chalet_altitude_exterieure_2.jpg",
+				"$price": null,
+				"$sale_price": null,
+				"city": "Val Thorens",
+				"country": "France",
+				"region": "Alpes du Nord",
+				"zip_code": "73440"
+			},
+			{
+				"$type": "ITEM_PROPOSAL",
+				"$item_id": "6",
+				"$id": "6",
+				"$catalog_id": "16",
+				"$name": "Les Chalets du Thabor***",
+				"$brand": "Madame Vacance",
+				"$url": "https://www.madamevacances.com/locations/france/alpes-du-nord/valfrejus/les-chalets-du-thabor/",
+				"$image_url": "http://hbs.madamevacances.com/photos/etab/65/235x130/valfrejus_chalet_thabor_exterieure_2.jpg",
+				"$price": 143.2,
+				"$sale_price": null,
+				"city": "Valfréjus",
+				"country": "France",
+				"region": "Alpes du Nord",
+				"zip_code": "73500"
+			}
+		]
+	}
 }`;
 
 app.get('/v1/display_campaigns/:campaignId/user_campaigns/:userCampaignId', function (req, res) {
