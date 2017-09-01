@@ -17,12 +17,7 @@ import { BasePlugin } from "./BasePlugin";
 import { TemplatingEngine } from "../../interfaces/mediarithmics/plugin/TemplatingEngineInterface";
 import { AdRendererPluginResponse } from "../../interfaces/mediarithmics/api/AdRendererPluginResponseInterface";
 
-export type AdContentHandler<T extends AdRendererBaseInstanceContext> = (
-  request: AdRendererRequest,
-  instanceContext: T
-) => Promise<AdRendererPluginResponse>;
-
-export class AdRendererBasePlugin<
+export abstract class AdRendererBasePlugin<
   T extends AdRendererBaseInstanceContext
 > extends BasePlugin {
   INSTANCE_CONTEXT_CACHE_EXPIRATION: number = 3000;
@@ -72,24 +67,33 @@ export class AdRendererBasePlugin<
     );
   }
 
-  // How to bind the main function of the plugin
-  setInstanceContextBuilder(
-    instanceContextBuilder: (
-      creativeId: string,
-      templatingEngine?: TemplatingEngine
-    ) => Promise<T>
-  ): void {
-    this.buildInstanceContext = instanceContextBuilder;
-  }
-
-  setAdContentsHandler(adContentsHandler: AdContentHandler<T>): void {
-    this.onAdContents = adContentsHandler;
-  }
-
   // Method to build an instance context
-  private buildInstanceContext: (creativeId: string) => Promise<T>;
+  // To be overriden to get a custom behavior
+  protected async buildInstanceContext(creativeId: string): Promise<T> {
+    console.warn(`You are using the default InstanceContextBuilder of AdRendererBasePlugin
+    Is it really what you want to do?
+    `);
 
-  protected onAdContents: AdContentHandler<T>;
+    const creativeP = this.fetchCreative(creativeId);
+    const creativePropsP = this.fetchCreativeProperties(creativeId);
+
+    const results = await Promise.all([creativeP, creativePropsP]);
+
+    const creative = results[0];
+    const creativeProps = results[1];
+
+    const context = {
+      creative: creative,
+      creativeProperties: creativeProps
+    } as T;
+
+    return Promise.resolve(context);
+  }
+
+  protected abstract onAdContents(
+    request: AdRendererRequest,
+    instanceContext: T
+  ): Promise<AdRendererPluginResponse>;
 
   private initAdContentsRoute(): void {
     this.app.post(
@@ -107,7 +111,9 @@ export class AdRendererBasePlugin<
           const adRendererRequest = req.body as AdRendererRequest;
 
           if (!this.onAdContents) {
-            this.logger.error("POST /v1/ad_contents: No AdContents listener registered!");
+            this.logger.error(
+              "POST /v1/ad_contents: No AdContents listener registered!"
+            );
             const msg = {
               error: "No AdContents listener registered!"
             };
@@ -151,33 +157,9 @@ export class AdRendererBasePlugin<
     );
   }
 
-  start() {
-    this.initAdContentsRoute();
-  }
-
   constructor() {
     super();
 
-    // Default Instance context builder
-    this.setInstanceContextBuilder(async (creativeId: string) => {
-      console.warn(`You are using the default InstanceContextBuilder of AdRendererBasePlugin
-      Is it really what you want to do?
-      `);
-
-      const creativeP = this.fetchCreative(creativeId);
-      const creativePropsP = this.fetchCreativeProperties(creativeId);
-
-      const results = await Promise.all([creativeP, creativePropsP]);
-
-      const creative = results[0];
-      const creativeProps = results[1];
-
-      const context = {
-        creative: creative,
-        creativeProperties: creativeProps
-      } as T;
-
-      return context;
-    });
+    this.initAdContentsRoute();
   }
 }

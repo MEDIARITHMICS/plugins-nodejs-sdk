@@ -16,7 +16,7 @@ import {
 } from "../../interfaces/mediarithmics/api/ActivityAnalyzerPropertyInterface";
 import { ActivityAnalyzerPluginResponse } from "../../interfaces/mediarithmics/api/ActivityAnalyzerPluginResponseInterface";
 
-export class ActivityAnalyzerPlugin extends BasePlugin {
+export abstract class ActivityAnalyzerPlugin extends BasePlugin {
   INSTANCE_CONTEXT_CACHE_EXPIRATION: number = 3000;
 
   instanceContext: Promise<ActivityAnalyzerBaseInstanceContext>;
@@ -58,24 +58,41 @@ export class ActivityAnalyzerPlugin extends BasePlugin {
       });
   }
 
-  // How to bind the main function of the plugin
-  setInstanceContextBuilder(
-    instanceContextBuilder: (
-      activityAnalyzerInstanceId: string
-    ) => Promise<ActivityAnalyzerBaseInstanceContext>
-  ): void {
-    this.buildInstanceContext = instanceContextBuilder;
-  }
-
   // Method to build an instance context
-  private buildInstanceContext: (
-    creativeId: string
-  ) => Promise<ActivityAnalyzerBaseInstanceContext>;
+  // To be overriden to get a cutom behavior
+  // This is a default provided implementation
+  protected async buildInstanceContext (
+    activityAnalyzerId: string
+  ): Promise<ActivityAnalyzerBaseInstanceContext> {
 
-  private onActivityAnalysis: (
+    const activityAnalyzerP = this.fetchActivityAnalyzer(activityAnalyzerId);
+    const activityAnalyzerPropsP = this.fetchActivityAnalyzerProperties(
+      activityAnalyzerId
+    );
+
+    const results = await Promise.all([
+      activityAnalyzerP,
+      activityAnalyzerPropsP
+    ]);
+
+    const activityAnalyzer = results[0];
+    const activityAnalyzerProps = results[1];
+
+    const context = {
+      activityAnalyzer: activityAnalyzer,
+      activityAnalyzerProperties: activityAnalyzerProps
+    } as ActivityAnalyzerBaseInstanceContext;
+
+    return context;
+
+  };
+
+  // Method to process an Activity Analysis
+  // To be overriden by the Plugin to get a custom behavior
+  protected abstract onActivityAnalysis (
     request: ActivityAnalyzerRequest,
     instanceContext: ActivityAnalyzerBaseInstanceContext
-  ) => ActivityAnalyzerPluginResponse;
+  ): ActivityAnalyzerPluginResponse;
 
   private initActivityAnalysis(): void {
     this.app.post(
@@ -127,43 +144,12 @@ export class ActivityAnalyzerPlugin extends BasePlugin {
       }
     );
   }
-
-  start() {
-    this.initActivityAnalysis();
-  }
-
-  setOnActivityAnalysis(activityAnalysisHandler: (
-    request: ActivityAnalyzerRequest,
-    instanceContext: ActivityAnalyzerBaseInstanceContext
-  ) => ActivityAnalyzerPluginResponse) {
-    this.onActivityAnalysis = activityAnalysisHandler
-  }
   
   constructor() {
     super();
 
-    // Default Instance context builder
-    this.setInstanceContextBuilder(async (activityAnalyzerId: string) => {
-      const activityAnalyzerP = this.fetchActivityAnalyzer(activityAnalyzerId);
-      const activityAnalyzerPropsP = this.fetchActivityAnalyzerProperties(
-        activityAnalyzerId
-      );
-
-      const results = await Promise.all([
-        activityAnalyzerP,
-        activityAnalyzerPropsP
-      ]);
-
-      const activityAnalyzer = results[0];
-      const activityAnalyzerProps = results[1];
-
-      const context = {
-        activityAnalyzer: activityAnalyzer,
-        activityAnalyzerProperties: activityAnalyzerProps
-      } as ActivityAnalyzerBaseInstanceContext;
-
-      return context;
-    });
+    // We init the specific route to listen for activity analysis requests
+    this.initActivityAnalysis();
 
   }
 }

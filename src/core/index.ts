@@ -22,3 +22,6 @@ export * from "./interfaces/mediarithmics/api/ActivityAnalyzerPluginResponseInte
 export * from "./interfaces/mediarithmics/api/ActivityAnalyzerInterface";
 export * from "./interfaces/mediarithmics/api/ActivityAnalyzerPropertyInterface";
 export * from "./class/mediarithmics/ActivityAnalyzerPlugin";
+
+// Plugin Runner
+export * from "./class/mediarithmics/ProductionPluginRunner";

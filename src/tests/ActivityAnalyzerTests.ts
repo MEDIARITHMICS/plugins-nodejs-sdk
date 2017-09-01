@@ -170,13 +170,7 @@ describe("Activity Analysis API test", function() {
       })
     );
 
-    mockery.registerMock("request-promise-native", function(
-      options: rp.Options
-    ) {
-      return Promise.resolve(requestPromiseProx(options));
-    });
-
-    plugin._transport = require("request-promise-native");
+    plugin._transport = requestPromiseProx;
 
     plugin.setOnActivityAnalysis((analyzerRequest, instanceContext) => {
       const response: core.ActivityAnalyzerPluginResponse = {
