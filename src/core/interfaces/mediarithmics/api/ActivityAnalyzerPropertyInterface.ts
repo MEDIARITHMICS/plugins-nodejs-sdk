@@ -13,4 +13,5 @@ export interface ActivityAnalyzerProperty {
   origin: string;
   writable: boolean;
   deletable: boolean;
+  id: string;
 }

@@ -1,81 +1,69 @@
 import { expect } from "chai";
 import "mocha";
-import { core } from "../";
+import { core, extra } from "../";
 import * as request from "supertest";
 import * as sinon from "sinon";
 import * as mockery from "mockery";
 import * as rp from "request-promise-native";
 
 describe("Fetch template API", () => {
-  let plugin: core.AdRendererRecoTemplatePlugin;
-  let requestPromiseProx: sinon.SinonStub = sinon.stub().returns("Fake answer");
+  class MyDummyHandlebarsAdRenderer extends core.AdRendererRecoTemplatePlugin {
+    protected async onAdContents(
+      adRenderRequest: core.AdRendererRequest,
+      instanceContext: core.AdRendererRecoTemplateInstanceContext
+    ): Promise<core.AdRendererPluginResponse> {
+      return {
+        html: `This is Spart.... Oups, HTML I mean`
+      };
+    }
 
-  beforeEach(function(done) {
-    requestPromiseProx = sinon.stub().returns(
-      new Promise((resolve, reject) => {
-        resolve("Yolo");
-      })
-    );
+    constructor() {
+      super();
+      this.engineBuilder = new extra.HandlebarsEngine();
+    }
+  }
 
-    plugin = new core.AdRendererRecoTemplatePlugin();
-
-    mockery.enable({
-      warnOnReplace: false,
-      warnOnUnregistered: false,
-      useCleanCache: true
-    });
-
-    mockery.registerMock("request-promise-native", function(
-      options: rp.Options
-    ) {
-      return Promise.resolve(requestPromiseProx(options));
-    });
-
-    done();
-  });
-
-  afterEach(function(done) {
-    plugin.server.close();
-    mockery.disable();
-    mockery.deregisterAll();
-    done();
-  });
+  const rpMockup: sinon.SinonStub = sinon
+    .stub()
+    .returns(Promise.resolve("Fake answer"));
 
   it("Check that templateURI is passed correctly in fetchTemplateContent", function(
     done
   ) {
-    // We replace the request-promise-native in the plugin
-    plugin._transport = require("request-promise-native");
+    const plugin = new MyDummyHandlebarsAdRenderer();
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     const faketemplatePath = "mics://yolo";
 
     // We try a call to the Gateway
-    plugin.fetchTemplateContent(faketemplatePath).then(() => {
-      expect(requestPromiseProx.args[0][0].uri).to.be.eq(
-        `${plugin.outboundPlatformUrl}/v1/data_file/data?uri=${encodeURIComponent(
-          faketemplatePath
-        )}`
-      );
-      done();
-    });
+    (runner.plugin as MyDummyHandlebarsAdRenderer)
+      .fetchTemplateContent(faketemplatePath)
+      .then(() => {
+        expect(rpMockup.args[0][0].uri).to.be.eq(
+          `${runner.plugin.outboundPlatformUrl}/v1/data_file/data`
+        );
+        expect(rpMockup.args[0][0].qs.uri).to.be.eq(faketemplatePath);
+        done();
+      });
   });
 
   it("Check that orgId / adLayoutId / versionId are passed correctly in fetchTemplateProperties", function(
     done
   ) {
-    // We replace the request-promise-native in the plugin
-    plugin._transport = require("request-promise-native");
+    const plugin = new MyDummyHandlebarsAdRenderer();
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     const fakeOrgId = "1";
     const fakeAdLayoutId = "23";
     const fakeVersionId = "456";
 
     // We try a call to the Gateway
-    plugin
+    (runner.plugin as MyDummyHandlebarsAdRenderer)
       .fetchTemplateProperties(fakeOrgId, fakeAdLayoutId, fakeVersionId)
       .then(() => {
-        expect(requestPromiseProx.args[0][0].uri).to.be.eq(
-          `${plugin.outboundPlatformUrl}/v1/ad_layouts/${fakeAdLayoutId}/versions/${fakeVersionId}?organisation_id=${fakeOrgId}`
+        expect(rpMockup.args[1][0].uri).to.be.eq(
+          `${runner.plugin
+            .outboundPlatformUrl}/v1/ad_layouts/${fakeAdLayoutId}/versions/${fakeVersionId}?organisation_id=${fakeOrgId}`
         );
         done();
       });
@@ -83,66 +71,84 @@ describe("Fetch template API", () => {
 });
 
 describe("Fetch recommendation API", () => {
-  let plugin: core.AdRendererRecoTemplatePlugin;
-  let requestPromiseProx: sinon.SinonStub = sinon.stub().returns("Fake answer");
+  class MyDummyHandlebarsAdRenderer extends core.AdRendererRecoTemplatePlugin {
+    protected async onAdContents(
+      adRenderRequest: core.AdRendererRequest,
+      instanceContext: core.AdRendererRecoTemplateInstanceContext
+    ): Promise<core.AdRendererPluginResponse> {
+      return {
+        html: `This is Spart.... Oups, HTML I mean`
+      };
+    }
 
-  const fakeRecommenderResponse = `{
-        "status": "ok",
-        "data": {
-            "ts": 1496939189652,
-            "proposals": [{
-                    "$type": "ITEM_PROPOSAL",
-                    "$item_id": "8",
-                    "$id": "8",
-                    "$catalog_id": "16",
-                    "$name": "Résidence Les Terrasses de Veret***",
-                    "$brand": "Madame Vacance",
-                    "$url": "https://www.madamevacances.com/locations/france/alpes-du-nord/flaine/residence-les-terrasses-de-veret/",
-                    "$image_url": "http://hbs.madamevacances.com/photos/etab/87/235x130/residence_les_terrasses_de_veret_piscine.jpg",
-                    "$price": 160.3,
-                    "$sale_price": null,
-                    "city": "Flaine",
-                    "country": "France",
-                    "region": "Alpes du Nord",
-                    "zip_code": "74300"
-                },
-                {
-                    "$type": "ITEM_PROPOSAL",
-                    "$item_id": "7",
-                    "$id": "7",
-                    "$catalog_id": "16",
-                    "$name": "Le Chalet Altitude*****",
-                    "$brand": "Madame Vacance",
-                    "$url": "https://www.madamevacances.com/locations/france/alpes-du-nord/val-thorens/le-chalet-altitude/",
-                    "$image_url": "http://hbs.madamevacances.com/photos/etab/335/235x130/chalet_altitude_exterieure_2.jpg",
-                    "$price": null,
-                    "$sale_price": null,
-                    "city": "Val Thorens",
-                    "country": "France",
-                    "region": "Alpes du Nord",
-                    "zip_code": "73440"
-                },
-                {
-                    "$type": "ITEM_PROPOSAL",
-                    "$item_id": "6",
-                    "$id": "6",
-                    "$catalog_id": "16",
-                    "$name": "Les Chalets du Thabor***",
-                    "$brand": "Madame Vacance",
-                    "$url": "https://www.madamevacances.com/locations/france/alpes-du-nord/valfrejus/les-chalets-du-thabor/",
-                    "$image_url": "http://hbs.madamevacances.com/photos/etab/65/235x130/valfrejus_chalet_thabor_exterieure_2.jpg",
-                    "$price": 143.2,
-                    "$sale_price": null,
-                    "city": "Valfréjus",
-                    "country": "France",
-                    "region": "Alpes du Nord",
-                    "zip_code": "73500"
-                }
-            ]
+    constructor() {
+      super();
+      this.engineBuilder = new extra.HandlebarsEngine();
+    }
+  }
+
+  const fakeRecommenderResponse: core.RecommenderResponse = {
+    status: "ok",
+    data: {
+      ts: 1496939189652,
+      proposals: [
+        {
+          $type: "ITEM_PROPOSAL",
+          $item_id: "8",
+          $id: "8",
+          $catalog_id: "16",
+          $name: "Résidence Les Terrasses de Veret***",
+          $brand: "Madame Vacance",
+          $url:
+            "https://www.madamevacances.com/locations/france/alpes-du-nord/flaine/residence-les-terrasses-de-veret/",
+          $image_url:
+            "http://hbs.madamevacances.com/photos/etab/87/235x130/residence_les_terrasses_de_veret_piscine.jpg",
+          $price: 160.3,
+          $sale_price: null,
+          city: "Flaine",
+          country: "France",
+          region: "Alpes du Nord",
+          zip_code: "74300"
+        },
+        {
+          $type: "ITEM_PROPOSAL",
+          $item_id: "7",
+          $id: "7",
+          $catalog_id: "16",
+          $name: "Le Chalet Altitude*****",
+          $brand: "Madame Vacance",
+          $url:
+            "https://www.madamevacances.com/locations/france/alpes-du-nord/val-thorens/le-chalet-altitude/",
+          $image_url:
+            "http://hbs.madamevacances.com/photos/etab/335/235x130/chalet_altitude_exterieure_2.jpg",
+          $price: null,
+          $sale_price: null,
+          city: "Val Thorens",
+          country: "France",
+          region: "Alpes du Nord",
+          zip_code: "73440"
+        },
+        {
+          $type: "ITEM_PROPOSAL",
+          $item_id: "6",
+          $id: "6",
+          $catalog_id: "16",
+          $name: "Les Chalets du Thabor***",
+          $brand: "Madame Vacance",
+          $url:
+            "https://www.madamevacances.com/locations/france/alpes-du-nord/valfrejus/les-chalets-du-thabor/",
+          $image_url:
+            "http://hbs.madamevacances.com/photos/etab/65/235x130/valfrejus_chalet_thabor_exterieure_2.jpg",
+          $price: 143.2,
+          $sale_price: null,
+          city: "Valfréjus",
+          country: "France",
+          region: "Alpes du Nord",
+          zip_code: "73500"
         }
-    }`;
-
-  const fakeRecommenderResponseJSON = JSON.parse(fakeRecommenderResponse);
+      ]
+    }
+  };
 
   const fakeCreative: core.Creative = {
     type: "DISPLAY_AD",
@@ -198,51 +204,39 @@ describe("Fetch recommendation API", () => {
 
   const fakeUserAgentId = "vec:888888";
 
-  beforeEach(function(done) {
-    requestPromiseProx = sinon
-      .stub()
-      .returns(new Promise((resolve, reject) => {
-          resolve(fakeRecommenderResponseJSON);
-      }));
+  const rpMockup: sinon.SinonStub = sinon.stub();
 
-    plugin = new core.AdRendererRecoTemplatePlugin();
+  rpMockup
+    .withArgs(
+      sinon.match.has(
+        "uri",
+        sinon.match(function(value: string) {
+          console.log(value);
+          return (
+            value.match(/\/v1\/recommenders\/(.){1,10}\/recommendations/) !==
+            null
+          );
+        })
+      )
+    )
+    .returns(fakeRecommenderResponse);
 
-    mockery.enable({
-      warnOnReplace: false,
-      warnOnUnregistered: false,
-      useCleanCache: true
-    });
-
-    mockery.registerMock("request-promise-native", function(
-      options: rp.Options
-    ) {
-      return Promise.resolve(requestPromiseProx(options));
-    });
-
-    done();
-  });
-
-  afterEach(function(done) {
-    plugin.server.close();
-    mockery.disable();
-    mockery.deregisterAll();
-    done();
-  });
-
-  it("Check that recommenderId and user_agent_id are passed correctly in fetchRecommendations", function(
+  it("Check that recommenderId and userAgentId are passed correctly in fetchRecommendations", function(
     done
   ) {
-    // We replace the request-promise-native in the plugin
-    plugin._transport = require("request-promise-native");
+    const plugin = new MyDummyHandlebarsAdRenderer();
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     // We try a call to the Gateway
-    plugin
+    (runner.plugin as MyDummyHandlebarsAdRenderer)
       .fetchRecommendations(fakeInstanceContext, fakeUserAgentId)
       .then(() => {
-        expect(requestPromiseProx.args[0][0].uri).to.be.eq(
+        expect(rpMockup.args[0][0].uri).to.be.eq(
           `${plugin.outboundPlatformUrl}/v1/recommenders/${fakeInstanceContext.recommender_id}/recommendations`
         );
-        expect(requestPromiseProx.args[0][0].body.input_data.user_agent_id).to.be.eq(fakeUserAgentId);
+        expect(rpMockup.args[0][0].body.input_data.user_agent_id).to.be.eq(
+          fakeUserAgentId
+        );
         done();
       });
   });
@@ -250,21 +244,21 @@ describe("Fetch recommendation API", () => {
   it("Check that fetched itemProposal are the same as sent by the recommender", function(
     done
   ) {
-    // We replace the request-promise-native in the plugin
-    plugin._transport = require("request-promise-native");
+    const plugin = new MyDummyHandlebarsAdRenderer();
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     // We try a call to the Gateway
-    plugin
+    (runner.plugin as MyDummyHandlebarsAdRenderer)
       .fetchRecommendations(fakeInstanceContext, fakeUserAgentId)
       .then((proposals: Array<core.ItemProposal>) => {
         expect(proposals[0]).to.deep.eq(
-          fakeRecommenderResponseJSON.data.proposals[0]
+          fakeRecommenderResponse.data.proposals[0]
         );
         expect(proposals[1]).to.deep.eq(
-          fakeRecommenderResponseJSON.data.proposals[1]
+          fakeRecommenderResponse.data.proposals[1]
         );
         expect(proposals[2]).to.deep.eq(
-          fakeRecommenderResponseJSON.data.proposals[2]
+          fakeRecommenderResponse.data.proposals[2]
         );
         done();
       });

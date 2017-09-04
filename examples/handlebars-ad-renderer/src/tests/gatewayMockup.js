@@ -140,36 +140,6 @@ app.get('/v1/ad_layouts/:adLayoutId/versions/:versionId', function (req, res) {
   res.send(json);
 });
 
-// app.get('/v1/data_file/data?:dataFilePath', function (req, res) {
-//   const content = `
-// <div class="header">
-//    <h1>{{title}}</h1>
-// </div>
-// <div class="body">
-//    <p>{{ad_layout_id}}</p>
-// </div>
-// <div class="footer">
-//     <div>
-//         <a href="http://twitter.com/{{recommender_id}}">{{recommender_id}}</a>
-//     </div>
-
-//     {{#each recommendations}}
-//     <div>    
-//         <div class="price">{{formatPrice 13 "##.000"}}</div>
-//         <div>{{> encodeRecoClickUrl }}</div>
-//     </div>
-//     {{/each}}
-//     <div>{{toJson restrictions}}</div>
-//     <ul>
-//       {{#each tags}}
-//         <li>{{this}}</li>
-//       {{/each}}
-//     </ul>
-// </div> 
-//   `;
-//   res.send(content);
-// });
-
 app.get('/v1/data_file/data?:dataFilePath', function (req, res) {
   const content = `
 <!doctype html>

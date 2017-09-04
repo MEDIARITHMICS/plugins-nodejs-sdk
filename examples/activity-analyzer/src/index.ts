@@ -1,35 +1,29 @@
-import {
-  core
-} from '@mediarithmics/plugins-nodejs-sdk';
+import { core } from "@mediarithmics/plugins-nodejs-sdk";
 
-
-class MyActivityAnalyzerPlugin extends core.ActivityAnalyzerPlugin {
-
-  protected onActivityAnalysis (
+export class MyActivityAnalyzerPlugin extends core.ActivityAnalyzerPlugin {
+  protected onActivityAnalysis(
     request: core.ActivityAnalyzerRequest,
     instanceContext: core.ActivityAnalyzerBaseInstanceContext
-  ) {
+  ): Promise<core.ActivityAnalyzerPluginResponse> {
     const updatedActivity = request.activity;
     const response: core.ActivityAnalyzerPluginResponse = {
       status: "ok",
       data: null
     };
-  
+
     // We add a field on the processed activitynégative
     updatedActivity.processed_by = `${instanceContext.activityAnalyzer
       .group_id}:${instanceContext.activityAnalyzer
       .artifact_id} v.${instanceContext.activityAnalyzer
       .visit_analyzer_plugin_id}`;
     response.data = updatedActivity;
-  
-    return response;
-  };
 
+    return Promise.resolve(response);
+  }
 }
 
 // All the magic is here
 const plugin = new MyActivityAnalyzerPlugin();
-
 const runner = new core.ProductionPluginRunner(plugin);
 
 runner.start();

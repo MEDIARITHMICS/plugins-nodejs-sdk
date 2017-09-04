@@ -2,7 +2,7 @@ export type UserIdentifierInfoType = 'USER_POINT' | 'USER_ACCOUNT' | 'USER_EMAIL
 
 export type UUID = string;
 export interface UserAgentId {
-    value: String;
+    value: string;
 }
 
 export type VectorId = string;

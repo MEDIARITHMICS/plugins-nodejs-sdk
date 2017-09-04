@@ -1,4 +1,5 @@
 import * as express from "express";
+import * as request from "request";
 import * as rp from "request-promise-native";
 import * as winston from "winston";
 import * as bodyParser from "body-parser";
@@ -86,8 +87,26 @@ export abstract class BasePlugin {
     );
   }
 
-  requestGatewayHelper(method: string, uri: string, body?: any) {
-    const options = {
+  fetchDataFile(uri: string): Promise<Buffer> {
+    return this.requestGatewayHelper(
+      "GET",
+      `${this.outboundPlatformUrl}/v1/data_file/data`,
+      undefined,
+      { uri: uri },
+      false,
+      true
+    );
+  }
+
+  async requestGatewayHelper(
+    method: string,
+    uri: string,
+    body?: any,
+    qs?: any,
+    isJson?: boolean,
+    isBinary?: boolean
+  ) {
+    let options = {
       method: method,
       uri: uri,
       json: true,
@@ -98,9 +117,52 @@ export abstract class BasePlugin {
       }
     };
 
-    return this._transport(
-      body ? Object.assign({ body: body }, options) : options
-    ).catch(function(e: any) {
+    // Set the body if provided
+    options = body
+      ? Object.assign(
+          {
+            body: body
+          },
+          options
+        )
+      : options;
+
+    // Set the querystring if provided
+    options = qs
+      ? Object.assign(
+          {
+            qs: qs
+          },
+          options
+        )
+      : options;
+
+    // Set the json flag if provided
+    options =
+      isJson !== undefined
+        ? Object.assign(
+            {
+              json: isJson
+            },
+            options
+          )
+        : options;
+
+    // Set the encoding to null if it is binary
+    options = isBinary
+      ? Object.assign(
+          {
+            encoding: null
+          },
+          options
+        )
+      : options;
+
+    this.logger.silly(`Doing gateway call with ${JSON.stringify(options)}`);
+
+    try {
+      return await this._transport(options);
+    } catch (e) {
       if (e.name === "StatusCodeError") {
         throw new Error(
           `Error while calling ${method} '${uri}' with the request body '${body ||
@@ -110,9 +172,12 @@ export abstract class BasePlugin {
           )}`
         );
       } else {
+        this.logger.error(
+          `Got an issue while doind a Gateway call: ${e.message} - ${e.stack}`
+        );
         throw e;
       }
-    });
+    }
   }
 
   // Plugin Init implementation
@@ -142,15 +207,14 @@ export abstract class BasePlugin {
   }
 
   // Method to start the plugin
-  start() {
-    
-  }
-  
+  start() {}
+
   constructor() {
     this.app = express();
     this.app.use(bodyParser.json({ type: "*/*" }));
     this.logger = new winston.Logger({
-      transports: [new winston.transports.Console()]
+      transports: [new winston.transports.Console()],
+      level: "silly"
     });
 
     this.initInitRoute();

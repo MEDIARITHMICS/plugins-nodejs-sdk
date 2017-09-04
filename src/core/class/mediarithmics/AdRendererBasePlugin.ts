@@ -27,36 +27,38 @@ export abstract class AdRendererBasePlugin<
   displayContextHeader = "x-mics-display-context";
 
   // Helper to fetch the creative resource with caching
-  fetchCreative(creativeId: string): Promise<Creative> {
-    return super
-      .requestGatewayHelper(
-        "GET",
-        `${this.outboundPlatformUrl}/v1/creatives/${creativeId}`
-      )
-      .then((result: CreativeResponse) => {
-        this.logger.debug(
-          `Fetched Creative: ${creativeId} - ${JSON.stringify(result.data)}`
-        );
-        return result.data;
-      });
+  async fetchCreative(creativeId: string): Promise<Creative> {
+    const creativeResponse = await super.requestGatewayHelper(
+      "GET",
+      `${this.outboundPlatformUrl}/v1/creatives/${creativeId}`
+    );
+
+    this.logger.debug(
+      `Fetched Creative: ${creativeId} - ${JSON.stringify(
+        creativeResponse.data
+      )}`
+    );
+
+    return creativeResponse.data;
   }
 
   // Helper to fetch the creative properties resource with caching
-  fetchCreativeProperties(creativeId: string): Promise<CreativeProperty[]> {
-    return super
-      .requestGatewayHelper(
-        "GET",
-        `${this
-          .outboundPlatformUrl}/v1/creatives/${creativeId}/renderer_properties`
-      )
-      .then((result: CreativePropertyResponse) => {
-        this.logger.debug(
-          `Fetched Creative Properties: ${creativeId} - ${JSON.stringify(
-            result.data
-          )}`
-        );
-        return result.data;
-      });
+  async fetchCreativeProperties(
+    creativeId: string
+  ): Promise<CreativeProperty[]> {
+    const creativePropertyResponse = await super.requestGatewayHelper(
+      "GET",
+      `${this
+        .outboundPlatformUrl}/v1/creatives/${creativeId}/renderer_properties`
+    );
+
+    this.logger.debug(
+      `Fetched Creative Properties: ${creativeId} - ${JSON.stringify(
+        creativePropertyResponse.data
+      )}`
+    );
+    
+    return creativePropertyResponse.data;
   }
 
   getEncodedClickUrl(redirectUrls: string[]): string {

@@ -22,49 +22,44 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
   instanceContext: Promise<ActivityAnalyzerBaseInstanceContext>;
 
   // Helper to fetch the activity analyzer resource with caching
-  fetchActivityAnalyzer(activityAnalyzerId: string): Promise<ActivityAnalyzer> {
-    return super
-      .requestGatewayHelper(
-        "GET",
-        `${this.outboundPlatformUrl}/v1/activity_analyzers/${activityAnalyzerId}`
-      )
-      .then((result: ActivityAnalyzerResponse) => {
-        this.logger.debug(
-          `Fetched Activity Analyzer: ${activityAnalyzerId} - ${JSON.stringify(
-            result.data
-          )}`
-        );
-        return result.data;
-      });
+  async fetchActivityAnalyzer(
+    activityAnalyzerId: string
+  ): Promise<ActivityAnalyzer> {
+    const activityAnalyzerResponse = await super.requestGatewayHelper(
+      "GET",
+      `${this.outboundPlatformUrl}/v1/activity_analyzers/${activityAnalyzerId}`
+    );
+    this.logger.debug(
+      `Fetched Activity Analyzer: ${activityAnalyzerId} - ${JSON.stringify(
+        activityAnalyzerResponse.data
+      )}`
+    );
+    return activityAnalyzerResponse.data;
   }
 
   // Helper to fetch the activity analyzer resource with caching
-  fetchActivityAnalyzerProperties(
+  async fetchActivityAnalyzerProperties(
     activityAnalyzerId: string
   ): Promise<ActivityAnalyzerProperty[]> {
-    return super
-      .requestGatewayHelper(
-        "GET",
-        `${this
-          .outboundPlatformUrl}/v1/activity_analyzers/${activityAnalyzerId}/properties`
-      )
-      .then((result: ActivityAnalyzerPropertyResponse) => {
-        this.logger.debug(
-          `Fetched Creative Properties: ${activityAnalyzerId} - ${JSON.stringify(
-            result.data
-          )}`
-        );
-        return result.data;
-      });
+    const activityAnalyzerPropertyResponse = await super.requestGatewayHelper(
+      "GET",
+      `${this
+        .outboundPlatformUrl}/v1/activity_analyzers/${activityAnalyzerId}/properties`
+    );
+    this.logger.debug(
+      `Fetched Creative Properties: ${activityAnalyzerId} - ${JSON.stringify(
+        activityAnalyzerPropertyResponse.data
+      )}`
+    );
+    return activityAnalyzerPropertyResponse.data;
   }
 
   // Method to build an instance context
   // To be overriden to get a cutom behavior
   // This is a default provided implementation
-  protected async buildInstanceContext (
+  protected async buildInstanceContext(
     activityAnalyzerId: string
   ): Promise<ActivityAnalyzerBaseInstanceContext> {
-
     const activityAnalyzerP = this.fetchActivityAnalyzer(activityAnalyzerId);
     const activityAnalyzerPropsP = this.fetchActivityAnalyzerProperties(
       activityAnalyzerId
@@ -84,15 +79,14 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
     } as ActivityAnalyzerBaseInstanceContext;
 
     return context;
-
-  };
+  }
 
   // Method to process an Activity Analysis
   // To be overriden by the Plugin to get a custom behavior
-  protected abstract onActivityAnalysis (
+  protected abstract onActivityAnalysis(
     request: ActivityAnalyzerRequest,
     instanceContext: ActivityAnalyzerBaseInstanceContext
-  ): ActivityAnalyzerPluginResponse;
+  ): Promise<ActivityAnalyzerPluginResponse>;
 
   private initActivityAnalysis(): void {
     this.app.post(
@@ -102,7 +96,10 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
           const msg = {
             error: "Missing request body"
           };
-          this.logger.error("POST /v1/activity_analysis : %s", JSON.stringify(msg));
+          this.logger.error(
+            "POST /v1/activity_analysis : %s",
+            JSON.stringify(msg)
+          );
           res.status(500).json(msg);
         } else {
           this.logger.debug(
@@ -128,11 +125,13 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
           cache
             .get(activityAnalyzerRequest.activity_analyzer_id)
             .then((instanceContext: ActivityAnalyzerBaseInstanceContext) => {
-              const activityAnalyzerResponse = this.onActivityAnalysis(
+              return this.onActivityAnalysis(
                 activityAnalyzerRequest,
                 instanceContext as ActivityAnalyzerBaseInstanceContext
-              );
-              res.status(200).send(JSON.stringify(activityAnalyzerResponse));
+              ).then(activityAnalyzerResponse => {
+                this.logger.debug(`Returning: ${JSON.stringify(activityAnalyzerResponse)}`)
+                res.status(200).send(JSON.stringify(activityAnalyzerResponse));
+              });
             })
             .catch((error: Error) => {
               this.logger.error(
@@ -144,12 +143,11 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
       }
     );
   }
-  
+
   constructor() {
     super();
 
     // We init the specific route to listen for activity analysis requests
     this.initActivityAnalysis();
-
   }
 }

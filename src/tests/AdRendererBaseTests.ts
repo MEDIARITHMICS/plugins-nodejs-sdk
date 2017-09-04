@@ -7,217 +7,150 @@ import * as mockery from "mockery";
 import * as rp from "request-promise-native";
 
 describe("Fetch creative API", () => {
-    let plugin: core.AdRendererBasePlugin<core.AdRendererBaseInstanceContext>;
-    let requestPromiseProx: sinon.SinonStub = sinon.stub().returns("Fake answer");
-  
-    beforeEach(function(done) {
-      requestPromiseProx = sinon.stub().returns(
-        new Promise((resolve, reject) => {
-          resolve("Yolo");
-        })
+  let requestPromiseProx: sinon.SinonStub = sinon
+    .stub()
+    .returns(Promise.resolve("Yolo"));
+
+  class MyFakeAdRenderer extends core.AdRendererBasePlugin<
+    core.AdRendererBaseInstanceContext
+  > {
+    protected async onAdContents(
+      request: core.AdRendererRequest,
+      instanceContext: core.AdRendererBaseInstanceContext
+    ) {
+      const result: core.AdRendererPluginResponse = {
+        html: `All your HTML is belong to us.`
+      };
+
+      return Promise.resolve(result);
+    }
+  }
+
+  //All the magic is here
+  const plugin = new MyFakeAdRenderer();
+  const runner = new core.TestingPluginRunner(plugin, requestPromiseProx);
+
+  it("Check that creativeId is passed correctly in fetchCreative", function(
+    done
+  ) {
+    const fakeCreativeId = "422";
+
+    // We try a call to the Gateway
+    plugin.fetchCreative(fakeCreativeId).then(() => {
+      expect(requestPromiseProx.args[0][0].uri).to.be.eq(
+        `${plugin.outboundPlatformUrl}/v1/creatives/${fakeCreativeId}`
       );
-  
-      plugin = new core.AdRendererBasePlugin<core.AdRendererBaseInstanceContext>();
-  
-      mockery.enable({
-        warnOnReplace: false,
-        warnOnUnregistered: false,
-        useCleanCache: true
-      });
-  
-      mockery.registerMock("request-promise-native", function(
-        options: rp.Options
-      ) {
-        return Promise.resolve(requestPromiseProx(options));
-      });
-  
       done();
-    });
-  
-    afterEach(function(done) {
-      plugin.server.close();
-      mockery.disable();
-      mockery.deregisterAll();
-      done();
-    });
-  
-    it("Check that creativeId is passed correctly in fetchCreative", function(
-      done
-    ) {
-      // We replace the request-promise-native in the plugin
-      plugin._transport = require("request-promise-native");
-  
-      const fakeCreativeId = "422";
-  
-      // We try a call to the Gateway
-      plugin.fetchCreative(fakeCreativeId).then(() => {
-        expect(requestPromiseProx.args[0][0].uri).to.be.eq(
-          `${plugin.outboundPlatformUrl}/v1/creatives/${fakeCreativeId}`
-        );
-        done();
-      });
-    });
-  
-    it("Check that fakeCreativeId is passed correctly in fetchCreativeProperties", function(
-      done
-    ) {
-      // We replace the request-promise-native in the plugin
-      plugin._transport = require("request-promise-native");
-  
-      const fakeCreativeId = "4255";
-  
-      // We try a call to the Gateway
-      plugin.fetchCreativeProperties(fakeCreativeId).then(() => {
-        expect(requestPromiseProx.args[0][0].uri).to.be.eq(
-          `${plugin.outboundPlatformUrl}/v1/creatives/${fakeCreativeId}/renderer_properties`
-        );
-        done();
-      });
     });
   });
-  
-  describe("Ad Contents API test", function() {
-    let plugin: core.AdRendererBasePlugin<core.AdRendererBaseInstanceContext>;
-    let requestPromiseProx: sinon.SinonStub = sinon.stub().returns("Fake answer");
-  
-    beforeEach(function(done) {
-      requestPromiseProx = sinon.stub().returns(
-        new Promise((resolve, reject) => {
-          resolve("Yolo");
-        })
+
+  it("Check that fakeCreativeId is passed correctly in fetchCreativeProperties", function(
+    done
+  ) {
+    const fakeCreativeId = "4255";
+
+    // We try a call to the Gateway
+    plugin.fetchCreativeProperties(fakeCreativeId).then(() => {
+      expect(requestPromiseProx.args[1][0].uri).to.be.eq(
+        `${plugin.outboundPlatformUrl}/v1/creatives/${fakeCreativeId}/renderer_properties`
       );
-  
-      plugin = new core.AdRendererBasePlugin<core.AdRendererBaseInstanceContext>();
-  
-      mockery.enable({
-        warnOnReplace: false,
-        warnOnUnregistered: false,
-        useCleanCache: true
-      });
-  
-      mockery.registerMock("request-promise-native", function(
-        options: rp.Options
-      ) {
-        return Promise.resolve(requestPromiseProx(options));
-      });
-  
       done();
     });
-  
-    afterEach(function(done) {
-      plugin.server.close();
-      mockery.disable();
-      mockery.deregisterAll();
-      done();
-    });
-  
-    it("Check that the plugin is not OK if there is no AdContentsHandler", function(
-      done
-    ) {
-      // All the magic is here
-  
-      plugin.start();
-  
-      const requestBody = {
-          hello: "world"
-      };
-  
-      request(plugin.app)
-        .post("/v1/ad_contents")
-        .send(requestBody)
-        .end(function(err, res) {
-          expect(res.status).to.equal(500);
-          done();
-        });
-    });
-  
-    it("Check that the plugin is giving good results with a simple adContents handler", function(
-      done
-    ) {
-      requestPromiseProx = sinon.stub();
-      requestPromiseProx.onCall(0).returns(
-        new Promise((resolve, reject) => {
-          const pluginInfo: core.CreativeResponse = {
-            status: "ok",
-            count: 1,
-            data: {
-                type: "DISPLAY_AD",
-                id: "7168",
-                organisation_id: "1126",
-                name: "Toto",
-                technical_name: null,
-                archived: false,
-                editor_version_id: "5",
-                editor_version_value: "1.0.0",
-                editor_group_id: "com.mediarithmics.creative.display",
-                editor_artifact_id: "default-editor",
-                editor_plugin_id: "5",
-                renderer_version_id: "1054",
-                renderer_version_value: "1.0.0",
-                renderer_group_id: "com.trololo.creative.display",
-                renderer_artifact_id: "multi-advertisers-display-ad-renderer",
-                renderer_plugin_id: "1041",
-                creation_date: 1492785056278,
-                subtype: "BANNER",
-                format: "300x250",
-                published_version: 1,
-                creative_kit: null,
-                ad_layout: null,
-                locale: null,
-                destination_domain: "estcequecestbientotlapero.fr",
-                audit_status: "NOT_AUDITED",
-                available_user_audit_actions: [
-                  "START_AUDIT"
-                ]
-            }
-          };
-          resolve(pluginInfo);
-        })
-      );
-      requestPromiseProx.onCall(1).returns(
-        new Promise((resolve, reject) => {
-          const pluginInfo: core.CreativePropertyResponse = {
-            status: "ok",
-            count: 45,
-            data: [{
+  });
+});
+
+describe("Ad Contents API test", function() {
+
+  // Fake AdRenderer with dummy processing
+  class MyFakeAdRenderer2 extends core.AdRendererBasePlugin<
+  core.AdRendererBaseInstanceContext
+> {
+  protected async onAdContents(
+    request: core.AdRendererRequest,
+    instanceContext: core.AdRendererBaseInstanceContext
+  ) {
+    const response: core.AdRendererPluginResponse = {
+      html: request.call_id
+    };
+    return Promise.resolve(response);
+  }
+}
+
+const plugin = new MyFakeAdRenderer2();
+
+  it("Check that the plugin is giving good results with a simple adContents handler", function(
+    done
+  ) {
+    const rpMockup = sinon.stub();
+    rpMockup.onCall(0).returns(
+      new Promise((resolve, reject) => {
+        const pluginInfo: core.CreativeResponse = {
+          status: "ok",
+          count: 1,
+          data: {
+            type: "DISPLAY_AD",
+            id: "7168",
+            organisation_id: "1126",
+            name: "Toto",
+            technical_name: null,
+            archived: false,
+            editor_version_id: "5",
+            editor_version_value: "1.0.0",
+            editor_group_id: "com.mediarithmics.creative.display",
+            editor_artifact_id: "default-editor",
+            editor_plugin_id: "5",
+            renderer_version_id: "1054",
+            renderer_version_value: "1.0.0",
+            renderer_group_id: "com.trololo.creative.display",
+            renderer_artifact_id: "multi-advertisers-display-ad-renderer",
+            renderer_plugin_id: "1041",
+            creation_date: 1492785056278,
+            subtype: "BANNER",
+            format: "300x250",
+            published_version: 1,
+            creative_kit: null,
+            ad_layout: null,
+            locale: null,
+            destination_domain: "estcequecestbientotlapero.fr",
+            audit_status: "NOT_AUDITED",
+            available_user_audit_actions: ["START_AUDIT"]
+          }
+        };
+        resolve(pluginInfo);
+      })
+    );
+    rpMockup.onCall(1).returns(
+      new Promise((resolve, reject) => {
+        const pluginInfo: core.CreativePropertyResponse = {
+          status: "ok",
+          count: 45,
+          data: [
+            {
               technical_name: "hello_world",
               value: {
-               value: "Yay" 
+                value: "Yay"
               },
               property_type: "STRING",
               origin: "PLUGIN",
               writable: true,
               deletable: false
-            }]
-          };
-          resolve(pluginInfo);
-        })
-      );
-  
-      mockery.registerMock("request-promise-native", function(
-        options: rp.Options
-      ) {
-        return Promise.resolve(requestPromiseProx(options));
-      });
-  
-      plugin._transport = require("request-promise-native");
-  
-      plugin.setAdContentsHandler((request, instanceContext) => {
-        const response: core.AdRendererPluginResponse = {
-          html: request.call_id
+            }
+          ]
         };
-        return Promise.resolve(response);
+        resolve(pluginInfo);
+      })
+    );
+
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);        
+
+    request(runner.plugin.app)
+      .post("/v1/init")
+      .send({ authentication_token: "Manny", worker_id: "Calavera" })
+      .end((err, res) => {
+        expect(res.status).to.equal(200);
       });
-      plugin.start();
-  
-      request(plugin.app)
-        .post("/v1/init")
-        .send({ authentication_token: "Manny", worker_id: "Calavera" })
-        .end((err, res) => {
-          expect(res.status).to.equal(200);
-        });
-  
-      const requestBody = JSON.parse(`{
+
+    const requestBody = JSON.parse(`{
         "call_id":"auc:goo:58346725000689de0a16ac4f120ecc41-0",
         "context":"LIVE",
         "creative_id":"2757",
@@ -234,15 +167,15 @@ describe("Fetch creative API", () => {
         "longitude":null,
         "restrictions":{"animation_max_duration":25}
     }`);
-  
-      request(plugin.app)
-        .post("/v1/ad_contents")
-        .send(requestBody)
-        .end(function(err, res) {
-          expect(res.status).to.equal(200);
-          expect(res.text).to.be.eq(requestBody.call_id);
-        
-          done();
-        });
-    });
+
+    request(runner.plugin.app)
+      .post("/v1/ad_contents")
+      .send(requestBody)
+      .end(function(err, res) {
+        expect(res.status).to.equal(200);
+        expect(res.text).to.be.eq(requestBody.call_id);
+
+        done();
+      });
   });
+});

@@ -4,6 +4,7 @@ export * from "./interfaces/mediarithmics/api/ValueInterface";
 export * from "./interfaces/mediarithmics/api/UserCampaignInterface";
 export * from "./interfaces/mediarithmics/api/CreativeInterface";
 export * from "./interfaces/mediarithmics/api/CreativePropertyInterface";
+export * from "./interfaces/mediarithmics/api/AdLayoutVersionInterface";
 export * from "./interfaces/mediarithmics/api/RecommenderInterface";
 
 export * from "./interfaces/mediarithmics/plugin/InstanceContextInterface";
@@ -15,13 +16,15 @@ export * from "./interfaces/mediarithmics/api/AdRendererPluginResponseInterface"
 
 export * from "./class/mediarithmics/AdRendererBasePlugin";
 export * from "./class/mediarithmics/AdRendererRecoTemplatePlugin";
+export * from "./interfaces/mediarithmics/plugin/TemplatingEngineInterface"
 
 // Activity Analyzer
 export * from "./interfaces/mediarithmics/api/ActivityAnalyzerRequestInterface";
 export * from "./interfaces/mediarithmics/api/ActivityAnalyzerPluginResponseInterface";
 export * from "./interfaces/mediarithmics/api/ActivityAnalyzerInterface";
 export * from "./interfaces/mediarithmics/api/ActivityAnalyzerPropertyInterface";
-export * from "./class/mediarithmics/ActivityAnalyzerPlugin";
+export * from "./class/mediarithmics/ActivityAnalyzerBasePlugin";
 
 // Plugin Runner
 export * from "./class/mediarithmics/ProductionPluginRunner";
+export * from "./class/mediarithmics/TestingPluginRunner";
