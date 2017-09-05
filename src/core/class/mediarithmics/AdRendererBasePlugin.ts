@@ -1,6 +1,5 @@
 import * as express from "express";
 import * as _ from "lodash";
-import * as cache from "memory-cache";
 
 import { AdRendererRequest } from "../../interfaces/mediarithmics/api/AdRendererRequestInterface";
 import {
@@ -57,7 +56,7 @@ export abstract class AdRendererBasePlugin<
         creativePropertyResponse.data
       )}`
     );
-    
+
     return creativePropertyResponse.data;
   }
 
@@ -71,7 +70,7 @@ export abstract class AdRendererBasePlugin<
 
   // Method to build an instance context
   // To be overriden to get a custom behavior
-  protected async buildInstanceContext(creativeId: string): Promise<T> {
+  protected async instanceContextBuilder(creativeId: string): Promise<T> {
     console.warn(`You are using the default InstanceContextBuilder of AdRendererBasePlugin
     Is it really what you want to do?
     `);
@@ -123,18 +122,18 @@ export abstract class AdRendererBasePlugin<
           }
 
           if (
-            !cache.get(adRendererRequest.creative_id) ||
+            !this.pluginCache.get(adRendererRequest.creative_id) ||
             adRendererRequest.context === "PREVIEW" ||
             adRendererRequest.context === "STAGE"
           ) {
-            cache.put(
+            this.pluginCache.put(
               adRendererRequest.creative_id,
-              this.buildInstanceContext(adRendererRequest.creative_id),
+              this.instanceContextBuilder(adRendererRequest.creative_id),
               this.INSTANCE_CONTEXT_CACHE_EXPIRATION
             );
           }
 
-          cache
+          this.pluginCache
             .get(adRendererRequest.creative_id)
             .then((instanceContext: T) =>
               this.onAdContents(adRendererRequest, instanceContext as T)

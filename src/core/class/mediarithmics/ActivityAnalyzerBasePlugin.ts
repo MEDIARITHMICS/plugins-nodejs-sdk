@@ -57,7 +57,7 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
   // Method to build an instance context
   // To be overriden to get a cutom behavior
   // This is a default provided implementation
-  protected async buildInstanceContext(
+  protected async instanceContextBuilder(
     activityAnalyzerId: string
   ): Promise<ActivityAnalyzerBaseInstanceContext> {
     const activityAnalyzerP = this.fetchActivityAnalyzer(activityAnalyzerId);
@@ -112,17 +112,17 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
             throw new Error("No Activity Analyzer listener registered!");
           }
 
-          if (!cache.get(activityAnalyzerRequest.activity_analyzer_id)) {
-            cache.put(
+          if (!this.pluginCache.get(activityAnalyzerRequest.activity_analyzer_id)) {
+            this.pluginCache.put(
               activityAnalyzerRequest.activity_analyzer_id,
-              this.buildInstanceContext(
+              this.instanceContextBuilder(
                 activityAnalyzerRequest.activity_analyzer_id
               ),
               this.INSTANCE_CONTEXT_CACHE_EXPIRATION
             );
           }
 
-          cache
+          this.pluginCache
             .get(activityAnalyzerRequest.activity_analyzer_id)
             .then((instanceContext: ActivityAnalyzerBaseInstanceContext) => {
               return this.onActivityAnalysis(

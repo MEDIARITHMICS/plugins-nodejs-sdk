@@ -1,12 +1,12 @@
 import { core } from "@mediarithmics/plugins-nodejs-sdk";
 
-class MySimpleAdRenderer extends core.AdRendererBasePlugin<
+export class MySimpleAdRenderer extends core.AdRendererBasePlugin<
   core.AdRendererBaseInstanceContext
 > {
   protected async onAdContents(
     request: core.AdRendererRequest,
     instanceContext: core.AdRendererBaseInstanceContext
-  ) {
+  ): Promise<core.AdRendererPluginResponse> {
     const result: core.AdRendererPluginResponse = {
       html: `<html>
       <body>
@@ -30,7 +30,6 @@ class MySimpleAdRenderer extends core.AdRendererBasePlugin<
 
 //All the magic is here
 const plugin = new MySimpleAdRenderer();
-
 const runner = new core.ProductionPluginRunner(plugin);
 
 runner.start();

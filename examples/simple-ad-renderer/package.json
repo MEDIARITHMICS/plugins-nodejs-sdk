@@ -4,7 +4,7 @@
   "description": "",
   "main": "build/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha -r ts-node/register src/tests/*.ts",
     "prepublishOnly": "tsc -p ./ --outDir build/"
   },
   "author": "",
@@ -17,6 +17,11 @@
     "@mediarithmics/plugins-nodejs-sdk": "^0.1.0"
   },
   "devDependencies": {
+    "@types/chai": "^4.0.4",
+    "@types/request-promise-native": "^1.0.6",
+    "chai": "^4.1.2",
+    "request": "^2.81.0",
+    "request-promise-native": "^1.0.4",
     "typescript": "^2.4.2"
   }
 }

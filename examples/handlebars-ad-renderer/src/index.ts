@@ -6,10 +6,9 @@ export class MyHandlebarsAdRenderer extends core.AdRendererRecoTemplatePlugin {
     adRenderRequest: core.AdRendererRequest,
     instanceContext: core.AdRendererRecoTemplateInstanceContext
   ): Promise<core.AdRendererPluginResponse> {
-
     const recommendations: Array<
       core.ItemProposal
-    > = await plugin.fetchRecommendations(
+    > = await this.fetchRecommendations(
       instanceContext,
       adRenderRequest.user_agent_id.value
     );
@@ -28,12 +27,20 @@ export class MyHandlebarsAdRenderer extends core.AdRendererRecoTemplatePlugin {
     };
 
     this.logger.debug(
-      `Loading template with properties: ${JSON.stringify(properties, null, 4)}`
+      `CallId: ${adRenderRequest.call_id} - Loading template with properties: ${JSON.stringify(
+        properties,
+        null,
+        4
+      )}`
     );
 
-    this.logger.debug(`Loading the rootContext into the compiledTemplate`);
+    this.logger.debug(
+      `CallId: ${adRenderRequest.call_id} - Injecting the rootContext into the compiledTemplate`
+    );
     const html = instanceContext.compiled_template(properties); //fill the properties
-    this.logger.debug(`We got from handlebar: ${html}`);
+    this.logger.debug(
+      `CallId: ${adRenderRequest.call_id} - HTML returned by Handlebars: ${html}`
+    );
 
     return {
       html: html,
@@ -45,13 +52,11 @@ export class MyHandlebarsAdRenderer extends core.AdRendererRecoTemplatePlugin {
 
   constructor() {
     super();
-
     this.engineBuilder = new extra.HandlebarsEngine();
   }
 }
 
 const plugin = new MyHandlebarsAdRenderer();
-
 const runner = new core.ProductionPluginRunner(plugin);
 
 runner.start();

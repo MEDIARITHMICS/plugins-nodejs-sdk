@@ -4,12 +4,14 @@ import * as rp from "request-promise-native";
 import * as winston from "winston";
 import * as bodyParser from "body-parser";
 import { Server } from "http";
+import * as cache from "memory-cache";
 
 // Helper request function
 
 export abstract class BasePlugin {
   server: Server;
 
+  pluginCache: any;
   gatewayHost: string = process.env.GATEWAY_HOST || "plugin-gateway.platform";
   gatewayPort: number = parseInt(process.env.GATEWAY_PORT) || 8080;
 
@@ -27,8 +29,11 @@ export abstract class BasePlugin {
   // This method can be overridden by any subclass
   protected onLogLevelUpdate(req: express.Request, res: express.Response) {
     if (req.body && req.body.level) {
+      // Lowering case
+      const logLevel = req.body.level.toLowerCase();
+
       this.logger.info("Setting log level to " + req.body.level);
-      this.logger.level = req.body.level;
+      this.logger.level = logLevel;
       res.status(200).end();
     } else {
       this.logger.error(
@@ -51,7 +56,7 @@ export abstract class BasePlugin {
   // Log level update implementation
   // This method can be overridden by any subclass
   protected onLogLevelRequest(req: express.Request, res: express.Response) {
-    res.send({ level: this.logger.level });
+    res.send({ level: this.logger.level.toUpperCase() });
   }
 
   private initLogLevelGetRoute() {
@@ -216,6 +221,9 @@ export abstract class BasePlugin {
       transports: [new winston.transports.Console()],
       level: "silly"
     });
+
+    this.pluginCache = cache;
+    this.pluginCache.clear();
 
     this.initInitRoute();
     this.initStatusRoute();

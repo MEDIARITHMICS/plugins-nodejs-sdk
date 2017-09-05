@@ -23,6 +23,7 @@ export abstract class AdRendererRecoTemplatePlugin extends AdRendererBasePlugin<
   async fetchTemplateContent(templatePath: string): Promise<Buffer> {
     const templateContent = await super.fetchDataFile(templatePath);
 
+    this.logger.debug(`Fetched template : ${templateContent}`);
     return templateContent;
   }
 
@@ -133,7 +134,7 @@ Error: ${e.message} - ${e.stack}`);
  */
   protected engineBuilder: TemplatingEngine;
 
-  protected async buildInstanceContext(creativeId: string) {
+  protected async instanceContextBuilder(creativeId: string) {
     console.warn(`You are using the default InstanceContextBuilder of AdRendererRecoTemplatePlugin
     Is it really what you want to do?
     `);

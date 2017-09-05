@@ -61,7 +61,7 @@ export interface UserActivityLocation {
 export interface UserActivityEvent {
     $ts: number;
     $event_name: string;
-    $properties: UserActivityEventProperty[];
+    $properties: UserActivityEventProperty;
 }
 
 export interface UserActivityEventProperty {
