@@ -80,12 +80,12 @@ describe("Plugin log level API tests", function() {
       });
   });
 
-  it("Should return warn when getting Log Level", function(done) {
+  it("Should return WARN when getting Log Level", function(done) {
     const plugin = new MyFakePlugin();    
     const runner = new core.TestingPluginRunner(plugin);
 
     const requestBody = {
-      level: "warn"
+      level: "WARN"
     };
 
     request(runner.plugin.app)
@@ -99,7 +99,7 @@ describe("Plugin log level API tests", function() {
       .get("/v1/log_level")
       .end(function(err, res) {
         expect(res.status).to.equal(200);
-        expect(res.body.level).to.equal("warn");
+        expect(res.body.level).to.equal(requestBody.level);
         done();
       });
   });
