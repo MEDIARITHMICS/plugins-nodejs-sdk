@@ -1,0 +1,93 @@
+import { UserActivity, UserAgentInfo } from "../../../../index";
+
+export enum AdSlotVisibility {
+  ABOVE_THE_FOLD,
+  MIDDLE_OF_THE_PAGE,
+  BELOW_THE_FOLD,
+  UNKNOWN
+}
+
+export enum BidMediaType {
+  WEB,
+  MOBILE_APP,
+  VIDEO
+}
+
+export enum BidObjectiveType {
+  CPC,
+  CPA,
+  CTR,
+  CPV
+}
+
+export enum BidOptimizerModelType {
+  CATEGORICAL_MODEL,
+  REGRESSION_MODEL,
+  DYNAMIC_ALLOCATION
+}
+
+export interface BidOptimizerRequest {
+    bid_info: BidInfo;
+    campaign_info: CampaignInfo;
+    user_info: UserInfo;
+    user_campaign_data_bag: string;
+}
+
+export interface BidInfo {
+  media_type: BidMediaType;
+  ad_ex_id: string;
+  display_network_id: string;
+  media_id: string;
+  content_id: string;
+  geo_info?: GeoLocationInfo[];
+  placements?: PlacementInfo[];
+}
+
+export interface SaleCondition {
+  id: string;
+  deal_id?: string;
+  floor_price: number;
+}
+
+export interface PlacementInfo {
+  placement_id: string;
+  format: string;
+  visibility: AdSlotVisibility;
+  viewability: Array<string>;
+  sales_conditions: Array<SaleCondition>;
+  creative_id: string;
+}
+
+export interface CampaignInfo {
+  organisation_Id: string;
+  campaign_id: string;
+  ad_group_id: string;
+  currency: string;
+  date: string;
+  max_bid_price_CPM: number;
+  bid_optimizer_id: string;
+  objective_type: BidObjectiveType;
+  objective_value: number;
+  impression_count?: number;
+  average_win_rate?: number;
+  average_bid_pice_CPM?: number;
+  average_winning_price_CPM?: number;
+  average_delivery_price_CPM?: number;
+}
+
+export interface UserInfo {
+  global_first_view?: Boolean;
+  media_first_view?: Boolean;
+  user_agent_info?: UserAgentInfo;
+}
+
+export interface GeoLocationInfo {
+  geo_name_id: number;
+  iso_country: string;
+  admin1?: string;
+  admin2?: string;
+  postal_code?: string;
+  point_name?: string;
+  latitude: number;
+  longitude: number;
+}
