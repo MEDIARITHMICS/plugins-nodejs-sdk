@@ -1,12 +1,12 @@
 import { Value } from "./ValueInterface";
 
-export interface ActivityAnalyzerPropertyResponse {
+export interface PluginPropertyResponse {
   status: string;
-  data: ActivityAnalyzerProperty[];
+  data: PluginProperty[];
   count: number;
 }
 
-export interface ActivityAnalyzerProperty {
+export interface PluginProperty {
   technical_name: string;
   value: Value;
   property_type: string;

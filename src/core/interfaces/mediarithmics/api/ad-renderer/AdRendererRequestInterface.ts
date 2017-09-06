@@ -1,4 +1,4 @@
-import { UserAgentId } from "./UserIdentifierInterface";
+import { UserAgentId } from "../../../../index";
 
 export type ContextEnum = "LIVE" | "STAGE" | "PREVIEW";
 export type ProtocolEnum = 'http' | 'https';

@@ -9,6 +9,9 @@ import * as cache from "memory-cache";
 // Helper request function
 
 export abstract class BasePlugin {
+
+  INSTANCE_CONTEXT_CACHE_EXPIRATION: number = 3000;
+  
   server: Server;
 
   pluginCache: any;

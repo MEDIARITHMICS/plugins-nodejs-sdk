@@ -1,16 +1,15 @@
 import * as _ from "lodash";
 import {
   ItemProposal,
-  CreativeProperty,
   Creative,
   AdRendererRequest,
   UserCampaignResponse,
   UserCampaignResource,
   AdRendererRecoTemplateInstanceContext,
   AdRendererBasePlugin,
-  RecommenderResponse
-} from "../../index";
-import { TemplatingEngine } from "../../interfaces/mediarithmics/plugin/TemplatingEngineInterface";
+  RecommenderResponse,
+  TemplatingEngine
+} from "../../../index";
 
 export abstract class AdRendererRecoTemplatePlugin extends AdRendererBasePlugin<
   AdRendererRecoTemplateInstanceContext

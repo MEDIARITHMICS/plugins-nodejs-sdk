@@ -181,6 +181,7 @@ describe("Fetch recommendation API", () => {
 
   const fakeCreativeProperties = [
     {
+      id: "42",
       technical_name: "hello_world",
       value: {
         value: "Yay"

@@ -2,10 +2,10 @@ import * as Handlebars from "handlebars";
 import { TemplatingEngine } from "../../core/interfaces/mediarithmics/plugin/TemplatingEngineInterface";
 import {
   AdRendererBaseInstanceContext,
-  AdRendererRequest
+  AdRendererRequest,
+  Creative,
+  ItemProposal
 } from "../../core/index";
-import { Creative } from "../../core/interfaces/mediarithmics/api/CreativeInterface";
-import { ItemProposal } from "../../core/interfaces/mediarithmics/api/RecommenderInterface";
 
 const handlebars = require("handlebars");
 const numeral = require("numeral");

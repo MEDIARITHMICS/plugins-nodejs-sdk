@@ -1,4 +1,4 @@
-import { UserActivity } from "./UserActivityInterface";
+import { UserActivity } from "../../../../index";
 
 export interface ActivityAnalyzerPluginResponse {
   status: string;

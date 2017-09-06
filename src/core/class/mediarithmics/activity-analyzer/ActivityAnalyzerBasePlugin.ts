@@ -2,23 +2,17 @@ import * as express from "express";
 import * as _ from "lodash";
 import * as cache from "memory-cache";
 
-import { ActivityAnalyzerBaseInstanceContext } from "../../interfaces/mediarithmics/plugin/InstanceContextInterface";
-
-import { BasePlugin } from "./BasePlugin";
-import { ActivityAnalyzerRequest } from "../../interfaces/mediarithmics/api/ActivityAnalyzerRequestInterface";
 import {
+  ActivityAnalyzerBaseInstanceContext,
+  BasePlugin,
+  ActivityAnalyzerRequest,
   ActivityAnalyzer,
-  ActivityAnalyzerResponse
-} from "../../interfaces/mediarithmics/api/ActivityAnalyzerInterface";
-import {
-  ActivityAnalyzerProperty,
-  ActivityAnalyzerPropertyResponse
-} from "../../interfaces/mediarithmics/api/ActivityAnalyzerPropertyInterface";
-import { ActivityAnalyzerPluginResponse } from "../../interfaces/mediarithmics/api/ActivityAnalyzerPluginResponseInterface";
+  ActivityAnalyzerResponse,
+  ActivityAnalyzerPluginResponse,
+  PluginProperty
+} from "../../../index";
 
 export abstract class ActivityAnalyzerPlugin extends BasePlugin {
-  INSTANCE_CONTEXT_CACHE_EXPIRATION: number = 3000;
-
   instanceContext: Promise<ActivityAnalyzerBaseInstanceContext>;
 
   // Helper to fetch the activity analyzer resource with caching
@@ -40,7 +34,7 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
   // Helper to fetch the activity analyzer resource with caching
   async fetchActivityAnalyzerProperties(
     activityAnalyzerId: string
-  ): Promise<ActivityAnalyzerProperty[]> {
+  ): Promise<PluginProperty[]> {
     const activityAnalyzerPropertyResponse = await super.requestGatewayHelper(
       "GET",
       `${this
@@ -112,7 +106,9 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
             throw new Error("No Activity Analyzer listener registered!");
           }
 
-          if (!this.pluginCache.get(activityAnalyzerRequest.activity_analyzer_id)) {
+          if (
+            !this.pluginCache.get(activityAnalyzerRequest.activity_analyzer_id)
+          ) {
             this.pluginCache.put(
               activityAnalyzerRequest.activity_analyzer_id,
               this.instanceContextBuilder(
@@ -127,9 +123,11 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
             .then((instanceContext: ActivityAnalyzerBaseInstanceContext) => {
               return this.onActivityAnalysis(
                 activityAnalyzerRequest,
-                instanceContext as ActivityAnalyzerBaseInstanceContext
+                instanceContext
               ).then(activityAnalyzerResponse => {
-                this.logger.debug(`Returning: ${JSON.stringify(activityAnalyzerResponse)}`)
+                this.logger.debug(
+                  `Returning: ${JSON.stringify(activityAnalyzerResponse)}`
+                );
                 res.status(200).send(JSON.stringify(activityAnalyzerResponse));
               });
             })

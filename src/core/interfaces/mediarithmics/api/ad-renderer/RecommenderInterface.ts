@@ -1,4 +1,4 @@
-import { UserIdentifierInfo } from "./UserIdentifierInterface";
+import { UserIdentifierInfo } from "../../../../index";
 
 export interface RecommenderRequest {
   recommender_id: string;

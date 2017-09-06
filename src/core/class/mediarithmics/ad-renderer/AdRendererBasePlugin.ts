@@ -1,26 +1,20 @@
 import * as express from "express";
 import * as _ from "lodash";
 
-import { AdRendererRequest } from "../../interfaces/mediarithmics/api/AdRendererRequestInterface";
 import {
+  AdRendererRequest,
   Creative,
-  CreativeResponse
-} from "../../interfaces/mediarithmics/api/CreativeInterface";
-import {
-  CreativeProperty,
-  CreativePropertyResponse
-} from "../../interfaces/mediarithmics/api/CreativePropertyInterface";
-import { AdRendererBaseInstanceContext } from "../../interfaces/mediarithmics/plugin/InstanceContextInterface";
-
-import { BasePlugin } from "./BasePlugin";
-import { TemplatingEngine } from "../../interfaces/mediarithmics/plugin/TemplatingEngineInterface";
-import { AdRendererPluginResponse } from "../../interfaces/mediarithmics/api/AdRendererPluginResponseInterface";
+  CreativeResponse,
+  AdRendererBaseInstanceContext,
+  BasePlugin,
+  TemplatingEngine,
+  AdRendererPluginResponse,
+  PluginProperty
+} from "../../../index";
 
 export abstract class AdRendererBasePlugin<
   T extends AdRendererBaseInstanceContext
 > extends BasePlugin {
-  INSTANCE_CONTEXT_CACHE_EXPIRATION: number = 3000;
-
   instanceContext: Promise<T>;
 
   displayContextHeader = "x-mics-display-context";
@@ -42,9 +36,7 @@ export abstract class AdRendererBasePlugin<
   }
 
   // Helper to fetch the creative properties resource with caching
-  async fetchCreativeProperties(
-    creativeId: string
-  ): Promise<CreativeProperty[]> {
+  async fetchCreativeProperties(creativeId: string): Promise<PluginProperty[]> {
     const creativePropertyResponse = await super.requestGatewayHelper(
       "GET",
       `${this

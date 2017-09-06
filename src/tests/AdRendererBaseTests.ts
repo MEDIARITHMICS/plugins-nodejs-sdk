@@ -60,23 +60,22 @@ describe("Fetch creative API", () => {
 });
 
 describe("Ad Contents API test", function() {
-
   // Fake AdRenderer with dummy processing
   class MyFakeAdRenderer2 extends core.AdRendererBasePlugin<
-  core.AdRendererBaseInstanceContext
-> {
-  protected async onAdContents(
-    request: core.AdRendererRequest,
-    instanceContext: core.AdRendererBaseInstanceContext
-  ) {
-    const response: core.AdRendererPluginResponse = {
-      html: request.call_id
-    };
-    return Promise.resolve(response);
+    core.AdRendererBaseInstanceContext
+  > {
+    protected async onAdContents(
+      request: core.AdRendererRequest,
+      instanceContext: core.AdRendererBaseInstanceContext
+    ) {
+      const response: core.AdRendererPluginResponse = {
+        html: request.call_id
+      };
+      return Promise.resolve(response);
+    }
   }
-}
 
-const plugin = new MyFakeAdRenderer2();
+  const plugin = new MyFakeAdRenderer2();
 
   it("Check that the plugin is giving good results with a simple adContents handler", function(
     done
@@ -121,11 +120,12 @@ const plugin = new MyFakeAdRenderer2();
     );
     rpMockup.onCall(1).returns(
       new Promise((resolve, reject) => {
-        const pluginInfo: core.CreativePropertyResponse = {
+        const pluginInfo: core.PluginPropertyResponse = {
           status: "ok",
           count: 45,
           data: [
             {
+              id: "42",
               technical_name: "hello_world",
               value: {
                 value: "Yay"
@@ -141,7 +141,7 @@ const plugin = new MyFakeAdRenderer2();
       })
     );
 
-    const runner = new core.TestingPluginRunner(plugin, rpMockup);        
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     request(runner.plugin.app)
       .post("/v1/init")

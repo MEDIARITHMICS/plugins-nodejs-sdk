@@ -1,4 +1,4 @@
-import { UserActivity } from "./UserActivityInterface";
+import { UserActivity } from "../../../../index";
 
 export interface ActivityAnalyzerRequest {
     activity_analyzer_id: string;
