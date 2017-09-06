@@ -70,7 +70,7 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
     const context = {
       activityAnalyzer: activityAnalyzer,
       activityAnalyzerProperties: activityAnalyzerProps
-    } as ActivityAnalyzerBaseInstanceContext;
+    };
 
     return context;
   }
