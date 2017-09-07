@@ -75,7 +75,7 @@ const encodeRecoClickUrlHelper = () => (
   return encodeClickUrl()(filledRedirectUrls, recommendation.$url);
 };
 
-export class HandlebarsEngine implements TemplatingEngine {
+export class HandlebarsEngine implements TemplatingEngine<void, string, HandlebarsTemplateDelegate<any>> {
   engine: typeof Handlebars;
 
   // Initialisation of the engine. Done once at every InstanceContext rebuild.

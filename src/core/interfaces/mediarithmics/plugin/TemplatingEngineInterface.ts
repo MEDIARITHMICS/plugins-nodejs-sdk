@@ -1,8 +1,8 @@
 import { AdRendererBaseInstanceContext } from "./InstanceContextInterface";
 
-export interface TemplatingEngine {
+export interface TemplatingEngine<Opt, In, Out> {
 
-    init: (opts?: any) => void;
-    compile: (template: any) => any;
+    init: (opts?: Opt) => void;
+    compile: (template: In) => Out;
 
 }

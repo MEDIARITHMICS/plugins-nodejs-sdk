@@ -131,7 +131,7 @@ Error: ${e.message} - ${e.stack}`);
  * 
  * Have to be overriden (see examples)
  */
-  protected engineBuilder: TemplatingEngine;
+  protected engineBuilder: TemplatingEngine<any, any, any>;
 
   protected async instanceContextBuilder(creativeId: string) {
     console.warn(`You are using the default InstanceContextBuilder of AdRendererRecoTemplatePlugin
