@@ -39,7 +39,7 @@ export interface BidInfo {
   display_network_id: string;
   media_id: string;
   content_id: string;
-  geo_info?: GeoLocationInfo[];
+  geo_info?: GeoLocationInfo;
   placements?: PlacementInfo[];
 }
 
