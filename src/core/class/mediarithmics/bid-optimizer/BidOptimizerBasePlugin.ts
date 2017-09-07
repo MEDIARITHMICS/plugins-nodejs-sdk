@@ -19,9 +19,7 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
    * 
    * @param bidOptimizerId 
    */
-  async fetchBidOptimizer(
-    bidOptimizerId: string
-  ): Promise<BidOptimizer> {
+  async fetchBidOptimizer(bidOptimizerId: string): Promise<BidOptimizer> {
     const bidOptimizerResponse = await super.requestGatewayHelper(
       "GET",
       `${this.outboundPlatformUrl}/v1/bid_optimizers/${bidOptimizerId}`
@@ -34,11 +32,12 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
     return bidOptimizerResponse.data;
   }
 
-/**
+  /**
  * 
  * @param bidOptimizerId 
- */  
-async fetchBidOptimizerProperties(
+ */
+
+  async fetchBidOptimizerProperties(
     bidOptimizerId: string
   ): Promise<PluginProperty[]> {
     const bidOptimizerPropertyResponse = await super.requestGatewayHelper(
@@ -54,8 +53,41 @@ async fetchBidOptimizerProperties(
     return bidOptimizerPropertyResponse.data;
   }
 
-  findBestSalesConditions(bidPrice: number, salesConditions: SaleCondition[]): SaleCondition {
-    return salesConditions.filter((sc) => sc.floor_price <= bidPrice).sort((a, b) => (a.floor_price - b.floor_price))[0];
+  findBestSalesConditions(
+    bidPrice: number,
+    salesConditions: SaleCondition[]
+  ): SaleCondition {
+    this.logger.debug(
+      `Looking to find the best sale condition for CPM: ${bidPrice} in: ${JSON.stringify(
+        salesConditions,
+        null,
+        4
+      )}`
+    );
+    const eligibleSalesConditions = salesConditions.filter(sc => {
+      return sc.floor_price <= bidPrice;
+    });
+    this.logger.debug(
+      `Found eligible sales condition for CPM: ${bidPrice} in: ${JSON.stringify(
+        eligibleSalesConditions,
+        null,
+        4
+      )}`
+    );
+    const sortedEligibleSalesConditions = eligibleSalesConditions.sort(
+      (a, b) => {
+        return a.floor_price - b.floor_price;
+      }
+    );
+    this.logger.debug(
+      `Sorted eligible sales condition for CPM: ${bidPrice} in: ${JSON.stringify(
+        sortedEligibleSalesConditions,
+        null,
+        4
+      )}`
+    );
+
+    return sortedEligibleSalesConditions[0];
   }
 
   /**
@@ -68,14 +100,9 @@ async fetchBidOptimizerProperties(
     bidOptimizerId: string
   ): Promise<BidOptimizerBaseInstanceContext> {
     const bidOptimizerP = this.fetchBidOptimizer(bidOptimizerId);
-    const bidOptimizerPropsP = this.fetchBidOptimizerProperties(
-      bidOptimizerId
-    );
+    const bidOptimizerPropsP = this.fetchBidOptimizerProperties(bidOptimizerId);
 
-    const results = await Promise.all([
-      bidOptimizerP,
-      bidOptimizerPropsP
-    ]);
+    const results = await Promise.all([bidOptimizerP, bidOptimizerPropsP]);
 
     const bidOptimizer = results[0];
     const bidOptimizerProps = results[1];
@@ -88,7 +115,7 @@ async fetchBidOptimizerProperties(
     return context;
   }
 
-/**
+  /**
  * 
  * @param request 
  * @param instanceContext 
@@ -123,7 +150,9 @@ async fetchBidOptimizerProperties(
           }
 
           if (
-            !this.pluginCache.get(bidOptimizerRequest.campaign_info.bid_optimizer_id)
+            !this.pluginCache.get(
+              bidOptimizerRequest.campaign_info.bid_optimizer_id
+            )
           ) {
             this.pluginCache.put(
               bidOptimizerRequest.campaign_info.bid_optimizer_id,
@@ -132,8 +161,7 @@ async fetchBidOptimizerProperties(
               ),
               this.INSTANCE_CONTEXT_CACHE_EXPIRATION
             );
-          }    // We init the specific route to listen for activity analysis requests
-          
+          } // We init the specific route to listen for activity analysis requests
 
           this.pluginCache
             .get(bidOptimizerRequest.campaign_info.bid_optimizer_id)
