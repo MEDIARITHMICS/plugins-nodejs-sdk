@@ -8,13 +8,17 @@ import {
   BidOptimizerBaseInstanceContext,
   BidOptimizer,
   BidOptimizerRequest,
-  BidOptimizerPluginResponse
+  BidOptimizerPluginResponse,
+  SaleCondition
 } from "../../../index";
 
 export abstract class BidOptimizerPlugin extends BasePlugin {
   instanceContext: Promise<BidOptimizerBaseInstanceContext>;
 
-  // Helper to fetch the activity analyzer resource with caching
+  /**
+   * 
+   * @param bidOptimizerId 
+   */
   async fetchBidOptimizer(
     bidOptimizerId: string
   ): Promise<BidOptimizer> {
@@ -30,8 +34,11 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
     return bidOptimizerResponse.data;
   }
 
-  // Helper to fetch the activity analyzer resource with caching
-  async fetchBidOptimizerProperties(
+/**
+ * 
+ * @param bidOptimizerId 
+ */  
+async fetchBidOptimizerProperties(
     bidOptimizerId: string
   ): Promise<PluginProperty[]> {
     const bidOptimizerPropertyResponse = await super.requestGatewayHelper(
@@ -47,9 +54,16 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
     return bidOptimizerPropertyResponse.data;
   }
 
-  // Method to build an instance context
-  // To be overriden to get a cutom behavior
-  // This is a default provided implementation
+  findBestSalesConditions(bidPrice: number, salesConditions: SaleCondition[]): SaleCondition {
+    return salesConditions.filter((sc) => sc.floor_price <= bidPrice).sort((a, b) => (a.floor_price - b.floor_price))[0];
+  }
+
+  /**
+   * Method to build an instance context
+   * To be overriden to get a cutom behavior
+   * This is a default provided implementation
+   * @param bidOptimizerId 
+   */
   protected async instanceContextBuilder(
     bidOptimizerId: string
   ): Promise<BidOptimizerBaseInstanceContext> {
@@ -74,8 +88,11 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
     return context;
   }
 
-  // Method to process an Activity Analysis
-  // To be overriden by the Plugin to get a custom behavior
+/**
+ * 
+ * @param request 
+ * @param instanceContext 
+ */
   protected abstract onBidDecisions(
     request: BidOptimizerRequest,
     instanceContext: BidOptimizerBaseInstanceContext
@@ -115,7 +132,8 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
               ),
               this.INSTANCE_CONTEXT_CACHE_EXPIRATION
             );
-          }
+          }    // We init the specific route to listen for activity analysis requests
+          
 
           this.pluginCache
             .get(bidOptimizerRequest.campaign_info.bid_optimizer_id)
@@ -144,7 +162,6 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
   constructor() {
     super();
 
-    // We init the specific route to listen for activity analysis requests
     this.initBidDecisions();
   }
 }
