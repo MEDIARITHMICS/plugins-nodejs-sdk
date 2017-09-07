@@ -36,7 +36,7 @@ describe("Test Example Activity Analyzer", function() {
     .returns(activityAnalyzer);
 
   // Activity Analyzer properties stub
-  const activityAnalyzerProperties: core.ActivityAnalyzerPropertyResponse = {
+  const activityAnalyzerProperties: core.PluginPropertyResponse = {
     count: 1,
     data: [
       {

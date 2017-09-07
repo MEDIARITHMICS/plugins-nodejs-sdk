@@ -64,15 +64,15 @@ export interface CampaignInfo {
   ad_group_id: string;
   currency: string;
   date: string;
-  max_bid_price_CPM: number;
+  max_bid_price: number;
   bid_optimizer_id: string;
   objective_type: BidObjectiveType;
   objective_value: number;
-  impression_count?: number;
-  average_win_rate?: number;
-  average_bid_pice_CPM?: number;
-  average_winning_price_CPM?: number;
-  average_delivery_price_CPM?: number;
+  imp_count?: number;
+  avg_win_rate?: number;
+  avg_bid_price?: number;
+  avg_winning_price?: number;
+  avg_delivery_price?: number;
 }
 
 export interface UserInfo {
