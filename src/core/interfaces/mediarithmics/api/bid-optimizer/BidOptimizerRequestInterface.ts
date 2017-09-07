@@ -1,36 +1,26 @@
 import { UserActivity, UserAgentInfo } from "../../../../index";
 
-export enum AdSlotVisibility {
-  ABOVE_THE_FOLD,
-  MIDDLE_OF_THE_PAGE,
-  BELOW_THE_FOLD,
-  UNKNOWN
-}
+export type AdSlotVisibility =
+  | "ABOVE_THE_FOLD"
+  | "MIDDLE_OF_THE_PAGE"
+  | "BELOW_THE_FOLD"
+  | "UNKNOWN";
 
-export enum BidMediaType {
-  WEB,
-  MOBILE_APP,
-  VIDEO
-}
+export type BidMediaType = "WEB" | "MOBILE_APP" | "VIDEO";
 
-export enum BidObjectiveType {
-  CPC,
-  CPA,
-  CTR,
-  CPV
-}
+export type BidObjectiveType = "CPC" | "CPA" | "CTR" | "CPV";
 
-export enum BidOptimizerModelType {
-  CATEGORICAL_MODEL,
-  REGRESSION_MODEL,
-  DYNAMIC_ALLOCATION
-}
+export type BidOptimizerModelType =
+  | "CATEGORICAL_MODEL"
+  | "REGRESSION_MODEL"
+  | "DYNAMIC_ALLOCATION";
 
 export interface BidOptimizerRequest {
-    bid_info: BidInfo;
-    campaign_info: CampaignInfo;
-    user_info: UserInfo;
-    user_campaign_data_bag: string;
+  bid_info: BidInfo;
+  campaign_info: CampaignInfo;
+  user_info: UserInfo;
+  user_campaign_data_bag: string;
+  data_feeds: any[];
 }
 
 export interface BidInfo {
@@ -59,7 +49,7 @@ export interface PlacementInfo {
 }
 
 export interface CampaignInfo {
-  organisation_Id: string;
+  organisation_id: string;
   campaign_id: string;
   ad_group_id: string;
   currency: string;
