@@ -1,0 +1,30 @@
+{
+  "name": "bid-optimizer-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "mocha -r ts-node/register src/tests/*.ts",
+    "prepublishOnly": "tsc -p ./ --outDir build/"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@mediarithmics/plugins-nodejs-sdk": "^0.2.0",
+    "@types/express": "^4.0.36",
+    "body-parser": "^1.17.2",
+    "express": "^4.15.3",
+    "lodash": "^4.17.4",
+    "winston": "^2.3.1"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.0.3",
+    "@types/escape-html": "0.0.20",
+    "@types/mocha": "^2.2.41",
+    "chai": "^4.1.1",
+    "escape-html": "^1.0.3",
+    "mocha": "^3.5.0",
+    "ts-node": "^3.3.0",
+    "typescript": "^2.4.2"
+  }
+}
