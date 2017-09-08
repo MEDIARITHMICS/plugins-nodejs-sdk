@@ -15,10 +15,12 @@
     "@types/winston": "^2.3.4",
     "body-parser": "^1.17.2",
     "express": "^4.15.3",
+    "mocha": "^3.5.0",
     "winston": "^2.3.1"
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
+    "@types/mocha": "^2.2.42",
     "@types/request-promise-native": "^1.0.6",
     "chai": "^4.1.2",
     "request": "^2.81.0",
