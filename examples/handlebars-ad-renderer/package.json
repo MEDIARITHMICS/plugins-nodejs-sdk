@@ -5,7 +5,7 @@
   "main": "build/index.js",
   "scripts": {
     "test": "mocha -r ts-node/register src/tests/*.ts",
-    "prepublishOnly": "tsc -p ./ --outDir build/"
+    "build": "tsc -p ./ --outDir build/"
   },
   "author": "",
   "license": "Apache-2.0",
