@@ -13,5 +13,4 @@ export interface PluginProperty {
   origin: string;
   writable: boolean;
   deletable: boolean;
-  id: string;
 }

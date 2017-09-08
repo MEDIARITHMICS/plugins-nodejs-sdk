@@ -41,7 +41,7 @@ const creative: core.CreativeResponse = {
 };
 
 // Activity Analyzer properties stub
-const creativePropertiesResponse: core.CreativePropertyResponse = {
+const creativePropertiesResponse: core.PluginPropertyResponse = {
   status: "ok",
   data: [
     {
