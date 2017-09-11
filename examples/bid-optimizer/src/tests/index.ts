@@ -40,7 +40,6 @@ describe("Test Example BidOptimizer", function() {
       count: 1,
       data: [
         {
-          id: "2345",
           technical_name: "name",
           value: {
             value:
