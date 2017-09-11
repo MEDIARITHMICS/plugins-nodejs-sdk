@@ -39,3 +39,6 @@ export * from "./class/mediarithmics/bid-optimizer/BidOptimizerBasePlugin";
 // Plugin Runner
 export * from "./class/mediarithmics/common/ProductionPluginRunner";
 export * from "./class/mediarithmics/common/TestingPluginRunner";
+
+// Helpers
+export * from "./class/mediarithmics/common/GeolocHelpers"
