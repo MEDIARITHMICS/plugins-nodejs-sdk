@@ -12,8 +12,6 @@ export abstract class BasePlugin {
 
   INSTANCE_CONTEXT_CACHE_EXPIRATION: number = 3000;
   
-  server: Server;
-
   pluginCache: any;
   gatewayHost: string = process.env.GATEWAY_HOST || "plugin-gateway.platform";
   gatewayPort: number = parseInt(process.env.GATEWAY_PORT) || 8080;
