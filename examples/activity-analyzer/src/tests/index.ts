@@ -4,7 +4,7 @@ import { core } from "@mediarithmics/plugins-nodejs-sdk";
 import * as request from "supertest";
 import * as sinon from "sinon";
 import * as rp from "request-promise-native";
-import { MyActivityAnalyzerPlugin } from "./..";
+import { MyActivityAnalyzerPlugin } from "../MyPluginImpl";
 
 describe("Test Example Activity Analyzer", function() {
   // We stub the Gateway calls
