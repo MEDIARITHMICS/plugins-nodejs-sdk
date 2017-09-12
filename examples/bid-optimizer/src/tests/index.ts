@@ -4,7 +4,7 @@ import { core } from "@mediarithmics/plugins-nodejs-sdk";
 import * as request from "supertest";
 import * as sinon from "sinon";
 import * as rp from "request-promise-native";
-import { MyBidOptimizerPlugin } from "./..";
+import { MyBidOptimizerPlugin } from "../MyPluginImpl";
 
 describe("Test Example BidOptimizer", function() {
     // We stub the Gateway calls
