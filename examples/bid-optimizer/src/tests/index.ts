@@ -112,7 +112,7 @@ describe("Test Example BidOptimizer", function() {
                      ],
                      "sales_conditions":[
                         {
-                           "id":"4147",
+                           "id":"4148",
                            "deal_id":null,
                            "floor_price":0.1899999976158142
                         }

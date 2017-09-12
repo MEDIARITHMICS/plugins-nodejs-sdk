@@ -1,20 +1,29 @@
 import { core } from "@mediarithmics/plugins-nodejs-sdk";
 
 export class MyBidOptimizerPlugin extends core.BidOptimizerPlugin {
-    protected onBidDecisions (
-      request: core.BidOptimizerRequest,
-      instanceContext: core.BidOptimizerBaseInstanceContext
-    ): Promise<core.BidOptimizerPluginResponse> {
-  
-      this.logger.debug(`Received ibnside plugin: ${JSON.stringify(request, null, 4)}`);
-      const response: core.BidOptimizerPluginResponse = {
-        bids: [{
-          index: 0,
-          bidPrice: request.campaign_info.max_bid_price,
-          saleConditionId: request.bid_info.placements[0].sales_conditions[0].id
-        }]
+  protected onBidDecisions(
+    request: core.BidOptimizerRequest,
+    instanceContext: core.BidOptimizerBaseInstanceContext
+  ): Promise<core.BidOptimizerPluginResponse> {
+    this.logger.debug(
+      `Received inside plugin: ${JSON.stringify(request, null, 4)}`
+    );
+
+    const bids: core.Bid[] = request.bid_info.placements.map((
+      placementInfo,
+      index
+    ) => {
+      return {
+        index: index,
+        bidPrice: request.campaign_info.max_bid_price,
+        saleConditionId: this.findBestSalesConditions(request.campaign_info.max_bid_price, placementInfo.sales_conditions).id
       };
-  
-      return Promise.resolve(response);
-    }
+    });
+
+    const response: core.BidOptimizerPluginResponse = {
+      bids: bids
+    };
+
+    return Promise.resolve(response);
   }
+}
