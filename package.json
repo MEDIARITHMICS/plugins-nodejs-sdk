@@ -5,7 +5,7 @@
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
   "scripts": {
-    "test": "mocha -r ts-node/register src/tests/*.ts",
+    "test": "./test_sdk_and_examples.sh",
     "prepublishOnly": "tsc -p ./ --outDir build/",
     "docs": "typedoc --out docs/ --mode modules --target es6 --module commonjs ./"
   },

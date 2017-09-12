@@ -67,7 +67,7 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
     const activityAnalyzer = results[0];
     const activityAnalyzerProps = results[1];
 
-    const context = {
+    const context:ActivityAnalyzerBaseInstanceContext = {
       activityAnalyzer: activityAnalyzer,
       activityAnalyzerProperties: activityAnalyzerProps
     };

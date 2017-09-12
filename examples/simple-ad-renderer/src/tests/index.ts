@@ -4,7 +4,7 @@ import { core } from "@mediarithmics/plugins-nodejs-sdk";
 import * as request from "supertest";
 import * as sinon from "sinon";
 import * as rp from "request-promise-native";
-import { MySimpleAdRenderer } from "../index";
+import { MySimpleAdRenderer } from '../MyPluginImpl'
 
 // Creative stub
 const creative: core.CreativeResponse = {
