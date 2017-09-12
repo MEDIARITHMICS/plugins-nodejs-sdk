@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eu 
 
+npm run prepublishOnly
+
 mocha -r ts-node/register src/tests/*.ts
 
 npm link
