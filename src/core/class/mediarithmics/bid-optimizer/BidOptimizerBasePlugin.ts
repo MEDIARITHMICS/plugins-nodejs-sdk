@@ -25,7 +25,7 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
       `${this.outboundPlatformUrl}/v1/bid_optimizers/${bidOptimizerId}`
     );
     this.logger.debug(
-      `Fetched Activity Analyzer: ${bidOptimizerId} - ${JSON.stringify(
+      `Fetched Bid Optimizer: ${bidOptimizerId} - ${JSON.stringify(
         bidOptimizerResponse.data
       )}`
     );
@@ -57,35 +57,44 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
     bidPrice: number,
     salesConditions: SaleCondition[]
   ): SaleCondition {
-    this.logger.debug(
-      `Looking to find the best sale condition for CPM: ${bidPrice} in: ${JSON.stringify(
-        salesConditions,
-        null,
-        4
-      )}`
-    );
+    // Optimization, we only do the stringify  if we are really on debug / silly mode
+    if (this.logger.level === "debug" || this.logger.level === "silly") {
+      this.logger.debug(
+        `Looking to find the best sale condition for CPM: ${bidPrice} in: ${JSON.stringify(
+          salesConditions,
+          null,
+          4
+        )}`
+      );
+    }
     const eligibleSalesConditions = salesConditions.filter(sc => {
       return sc.floor_price <= bidPrice;
     });
-    this.logger.debug(
-      `Found eligible sales condition for CPM: ${bidPrice} in: ${JSON.stringify(
-        eligibleSalesConditions,
-        null,
-        4
-      )}`
-    );
+    // Optimization, we only do the stringify  if we are really on debug / silly mode
+    if (this.logger.level === "debug" || this.logger.level === "silly") {
+      this.logger.debug(
+        `Found eligible sales condition for CPM: ${bidPrice} in: ${JSON.stringify(
+          eligibleSalesConditions,
+          null,
+          4
+        )}`
+      );
+    }
     const sortedEligibleSalesConditions = eligibleSalesConditions.sort(
       (a, b) => {
         return a.floor_price - b.floor_price;
       }
     );
-    this.logger.debug(
-      `Sorted eligible sales condition for CPM: ${bidPrice} in: ${JSON.stringify(
-        sortedEligibleSalesConditions,
-        null,
-        4
-      )}`
-    );
+    // Optimization, we only do the stringify  if we are really on debug / silly mode
+    if (this.logger.level === "debug" || this.logger.level === "silly") {
+      this.logger.debug(
+        `Sorted eligible sales condition for CPM: ${bidPrice} in: ${JSON.stringify(
+          sortedEligibleSalesConditions,
+          null,
+          4
+        )}`
+      );
+    }
 
     return sortedEligibleSalesConditions[0];
   }
@@ -134,7 +143,7 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
             error: "Missing request body"
           };
           this.logger.error(
-            "POST /v1/activity_analysis : %s",
+            "POST /v1/bid_decisions : %s",
             JSON.stringify(msg)
           );
           res.status(500).json(msg);
@@ -161,7 +170,7 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
               ),
               this.INSTANCE_CONTEXT_CACHE_EXPIRATION
             );
-          } // We init the specific route to listen for activity analysis requests
+          } // We init the specific route to listen for bid decisions requests
 
           this.pluginCache
             .get(bidOptimizerRequest.campaign_info.bid_optimizer_id)
