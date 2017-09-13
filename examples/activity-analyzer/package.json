@@ -30,7 +30,6 @@
     "proxyquire": "^1.8.0",
     "sinon": "^3.2.1",
     "supertest": "^3.0.0",
-    "ts-node": "^3.3.0",
     "typescript": "^2.4.2"
   }
 }
