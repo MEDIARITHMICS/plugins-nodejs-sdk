@@ -4,8 +4,9 @@
   "description": "",
   "main": "build/index.js",
   "scripts": {
-    "test": "mocha -r ts-node/register src/tests/*.ts",
-    "prepublishOnly": "tsc -p ./ --outDir build/"
+    "pretest": "npm run build",
+    "test": "mocha build/tests/*.js",
+    "build": "tsc -p ./ --outDir build/"
   },
   "author": "",
   "license": "Apache-2.0",
