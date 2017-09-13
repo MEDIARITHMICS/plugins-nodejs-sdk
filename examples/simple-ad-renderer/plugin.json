@@ -1,0 +1,8 @@
+{
+    "group_id": "<REPLACE ME>",
+    "artifact_id": "<REPLACE ME>",
+    "version_id": "<REPLACE ME>",
+    "environment": {
+      "type": "nodejs_build_src"
+    }
+  }
