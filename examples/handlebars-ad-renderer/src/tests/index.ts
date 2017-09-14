@@ -330,6 +330,19 @@ describe("Test Example Handlebar Ad Renderer", function() {
               .end((err, res) => {
                 expect(res.status).to.eq(200);
 
+                expect(rpMockup
+                  .withArgs(
+                    sinon.match.has(
+                      "uri",
+                      sinon.match(function(value: string) {
+                        return (
+                          value.match(/\/v1\/recommenders\/(.){1,10}\/recommendations/) !==
+                          null
+                        );
+                      })
+                    )
+                  ).args[0][0].body.input_data.user_agent_id).to.be.eq(adRequest.user_agent_id);
+
                 done();
               });
           });
@@ -815,6 +828,19 @@ describe("Test Example Handlebar Ad Renderer", function() {
               .send(adRequest2)
               .end((err, res) => {
                 expect(res.status).to.eq(200);
+
+                expect(rpMockup
+                  .withArgs(
+                    sinon.match.has(
+                      "uri",
+                      sinon.match(function(value: string) {
+                        return (
+                          value.match(/\/v1\/recommenders\/(.){1,10}\/recommendations/) !==
+                          null
+                        );
+                      })
+                    )
+                  ).args[0][0].body.input_data.user_agent_id).to.be.eq(adRequest2.user_agent_id);
 
                 done();
               });
