@@ -4,7 +4,6 @@ import * as _ from "lodash";
 import {
   AdRendererRequest,
   Creative,
-  CreativeResponse,
   AdRendererBaseInstanceContext,
   BasePlugin,
   TemplatingEngine,

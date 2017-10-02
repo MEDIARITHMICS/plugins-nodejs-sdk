@@ -1,9 +1,3 @@
-export interface ActivityAnalyzerResponse {
-    status: string;
-    data: ActivityAnalyzer;
-    count: number;
-}
-
 export interface ActivityAnalyzer {
     id: string;
     organisation_id: string;

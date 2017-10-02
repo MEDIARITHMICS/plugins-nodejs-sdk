@@ -9,11 +9,6 @@ export interface RecommenderRequest {
   [propsName: string]: any;
 }
 
-export interface RecommenderResponse {
-  status: string;
-  data: RecommandationsWrapper;
-}
-
 export interface RecommandationsWrapper {
   ts: number;
   proposals: ItemProposal[];

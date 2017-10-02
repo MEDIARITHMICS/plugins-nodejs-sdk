@@ -1,9 +1,3 @@
-export interface CreativeResponse {
-    status: string;
-    data: Creative;
-    count: number;
-}
-
 export interface Creative {
     type: string;
     id: string;

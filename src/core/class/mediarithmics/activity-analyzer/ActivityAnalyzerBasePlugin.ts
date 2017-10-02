@@ -7,7 +7,6 @@ import {
   BasePlugin,
   ActivityAnalyzerRequest,
   ActivityAnalyzer,
-  ActivityAnalyzerResponse,
   ActivityAnalyzerPluginResponse,
   PluginProperty
 } from "../../../index";

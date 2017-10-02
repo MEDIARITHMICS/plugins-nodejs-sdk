@@ -7,7 +7,7 @@ import * as rp from "request-promise-native";
 import { MySimpleAdRenderer } from '../MyPluginImpl'
 
 // Creative stub
-const creative: core.CreativeResponse = {
+const creative: core.ResponseData<core.Creative> = {
   status: "ok",
   data: {
     type: "DISPLAY_AD",

@@ -1,6 +1,8 @@
 // Common plugin
 export * from "./class/mediarithmics/common/BasePlugin";
 export * from "./interfaces/mediarithmics/api/common/ValueInterface";
+export * from "./interfaces/mediarithmics/api/common/Response";
+
 export * from "./interfaces/mediarithmics/api/common/PluginPropertyInterface";
 export * from "./interfaces/mediarithmics/api/common/CredentialsInterface";
 

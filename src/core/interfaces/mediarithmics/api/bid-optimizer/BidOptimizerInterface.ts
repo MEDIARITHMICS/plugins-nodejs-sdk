@@ -1,9 +1,3 @@
-export interface BidOptimizerResponse {
-    status: string;
-    data: BidOptimizer;
-    count: number;
-}
-
 export interface BidOptimizer {
     id: string;
     organisation_id: string;

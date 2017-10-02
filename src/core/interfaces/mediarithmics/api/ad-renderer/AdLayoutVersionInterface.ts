@@ -1,9 +1,3 @@
-export interface AdLayoutVersionResponse {
-    data: AdLayoutVersion;
-    count: number;
-    status: string;
-}
-
 export interface AdLayoutVersion {
     id: string;
     version_id: string;
