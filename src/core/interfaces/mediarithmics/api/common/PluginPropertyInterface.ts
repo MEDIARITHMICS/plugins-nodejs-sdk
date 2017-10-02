@@ -1,10 +1,7 @@
 import { Value } from "./ValueInterface";
+import { ResponseListOfData } from "./Response";
 
-export interface PluginPropertyResponse {
-  status: string;
-  data: PluginProperty[];
-  count: number;
-}
+export type PluginPropertyResponse = ResponseListOfData<PluginProperty>;
 
 export interface PluginProperty {
   technical_name: string;
