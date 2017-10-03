@@ -66,7 +66,7 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
     const activityAnalyzer = results[0];
     const activityAnalyzerProps = results[1];
 
-    const context:ActivityAnalyzerBaseInstanceContext = {
+    const context: ActivityAnalyzerBaseInstanceContext = {
       activityAnalyzer: activityAnalyzer,
       activityAnalyzerProperties: activityAnalyzerProps
     };
@@ -123,13 +123,16 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin {
               return this.onActivityAnalysis(
                 activityAnalyzerRequest,
                 instanceContext
-              ).then(activityAnalyzerResponse => {
+              );
+            })
+            .then(
+              (activityAnalyzerResponse: ActivityAnalyzerPluginResponse) => {
                 this.logger.debug(
                   `Returning: ${JSON.stringify(activityAnalyzerResponse)}`
                 );
                 res.status(200).send(JSON.stringify(activityAnalyzerResponse));
-              });
-            })
+              }
+            )
             .catch((error: Error) => {
               this.logger.error(
                 `Something bad happened : ${error.message} - ${error.stack}`

@@ -101,8 +101,8 @@ export abstract class EmailRouteurPlugin extends BasePlugin {
     );
   }
 
-   // To be overriden by the Plugin to get a custom behavior
-   protected abstract onEmailCheck(
+  // To be overriden by the Plugin to get a custom behavior
+  protected abstract onEmailCheck(
     request: CheckEmailsRequest,
     instanceContext: EmailRouteurBaseInstanceContext
   ): Promise<EmailRouteurPluginResponse>;
@@ -115,7 +115,10 @@ export abstract class EmailRouteurPlugin extends BasePlugin {
           const msg = {
             error: "Missing request body"
           };
-          this.logger.error("POST /v1/email_router_check : %s", JSON.stringify(msg));
+          this.logger.error(
+            "POST /v1/email_router_check : %s",
+            JSON.stringify(msg)
+          );
           res.status(500).json(msg);
         } else {
           this.logger.debug(
@@ -139,13 +142,11 @@ export abstract class EmailRouteurPlugin extends BasePlugin {
           this.pluginCache
             .get(emailCheckRequest.email_router_id)
             .then((instanceContext: EmailRouteurBaseInstanceContext) => {
-              return this.onEmailCheck(
-                emailCheckRequest,
-                instanceContext
-              ).then(response => {
-                this.logger.debug(`Returning: ${JSON.stringify(response)}`);
-                res.status(200).send(JSON.stringify(response));
-              });
+              return this.onEmailCheck(emailCheckRequest, instanceContext);
+            })
+            .then((response: EmailRouteurPluginResponse) => {
+              this.logger.debug(`Returning: ${JSON.stringify(response)}`);
+              res.status(200).send(JSON.stringify(response));
             })
             .catch((error: Error) => {
               this.logger.error(

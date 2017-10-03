@@ -178,12 +178,12 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
               return this.onBidDecisions(
                 bidOptimizerRequest,
                 instanceContext
-              ).then(bidOptimizerResponse => {
-                this.logger.debug(
-                  `Returning: ${JSON.stringify(bidOptimizerResponse)}`
-                );
-                res.status(200).send(JSON.stringify(bidOptimizerResponse));
-              });
+              );
+            }).then((bidOptimizerResponse: BidOptimizerPluginResponse) => {
+              this.logger.debug(
+                `Returning: ${JSON.stringify(bidOptimizerResponse)}`
+              );
+              res.status(200).send(JSON.stringify(bidOptimizerResponse));
             })
             .catch((error: Error) => {
               this.logger.error(
