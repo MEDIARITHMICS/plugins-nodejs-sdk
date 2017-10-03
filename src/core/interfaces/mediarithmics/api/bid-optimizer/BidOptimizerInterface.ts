@@ -1,8 +1,12 @@
+import { ResponseData } from "../common/Response";
+
 export interface BidOptimizer {
-    id: string;
-    organisation_id: string;
-    name: string;
-    engine_artifact_id: string;
-    engine_version_id: string;
-    engine_group_id: string;
+  id: string;
+  organisation_id: string;
+  name: string;
+  engine_artifact_id: string;
+  engine_version_id: string;
+  engine_group_id: string;
 }
+
+export type BidOptimizerResponse = ResponseData<BidOptimizer>;
