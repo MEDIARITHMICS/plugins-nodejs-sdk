@@ -5,13 +5,19 @@ import * as winston from "winston";
 import * as bodyParser from "body-parser";
 import { Server } from "http";
 import * as cache from "memory-cache";
-
-// Helper request function
+import {
+  Credentials,
+  SocketMsg,
+  MsgCmd,
+  InitUpdateResponse,
+  LogLevelUpdateResponse
+} from "../../../index";
 
 export abstract class BasePlugin {
+  multiThread: boolean = false;
 
-  INSTANCE_CONTEXT_CACHE_EXPIRATION: number = 3000;
-  
+  INSTANCE_CONTEXT_CACHE_EXPIRATION: number = 120000;
+
   pluginCache: any;
   gatewayHost: string = process.env.GATEWAY_HOST || "plugin-gateway.platform";
   gatewayPort: number = parseInt(process.env.GATEWAY_PORT) || 8080;
@@ -21,35 +27,61 @@ export abstract class BasePlugin {
 
   app: express.Application;
   logger: winston.LoggerInstance;
-  worker_id: string;
-  authentication_token: string;
+  credentials: Credentials;
 
   _transport: any = rp;
 
   // Log level update implementation
   // This method can be overridden by any subclass
-  protected onLogLevelUpdate(req: express.Request, res: express.Response) {
-    if (req.body && req.body.level) {
-      // Lowering case
-      const logLevel = req.body.level.toLowerCase();
-
-      this.logger.info("Setting log level to " + req.body.level);
-      this.logger.level = logLevel;
-      res.status(200).end();
-    } else {
-      this.logger.error(
-        "Incorrect body : Cannot change log level, actual: " + this.logger.level
-      );
-      res.status(400).end();
-    }
+  onLogLevelUpdate(level: string): LogLevelUpdateResponse {
+    // Lowering case
+    const logLevel = level.toLowerCase();
+    this.logger.info("Setting log level to " + logLevel);
+    this.logger.level = logLevel;
+    return { status: "ok" };
   }
 
   private initLogLevelUpdateRoute() {
     //Route used by the plugin manager to check if the plugin is UP and running
     this.app.put(
       "/v1/log_level",
-      (req: express.Request, res: express.Response) => {
-        this.onLogLevelUpdate(req, res);
+      (req, res, next) => {
+        if (req.body && req.body.level) {
+          next();
+        } else {
+          this.logger.error(
+            "Incorrect body : Cannot change log level, actual: " +
+              this.logger.level
+          );
+          res.status(400).end();
+        }
+      },
+      (req, res, next) => {
+        const level = req.body.level;
+
+        if (this.multiThread) {
+          const msg: SocketMsg = {
+            value: req.body.level.toLowerCase(),
+            cmd: MsgCmd.LOG_LEVEL_UPDATE_FROM_WORKER
+          };
+
+          this.logger.debug(
+            `Sending DEBUG_LEVEL_UPDATE_FROM_WORKER from worker ${process.pid} to master with value: ${msg.value}`
+          );
+          process.send(msg);
+
+          // We have to assume that everything went fine in the propagation...
+          res.status(200).end();
+        } else {
+          const result = this.onLogLevelUpdate(level);
+
+          if (result.status === "error") {
+            this.logger.error(`Error while LogLevelUpdate: ${result.msg}`);
+            res.status(500).end();
+          } else {
+            res.status(200).end();
+          }
+        }
       }
     );
   }
@@ -74,7 +106,7 @@ export abstract class BasePlugin {
   protected onStatusRequest(req: express.Request, res: express.Response) {
     //Route used by the plugin manager to check if the plugin is UP and running
     this.logger.silly("GET /v1/status");
-    if (this.worker_id && this.authentication_token) {
+    if (this.credentials.worker_id && this.credentials.authentication_token) {
       res.status(200).end();
     } else {
       this.logger.error(
@@ -117,8 +149,8 @@ export abstract class BasePlugin {
       uri: uri,
       json: true,
       auth: {
-        user: this.worker_id,
-        pass: this.authentication_token,
+        user: this.credentials.worker_id,
+        pass: this.credentials.authentication_token,
         sendImmediately: true
       }
     };
@@ -188,28 +220,71 @@ export abstract class BasePlugin {
 
   // Plugin Init implementation
   // This method can be overridden by any subclass
-  protected onInitRequest(req: express.Request, res: express.Response) {
-    this.logger.debug("POST /v1/init ", req.body);
-    if (req.body.authentication_token && req.body.worker_id) {
-      this.authentication_token = req.body.authentication_token;
-      this.worker_id = req.body.worker_id;
+  onInitRequest(creds: Credentials): InitUpdateResponse {
+
+    this.logger.debug("POST /v1/init ", JSON.stringify(creds));
+    
+    if (creds && creds.authentication_token && creds.worker_id) {
+      this.credentials.authentication_token = creds.authentication_token;
+      this.credentials.worker_id = creds.worker_id;
       this.logger.info(
         "Update authentication_token with %s",
-        this.authentication_token
+        this.credentials.authentication_token
       );
-      res.status(200).end();
+      return { status: "ok" };
     } else {
-      this.logger.error(
-        `Received /v1/init call without authentification_token or worker_id`
-      );
-      res.status(400).end();
+      return { status: "error", msg: "creds are undefined" };
     }
   }
 
   private initInitRoute() {
-    this.app.post("/v1/init", (req: express.Request, res: express.Response) => {
-      this.onInitRequest(req, res);
-    });
+    this.app.post(
+      "/v1/init",
+      (req, res, next) => {
+        if (req.body.authentication_token && req.body.worker_id) {
+          next();
+        } else {
+          this.logger.error(
+            `Received /v1/init call without authentification_token or worker_id`
+          );
+          res.status(400).end();
+        }
+      },
+      (req, res, next) => {
+        const creds: Credentials = {
+          authentication_token: req.body.authentication_token,
+          worker_id: req.body.worker_id
+        };
+
+        // If MultiThread, we send a message to the cluster master,
+        // the onInitRequest() will be called once the master will propagate the update to each worker
+        if (this.multiThread) {
+          const msg: SocketMsg = {
+            value: JSON.stringify(creds),
+            cmd: MsgCmd.CREDENTIAL_UPDATE_FROM_WORKER
+          };
+
+          this.logger.debug(
+            `Sending CREDENTIAL_UPDATE_FROM_WORKER from worker ${process.pid} to master with value: ${msg.value}`
+          );
+          process.send(msg);
+
+          // We have to assume that everything went fine in the propagation...
+          res.status(200).end();
+
+          // Else, we handle the onInitRequest in this process
+        } else {
+          const initUpdateResult = this.onInitRequest(creds);
+
+          if (initUpdateResult.status === "error") {
+            this.logger.error(`Error while Init: ${initUpdateResult.msg}`);
+            res.status(500).end();
+          } else {
+            res.status(200).end();
+          }
+        }
+      }
+    );
   }
 
   // Method to start the plugin
@@ -217,14 +292,19 @@ export abstract class BasePlugin {
 
   constructor() {
     this.app = express();
-    this.app.use(bodyParser.json({ type: "*/*" }));
+    this.app.use(bodyParser.json({ type: "*/*", limit: "5mb" }));
     this.logger = new winston.Logger({
       transports: [new winston.transports.Console()],
-      level: "info"
+      level: "debug"
     });
 
     this.pluginCache = cache;
     this.pluginCache.clear();
+
+    this.credentials = {
+      authentication_token: "",
+      worker_id: ""
+    };
 
     this.initInitRoute();
     this.initStatusRoute();
