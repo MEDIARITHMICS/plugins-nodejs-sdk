@@ -1,10 +1,4 @@
-import { UserIdentifierInfo } from "../../../../index";
-
-export interface UserCampaignResponse {
-    status: string;
-    data: UserCampaignResource;
-    count: number;
-}
+import { UserIdentifierInfo, ResponseData } from "../../../../index";
 
 export interface UserCampaignResource {
     user_account_id: string;
@@ -12,3 +6,5 @@ export interface UserCampaignResource {
     databag: string;
     user_identifiers: UserIdentifierInfo[];
 }
+
+export type UserCampaignResponse = ResponseData<UserCampaignResource>;

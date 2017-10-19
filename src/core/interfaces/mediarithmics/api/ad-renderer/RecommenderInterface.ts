@@ -1,4 +1,4 @@
-import { UserIdentifierInfo } from "../../../../index";
+import { UserIdentifierInfo, ResponseData } from "../../../../index";
 
 export interface RecommenderRequest {
   recommender_id: string;
@@ -9,15 +9,12 @@ export interface RecommenderRequest {
   [propsName: string]: any;
 }
 
-export interface RecommenderResponse {
-  status: string;
-  data: RecommandationsWrapper;
-}
-
 export interface RecommandationsWrapper {
   ts: number;
   proposals: ItemProposal[];
 }
+
+export type RecommenderResponse = ResponseData<RecommandationsWrapper>;
 
 export type ProposalType =
   | "ITEM_PROPOSAL"

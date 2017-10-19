@@ -4,7 +4,6 @@ import * as _ from "lodash";
 import {
   AdRendererRequest,
   Creative,
-  CreativeResponse,
   AdRendererBaseInstanceContext,
   BasePlugin,
   TemplatingEngine,
@@ -127,9 +126,9 @@ export abstract class AdRendererBasePlugin<
 
           this.pluginCache
             .get(adRendererRequest.creative_id)
-            .then((instanceContext: T) =>
-              this.onAdContents(adRendererRequest, instanceContext as T)
-            )
+            .then((instanceContext: T) => {
+              return this.onAdContents(adRendererRequest, instanceContext as T);
+            })
             .then((adRendererResponse: AdRendererPluginResponse) =>
               res
                 .header(

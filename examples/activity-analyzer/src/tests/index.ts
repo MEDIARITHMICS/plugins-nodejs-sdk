@@ -11,7 +11,7 @@ describe("Test Example Activity Analyzer", function() {
   const rpMockup: sinon.SinonStub = sinon.stub();
 
   // Activity Analyzer stub
-  const activityAnalyzer: core.ActivityAnalyzerResponse = {
+  const activityAnalyzer: core.ResponseData<core.ActivityAnalyzer> = {
     status: "ok",
     data: {
       id: "1000",
@@ -20,8 +20,7 @@ describe("Test Example Activity Analyzer", function() {
       visit_analyzer_plugin_id: 1001,
       group_id: "com.mediarithmics.visit-analyzer",
       artifact_id: "default"
-    },
-    count: 1
+    }
   };
 
   rpMockup

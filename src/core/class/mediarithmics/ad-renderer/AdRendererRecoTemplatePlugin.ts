@@ -3,12 +3,12 @@ import {
   ItemProposal,
   Creative,
   AdRendererRequest,
-  UserCampaignResponse,
   UserCampaignResource,
   AdRendererRecoTemplateInstanceContext,
   AdRendererBasePlugin,
-  RecommenderResponse,
-  TemplatingEngine
+  TemplatingEngine,
+  RecommandationsWrapper,
+  ResponseData
 } from "../../../index";
 
 export abstract class AdRendererRecoTemplatePlugin extends AdRendererBasePlugin<
@@ -53,7 +53,7 @@ export abstract class AdRendererRecoTemplatePlugin extends AdRendererBasePlugin<
     campaignId: string,
     userCampaignId: string
   ): Promise<UserCampaignResource> {
-    let userCampaignResponse: UserCampaignResponse;
+    let userCampaignResponse: ResponseData<UserCampaignResource>;
     try {
       userCampaignResponse = await super.requestGatewayHelper(
         "GET",
@@ -73,8 +73,7 @@ Error: ${e.message} - ${e.stack}`);
           user_agent_ids: ["null"],
           databag: "",
           user_identifiers: []
-        },
-        count: 0
+        }
       };
     }
 
@@ -91,7 +90,6 @@ Error: ${e.message} - ${e.stack}`);
     instanceContext: AdRendererRecoTemplateInstanceContext,
     userAgentId: string
   ): Promise<Array<ItemProposal>> {
-
     // Without any recommender, we return an empty array
     if (!instanceContext.recommender_id) {
       return Promise.resolve([]);
@@ -109,14 +107,14 @@ Error: ${e.message} - ${e.stack}`);
 
     this.logger.debug(`POST: ${uri} - ${JSON.stringify(body)}`);
 
-    const response: RecommenderResponse = await super.requestGatewayHelper(
-      "POST",
-      uri,
-      body
-    );
+    const response: ResponseData<
+      RecommandationsWrapper
+    > = await super.requestGatewayHelper("POST", uri, body);
 
     this.logger.debug(
-      `Recommender ${instanceContext.recommender_id} response : ${JSON.stringify(response)}`
+      `Recommender ${instanceContext.recommender_id} response : ${JSON.stringify(
+        response
+      )}`
     );
 
     return response.data.proposals;

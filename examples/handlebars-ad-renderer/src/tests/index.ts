@@ -8,7 +8,7 @@ import { MyHandlebarsAdRenderer } from "../MyPluginImpl";
 import { badChars, escapeChar } from "./utils";
 
 // Creative stub
-const creative: core.CreativeResponse = {
+const creative: core.ResponseData<core.Creative> = {
   status: "ok",
   data: {
     type: "DISPLAY_AD",
@@ -37,8 +37,7 @@ const creative: core.CreativeResponse = {
     destination_domain: "splendia.com",
     audit_status: "NOT_AUDITED",
     available_user_audit_actions: ["START_AUDIT"]
-  },
-  count: 1
+  }
 };
 
 const creativePropertiesResponse: core.PluginPropertyResponse = {
@@ -116,7 +115,7 @@ const creativePropertiesResponse: core.PluginPropertyResponse = {
 };
 
 // Template properties stub
-const templateProperties: core.AdLayoutVersionResponse = {
+const templateProperties: core.ResponseData<core.AdLayoutVersion> = {
   status: "ok",
   data: {
     id: "276",
@@ -126,12 +125,11 @@ const templateProperties: core.AdLayoutVersionResponse = {
     template: "mics://data_file/tenants/1126/ads_templates/250.276.template",
     ad_layout_id: "250",
     status: "DRAFT"
-  },
-  count: 1
+  }
 };
 
 // Recommendation stub
-const recommendations: core.RecommenderResponse = {
+const recommendations: core.ResponseData<core.RecommandationsWrapper> = {
   status: "ok",
   data: {
     ts: 1496939189652,
