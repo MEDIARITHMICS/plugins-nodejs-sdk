@@ -9,12 +9,16 @@ export * from "./interfaces/mediarithmics/api/common/EmailInterface";
 export * from "./interfaces/mediarithmics/api/common/CreativeInterface";
 
 export * from "./interfaces/mediarithmics/api/common/PluginPropertyInterface";
+export * from "./interfaces/mediarithmics/api/common/CredentialsInterface";
 
-export * from "./interfaces/mediarithmics/api/common/PluginPropertyInterface";
 export * from "./interfaces/mediarithmics/api/common/UserActivityInterface";
 export * from "./interfaces/mediarithmics/api/common/UserIdentifierInterface";
 
 export * from "./interfaces/mediarithmics/plugin/InstanceContextInterface";
+export * from "./interfaces/mediarithmics/plugin/InitResponse";
+export * from "./interfaces/mediarithmics/plugin/LogLevelResponse";
+export * from "./interfaces/mediarithmics/plugin/ResponseStatusCode";
+
 
 // Email Router
 export * from "./interfaces/mediarithmics/api/email-router/EmailRouterInterface"
