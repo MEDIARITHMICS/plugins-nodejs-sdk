@@ -604,10 +604,10 @@ describe("Test Example Handlebar Ad Renderer", function() {
 
                 recommendations.data.proposals.map((prop, idx) => {
                   expect(
-                    JSON.parse(headers).$clickable_contents[idx].item_id
+                    JSON.parse(decodeURIComponent(headers)).$clickable_contents[idx].item_id
                   ).to.be.eq(prop.$id);
                   expect(
-                    JSON.parse(headers).$clickable_contents[idx].$content_id
+                    JSON.parse(decodeURIComponent(headers)).$clickable_contents[idx].$content_id
                   ).to.be.eq(idx);
                 });
 

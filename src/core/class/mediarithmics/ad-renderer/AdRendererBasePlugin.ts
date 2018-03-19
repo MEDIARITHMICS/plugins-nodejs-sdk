@@ -147,7 +147,7 @@ export abstract class AdRendererBasePlugin<
             return res
               .header(
                 this.displayContextHeader,
-                JSON.stringify(adRendererResponse.displayContext)
+                encodeURIComponent(JSON.stringify(adRendererResponse.displayContext))
               )
               .status(200)
               .send(adRendererResponse.html);
