@@ -17,10 +17,10 @@ export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<
   AdRendererTemplateInstanceContext
 > {
   /**
- * Helper to fetch the content of a template
- * @param templatePath  The raw (e.g. non URL encoded) mics URI to the template file as a string.
- * @returns       A Buffer with the file content in it. This have to be decoded with the proper encoding.
- */
+   * Helper to fetch the content of a template
+   * @param templatePath  The raw (e.g. non URL encoded) mics URI to the template file as a string.
+   * @returns       A Buffer with the file content in it. This have to be decoded with the proper encoding.
+   */
   async fetchTemplateContent(templatePath: string): Promise<Buffer> {
     const templateContent = await super.fetchDataFile(templatePath);
 
@@ -29,8 +29,8 @@ export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<
   }
 
   /**
- * Helper to fetch the properties of a template
- */
+   * Helper to fetch the properties of a template
+   */
   async fetchTemplateProperties(
     organisationId: string,
     adLayoutId: string,
@@ -38,19 +38,20 @@ export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<
   ): Promise<any> {
     const templateProperties = await super.requestGatewayHelper(
       "GET",
-      `${this
-        .outboundPlatformUrl}/v1/ad_layouts/${adLayoutId}/versions/${versionId}?organisation_id=${organisationId}`
+      `${this.outboundPlatformUrl}/v1/ad_layouts/${adLayoutId}/versions/${
+        versionId
+      }?organisation_id=${organisationId}`
     );
 
     return templateProperties;
   }
 
   /**
- * The engineBuilder that can be used to compile the template
- * during the InstanceContext building
- * 
- * Have to be overriden (see examples)
- */
+   * The engineBuilder that can be used to compile the template
+   * during the InstanceContext building
+   *
+   * Have to be overriden (see examples)
+   */
   protected engineBuilder: TemplatingEngine<any, any, any>;
 
   protected async instanceContextBuilder(
@@ -63,11 +64,6 @@ export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<
       baseInstanceContext.displayAdProperties,
       p => p.property_type === "URL"
     );
-
-    if (!urlProperty) {
-      const msg = `crid: ${creativeId} - url property is undefined`;
-      this.logger.warn(msg);
-    }
 
     const IASProperty = _.find(
       baseInstanceContext.displayAdProperties,
@@ -131,7 +127,19 @@ export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<
     const compiledTemplate = this.engineBuilder.compile(template);
 
     const creativeClickUrl =
-      urlProperty && urlProperty.value.url ? urlProperty.value.url : undefined;
+      urlProperty && urlProperty.value && urlProperty.value.url
+        ? urlProperty.value.url
+        : undefined;
+
+    if (
+      urlProperty &&
+      urlProperty.value &&
+      (!urlProperty.value.url || urlProperty.value.url.length === 0)
+    ) {
+      const msg = `crid: ${creativeId} - Url property is undefined`;
+      this.logger.warn(msg);
+    }
+
     const compiledClickUrl = creativeClickUrl
       ? this.engineBuilder.compile(creativeClickUrl)
       : undefined;
@@ -146,7 +154,7 @@ export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<
 
     const IASClientId =
       IASProperty && IASProperty.value && IASProperty.value.value
-        ? IASProperty.value.value as string
+        ? (IASProperty.value.value as string)
         : undefined;
 
     const width = baseInstanceContext.displayAd.format.split("x")[0];
