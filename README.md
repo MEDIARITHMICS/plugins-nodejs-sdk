@@ -181,6 +181,8 @@ should become
 
 * `AdRendererBasePlugin.fetchDisplayAd`/`AdRendererBasePlugin.fetchDisplayAdProperties` are also taking a `forceReload` boolean parameter. When set to `true`, it will ask to the platform to bypass all caches and give the last known values for the creative / its properties. This should only be used for `PREVIEW`/`STAGE` context (e.g. when `forceReload` parameter passed to the `instanceContextBuilder()` is set at `true`).
 
+* `core.UserActivityEvent` is now a `type`. If you were using it as a Class (ex: by extending it), you should now use `core.GenericUserActivityEvent` instead.
+
 ## Migration from 0.3.x to 0.4.x
 
 * the type `Value` has been removed and replaced by a serie of specialized types. Following this change, `PluginProperty` has been transformed to a discriminated union (see the eponym section at https://www.typescriptlang.org/docs/handbook/advanced-types.html ).
@@ -194,8 +196,6 @@ should become
 * `core.ResponseData` and `core.ResponseListOfData` have been respectively renamed `core.DataResponse` and `core.DataListResponse`
 
 * `core.RecommandationsWrapper` have been renamed to `core.RecommendationsWrapper`
-
-* `core.UserActivityEvent` is now a `type`. If you were using it as a Class (ex: by extending it), you should now use `core.GenericUserActivityEvent` instead.
 
 
 ## Migration from 0.2.x to 0.3.x
