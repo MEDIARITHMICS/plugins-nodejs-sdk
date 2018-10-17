@@ -1,6 +1,8 @@
 import ExampleAudienceFeedConnector from "./MyPluginImpl";
 import { core } from "@mediarithmics/plugins-nodejs-sdk";
 
+
+// true?
 const plugin = new ExampleAudienceFeedConnector();
 const runner = new core.ProductionPluginRunner(plugin);
 
