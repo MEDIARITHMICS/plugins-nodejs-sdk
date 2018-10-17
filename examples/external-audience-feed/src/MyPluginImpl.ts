@@ -1,5 +1,6 @@
-import { IExampleAudienceFeedConnector } from "./interfaces/IExampleAudienceFeedConnector";
 import { core } from "@mediarithmics/plugins-nodejs-sdk";
+import { IExampleAudienceFeedConnector } from "./interfaces/IExampleAudienceFeedConnector";
+import { addEmailsInCustomAudience, createCustomAudience } from './services/ExampleAudienceFeed';
 
 const API_KEY_PROPERTY_NAME: string = 'api-key';
 
@@ -7,23 +8,41 @@ export default class ExampleAudienceFeedConnector extends core.AudienceFeedConne
 
     protected async instanceContextBuilder(feedId: string): Promise<IExampleAudienceFeedConnector> {
 
-        
+    try {
         const baseInstanceContext: core.AudienceFeedConnectorBaseInstanceContext = await super.instanceContextBuilder(feedId);
-        const apiKey = this.getApiKey(baseInstanceContext, feedId)
+        const apiKey: string = this.getApiKey(baseInstanceContext, feedId)
 
-        return {
-            ...baseInstanceContext,
-            apiKey
+        const context = {
+            api_key: apiKey,
+            ...baseInstanceContext
         };
+        
 
+        return context;
+
+    } catch (e) {
+        this.logger.error(`Something bad happened in instanceContextBuilder | ${e}`);
+        throw (e);
+      }
     }
 
     protected async onExternalSegmentCreation(
         request: core.ExternalSegmentCreationRequest,
-        instanceContext: any
+        instanceContext: ExampleAudienceFeedConnectorConnectorInstanceContext
     ): Promise<core.ExternalSegmentCreationPluginResponse> {
         try {
-            // request.feed_id
+            this.logger.debug(`Feed ${request.feed_id} - Segment ${request.segment_id} - OnExternalSegmentCreation`);
+
+            const segment: core.AudienceSegmentResource = await this.fetchAudienceSegment(request.feed_id);
+
+
+
+              await Promise.all(instanceContext.apps.map(async (app: ICredentialsClientApp) => {
+                this.logger.debug(`Email ${app.name} - Create custom audience`);
+                const payload: ExampleAudienceFeedPayloadCustomAudience = buildCreateCustomAudiencePayload(instanceContext.batchAudienceName as string);
+                await createCustomAudience(instanceContext, payload, this.logger);
+              }));
+
             return {
                 status: 'ok'
             } as core.ExternalSegmentCreationPluginResponse;
@@ -38,7 +57,7 @@ export default class ExampleAudienceFeedConnector extends core.AudienceFeedConne
 
     protected async onExternalSegmentConnection(
         request: core.ExternalSegmentConnectionRequest,
-        instanceContext: any
+        instanceContext: ExampleAudienceFeedConnectorConnectorInstanceContext
     ): Promise<core.ExternalSegmentConnectionPluginResponse> {
         try{
             return {
@@ -54,7 +73,7 @@ export default class ExampleAudienceFeedConnector extends core.AudienceFeedConne
 
     protected async onUserSegmentUpdate(
         request: core.UserSegmentUpdateRequest,
-        instanceContext: any
+        instanceContext: ExampleAudienceFeedConnectorConnectorInstanceContext
     ): Promise<core.UserSegmentUpdatePluginResponse> {
         try{
             return {
