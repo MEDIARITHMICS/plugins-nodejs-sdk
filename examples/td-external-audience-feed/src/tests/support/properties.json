@@ -1,0 +1,10 @@
+{
+  "mics_api_token": "api:thisisanapitoken",
+  "client_id": "YOLO",
+  "client_secret": "YALA",
+  "credentials": {
+      "test": {
+          "segment_provider_id": "LOLOLOL"
+      }
+  }
+}
