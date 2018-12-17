@@ -1,5 +1,4 @@
 import { core } from "@mediarithmics/plugins-nodejs-sdk";
-// import ExampleAudienceFeedConnector from "../MyPluginImpl";
 
 export interface IExampleAudienceFeedConnector extends core.AudienceFeedConnectorBaseInstanceContext {
     exampleApiKey: string;

@@ -493,12 +493,6 @@ describe("Test Example Audience Feed Manager", function() {
       ]
     };
 
-   /*  populateEmailsAudience = sinon.stub(ExampleAudienceFeed, "pushEmailsAudience").returns(`{
-        "results": {
-          "count_added": 1,
-          "count_removed": 0
-        }
-      }`); */
     // Plugin init
     
     request(runner.plugin.app)

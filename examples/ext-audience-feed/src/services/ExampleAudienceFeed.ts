@@ -27,7 +27,6 @@ export async function createCustomAudience(
       headers: { 'X-Authorization': instanceContext.exampleApiKey },
       body: payload
     };
-    console.log('______________________________createCustomAudience')
     return await rp(options);
   } catch (e) {
     throw(e);
