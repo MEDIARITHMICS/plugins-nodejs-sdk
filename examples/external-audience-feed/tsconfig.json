@@ -7,11 +7,6 @@
         "target": "es6",
         "rootDir": "./src",
         "typeRoots": ["node_modules/@types"],
-        "declaration": true,
-        "strictNullChecks": true,
-        "pretty": true,
-        "sourceMap": true
-
     },
     "include": [
         "./src/**/*"

@@ -1,14 +1,15 @@
 import { core } from '@mediarithmics/plugins-nodejs-sdk';
 
-// Lesquels sont utiles à chaque fois?
-export interface ExampleAudienceFeedConnectorConnectorInstanceContext extends core.AudienceFeedConnectorBaseInstanceContext {
+export interface IExampleAudienceFeedConnectorConnectorInstanceContext extends core.AudienceFeedConnectorBaseInstanceContext {
   technicalConfiguration: ITechnicalConfiguration;
   exampleApiKey: string;
   micsApiToken: string;
+  audience_feed_id?: string;
 }
 
 export interface ITechnicalConfiguration {
   web_domain: string[];
   mics_api_version: string;
   mics_api_endpoint: string;
+  max_retry: string;
 }
