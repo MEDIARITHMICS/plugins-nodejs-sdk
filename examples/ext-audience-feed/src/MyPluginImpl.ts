@@ -45,7 +45,6 @@ export default class ExampleAudienceFeedConnector extends core.AudienceFeedConne
         audience_feed_name: exampleAudienceFeedAudienceName,
         ...baseInstanceContext
       };
-      console.log('==========> Example Audience Feed Connector ===========> OK');
       return context;
     } catch (e) {
       this.logger.error(
@@ -66,29 +65,17 @@ export default class ExampleAudienceFeedConnector extends core.AudienceFeedConne
           request.segment_id
         } - OnExternalSegmentCreation`
       );
-      this.logger.debug(`========== Creating custom audience`);
       const payload: IExampleAudienceFeedPayloadCustomAudience = {
         audienceId: request.feed_id
       };
-      console.log(JSON.stringify(payload));
       const exampleAudienceFeedResponse: IExampleAudienceFeedCreateCustomAudienceResponse = await createCustomAudience(
         instanceContext,
         payload,
         this.logger
-      );
-      console.log('exampleAudienceFeedResponse =>' + exampleAudienceFeedResponse);
-      this.logger.debug(`========== Response is: ${JSON.stringify(exampleAudienceFeedResponse)}`);
-      console.log('exampleAudienceFeedResponse.data["audienceId"] =====>' + payload.audienceId);
-       // ERROR   console.log(JSON.stringify(exampleAudienceFeedResponse.data.audienceId));
-       // console.log(JSON.stringify(instanceContext.audience_feed_id));
-       // console.log('exampleAudienceFeedResponse.data.audienceId[0] ===>' + exampleAudienceFeedResponse.data.audienceId[0]);
-       instanceContext.audience_feed_id = exampleAudienceFeedResponse.results.audienceId;
-       // instanceContext.audience_feed_id = payload.audienceId;
-        console.log("===============================",exampleAudienceFeedResponse)
+      ); instanceContext.audience_feed_id = exampleAudienceFeedResponse.results.audienceId;
       if (!instanceContext.audience_feed_id) {
         throw new Error(`AudienceId empty`);
       }
-      console.log('========== External Segment Creation ===========> OK');
       return {
         status: "ok"
       };
