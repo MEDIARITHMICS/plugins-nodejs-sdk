@@ -9,7 +9,7 @@ export function buildCreateCustomAudiencePayload(
   exampleAudienceFeedAudienceId: string
 ): IExampleAudienceFeedPayloadCustomAudience {
   return {
-      audienceId : exampleAudienceFeedAudienceId,
+    audienceId : exampleAudienceFeedAudienceId,
   }
 }
 export function buildPayLoadEmail(

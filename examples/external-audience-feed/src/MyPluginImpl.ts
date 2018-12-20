@@ -1,26 +1,21 @@
-import { core } from "@mediarithmics/plugins-nodejs-sdk"; // import core sdk
+import { core } from "@mediarithmics/plugins-nodejs-sdk";
 import {
   IExampleAudienceFeedConnector,
   IExampleAudienceFeedPayloadCustomAudience,
   IExampleAudienceFeedCreateCustomAudienceResponse,
-} from "./interfaces/IExampleAudienceFeedConnector"; // import connections
+} from "./interfaces/IExampleAudienceFeedConnector";
 import { IExampleAudienceFeedConnectorConnectorInstanceContext } from "./interfaces/IMics";
 import {
   createCustomAudience,
   pushEmailsAudience,
   getAllSegments
-} from "./services/ExampleAudienceFeed"; // import dedicated functions
+} from "./services/ExampleAudienceFeed";
 
-// creating const to use
-const API_KEY_PROPERTY_NAME: string = "api-key"; // API key from external platform
-// const TECHNICAL_CONFIGURATION_FILE_NAME = 'technical-configuration'; // technical configuration
-const EXAMPLEAUDIENCEFEED_AUDIENCE_ID_PROPERTY_ID =
-  "exampleaudiencefeed_audience_id"; // id assigned by mics to the audience
-const EXAMPLEAUDIENCEFEED_AUDIENCE_NAME_PROPERTY_NAME =
-  "exampleaudiencefeed_audience_name"; // name of this audience
+const API_KEY_PROPERTY_NAME: string = "api-key";
+const EXAMPLEAUDIENCEFEED_AUDIENCE_ID_PROPERTY_ID = "exampleaudiencefeed_audience_id";
+const EXAMPLEAUDIENCEFEED_AUDIENCE_NAME_PROPERTY_NAME = "exampleaudiencefeed_audience_name";
 
 export default class ExampleAudienceFeedConnector extends core.AudienceFeedConnectorBasePlugin {
-  // connection to the mics audiences
   protected async instanceContextBuilder(
     feed_id: string
   ): Promise<IExampleAudienceFeedConnector> {
@@ -28,7 +23,6 @@ export default class ExampleAudienceFeedConnector extends core.AudienceFeedConne
       const baseInstanceContext: core.AudienceFeedConnectorBaseInstanceContext = await super.instanceContextBuilder(
         feed_id
       );
-
       const apiKey: string = this.getApiKey(baseInstanceContext, feed_id);
       const exampleAudienceFeedAudienceId: string = this.getExampleAudienceFeedAudienceId(
         baseInstanceContext,
@@ -38,11 +32,10 @@ export default class ExampleAudienceFeedConnector extends core.AudienceFeedConne
         baseInstanceContext,
         feed_id
       );
-
       const context = {
         exampleApiKey: apiKey,
-        audience_feed_id: exampleAudienceFeedAudienceId,
-        audience_feed_name: exampleAudienceFeedAudienceName,
+        audienceFeedId: exampleAudienceFeedAudienceId,
+        audienceFeedName: exampleAudienceFeedAudienceName,
         ...baseInstanceContext
       };
       return context;
@@ -72,8 +65,9 @@ export default class ExampleAudienceFeedConnector extends core.AudienceFeedConne
         instanceContext,
         payload,
         this.logger
-      ); instanceContext.audience_feed_id = exampleAudienceFeedResponse.results.audienceId;
-      if (!instanceContext.audience_feed_id) {
+      );
+      instanceContext.audienceFeedId = exampleAudienceFeedResponse.results.audienceId;
+      if (!instanceContext.audienceFeedId) {
         throw new Error(`AudienceId empty`);
       }
       return {
@@ -81,26 +75,22 @@ export default class ExampleAudienceFeedConnector extends core.AudienceFeedConne
       };
     }  catch (e) {
       return {
-        status: e.status || "error",
+        status: e.status || "Unable to create a custom Audience with this Id:" + instanceContext.audienceFeedId + ". Error: " + e ,
         message: e.message || e
       };
-     } 
-  
+    } 
   }
 
   protected async onExternalSegmentConnection(
     request: core.ExternalSegmentConnectionRequest,
     instanceContext: IExampleAudienceFeedConnectorConnectorInstanceContext
   ): Promise<core.ExternalSegmentConnectionPluginResponse> {
-    if (!instanceContext.audience_feed_id) throw new Error(`AudienceId empty`);
+    if (!instanceContext.audienceFeedId) throw new Error(`AudienceId empty`);
     try {
       const payload = "mics@dev.com";
-      const id = instanceContext.audience_feed_id;
+      const id = instanceContext.audienceFeedId;
       await getAllSegments(id);
       this.logger.debug(`Audience Id Saved on creation : ${request.feed_id}`);
-
-      // call http avec fonction en entrée email et audienceId  et call sur la route dans la doc
-      //fonction unique "OnUserCreation"
       await pushEmailsAudience(instanceContext, id, payload, this.logger);
       return {
         audienceId: "1234",
@@ -119,22 +109,17 @@ export default class ExampleAudienceFeedConnector extends core.AudienceFeedConne
     instanceContext: IExampleAudienceFeedConnectorConnectorInstanceContext
   ): Promise<core.UserSegmentUpdatePluginResponse> {
     try {
-      if (!instanceContext.audience_feed_id)
+      if (!instanceContext.audienceFeedId)
         throw new Error(`Can't find Audience ID`);
-      const identifiersEmail: core.UserEmailIdentifierInfo[] = <
-        core.UserEmailIdentifierInfo[]
-      >request.user_identifiers.filter(
+      const identifiersEmail: core.UserEmailIdentifierInfo[] = <core.UserEmailIdentifierInfo[]>request.user_identifiers.filter(
         (identifier: core.UserIdentifierInfo) =>
           (identifier.type = "USER_EMAIL")
       );
-
+      const payload = "mics@dev.com";
       if (identifiersEmail.length > 0) {
         const payload = identifiersEmail[0].hash;
       }
-      const id = instanceContext.audience_feed_id;
-      
-      await getAllSegments(id);
-      const payload = "mics@dev.com";
+      const id = instanceContext.audienceFeedId;
       this.logger.debug(`Audience Id Saved on creation : ${request.feed_id}`);
       await pushEmailsAudience(instanceContext, id, payload, this.logger);
       return {
@@ -142,7 +127,7 @@ export default class ExampleAudienceFeedConnector extends core.AudienceFeedConne
       } as core.UserSegmentUpdatePluginResponse;
     } catch (e) {
       return {
-        status: e.status || "error",
+        status: e.status || "Unable to update Audience (id: " + instanceContext.audienceFeedId + ").",
         message: e.message || e
       };
     }

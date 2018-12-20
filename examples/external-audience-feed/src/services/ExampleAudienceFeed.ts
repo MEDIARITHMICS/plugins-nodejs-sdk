@@ -15,11 +15,8 @@ export async function createCustomAudience(
   payload: IExampleAudienceFeedPayloadCustomAudience,
   logger: winston.LoggerInstance,
 ): Promise<IExampleAudienceFeedCreateCustomAudienceResponse> {
-
   try {
-
     logger.debug(`Create audience -> ${EXAMPLE_URL}/v1/audience_segment_external_feeds/}`);
-
     const options: rp.OptionsWithUri = {
       method: 'POST',
       uri: `${EXAMPLE_URL}/v1/audience_segment_external_feeds/`,
@@ -34,15 +31,14 @@ export async function createCustomAudience(
 }
 
 export async function getAllSegments(
-    id: string
+  id: string
 ) {
   try{
     const options: rp.OptionsWithUri = {
-        method: "GET",
-        uri: `${EXAMPLE_URL}/v1/external_segment_connection/${id}`,
-        json: true
+      method: "GET",
+      uri: `${EXAMPLE_URL}/v1/external_segment_connection/${id}`,
+      json: true
     };
-
     return await rp(options);
   } catch (e) {
     throw(e);
@@ -55,11 +51,8 @@ export async function pushEmailsAudience(
   payload: string,
   logger: winston.LoggerInstance,
 ): Promise<any> {
-
   try {
-
     logger.debug(`Example Audience Feed call -> ${EXAMPLE_URL}/audiences/${id}`)
-
     const options: rp.OptionsWithUri = {
       method: 'POST',
       uri: `${EXAMPLE_URL}/v1/user_segment_update/${id}`,
@@ -69,11 +62,7 @@ export async function pushEmailsAudience(
       // proxy: PROXY_URL,
     };
     return await rp(options);
-
   } catch (e) {
     throw (e);
   }
 }
-
-
-

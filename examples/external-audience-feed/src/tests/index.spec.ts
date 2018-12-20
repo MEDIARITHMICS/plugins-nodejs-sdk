@@ -17,11 +17,9 @@ let populateEmailsAudience: sinon.SinonStub;
 let getAllSegmentsStub: sinon.SinonStub;
 
 const LOG_LEVEL: string = "debug";
-
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-describe("Test Example Audience Feed Manager", function() {
-    
+describe("Test Example Audience Feed Manager", function() { 
   beforeEach(() => {
     // v1/log_level
     if (createSegmentStub) {
@@ -30,8 +28,7 @@ describe("Test Example Audience Feed Manager", function() {
       .post('/v1/external_segment_creation')
       .query({
         payload : audienceSegmentId
-         }
-      )
+      })
       .reply(200, {
         results: [{  payload : audienceSegmentId }],
       })
@@ -43,13 +40,11 @@ describe("Test Example Audience Feed Manager", function() {
       .post('/v1/audience_segment_external_feeds')
       .query({
         payload : audienceSegmentId
-         }
-      )
+      })
       .reply(200, {
         results: [{ status: 'ok' }],
       })
       .log(console.log);
-      
     }
     if (createSegmentStub) {
       nock('http://api.exampleaudiencefeed.com')
@@ -60,7 +55,6 @@ describe("Test Example Audience Feed Manager", function() {
       .reply(200, {
         results: [{ status: 'ok' }],
       });
-      
     } 
     if (getAllSegmentsStub) {
       nock('http://api.exampleaudiencefeed.com')
@@ -73,7 +67,6 @@ describe("Test Example Audience Feed Manager", function() {
       .reply(200, {
         results: [{ status: 'ok' }],
       });
-      
     }
     if (populateEmailsAudience) {
       nock('http://api.exampleaudiencefeed.com')
@@ -84,25 +77,21 @@ describe("Test Example Audience Feed Manager", function() {
       .reply(200, {
         results: [{ status: 'ok' }],
       });
-      
     } 
-   if (populateEmailsAudience) {
-    nock('http://api.exampleaudiencefeed.com')
-    .post('/v1/user_segment_update/${id}')
-    .query({
-      audience_id: 'device_ifa,list_id,delete\n38400000-8cf0-11bd-b23e-10b96e40000a,3456,0'
-    })
-    .reply(200, {
-      results: [{ status: 'ok' }],
-    });
-    
-  } 
-}) 
+    if (populateEmailsAudience) {
+      nock('http://api.exampleaudiencefeed.com')
+      .post('/v1/user_segment_update/${id}')
+      .query({
+        audience_id: 'device_ifa,list_id,delete\n38400000-8cf0-11bd-b23e-10b96e40000a,3456,0'
+      })
+      .reply(200, {
+        results: [{ status: 'ok' }],
+      });  
+    } 
+})
   const audienceSegmentName = "Awesome Segment";
   const audienceSegmentId = "1254";
-
   function buildGatewayRpMockup() {
- 
     const rpMockup: sinon.SinonStub = sinon.stub();
     const pluginRes: core.DataResponse<core.AudienceSegmentExternalFeedResource> = {
       status: "ok",
@@ -115,7 +104,6 @@ describe("Test Example Audience Feed Manager", function() {
         version_id: "what's up"
       }
     };
-
     rpMockup
       .withArgs(
         sinon.match.has(
@@ -130,7 +118,6 @@ describe("Test Example Audience Feed Manager", function() {
         )
       ) 
     .returns(pluginRes);
-
     const audienceSegment: core.DataResponse<core.AudienceSegmentResource> = {
       status: "ok",
       data: {
@@ -147,7 +134,6 @@ describe("Test Example Audience Feed Manager", function() {
     };
     rpMockup
       .withArgs(
-        
         sinon.match.has(
           "uri",
           sinon.match(function(value: string) {
@@ -160,7 +146,6 @@ describe("Test Example Audience Feed Manager", function() {
         )
       )
       .returns(audienceSegment);
-
     const pluginProperties = {
       status: "ok",
       data: [
@@ -197,7 +182,6 @@ describe("Test Example Audience Feed Manager", function() {
       ],
       count: 1
     };
-
     rpMockup
       .withArgs(
         sinon.match.has(
@@ -212,7 +196,6 @@ describe("Test Example Audience Feed Manager", function() {
         )
       )
       .returns(pluginProperties);
-
     rpMockup
       .withArgs(
         sinon.match.has(
@@ -227,7 +210,6 @@ describe("Test Example Audience Feed Manager", function() {
         )
       )
       .returns(new Buffer(JSON.stringify(configuration)));
-
     rpMockup
       .withArgs(
         sinon.match.has(
@@ -241,31 +223,24 @@ describe("Test Example Audience Feed Manager", function() {
         )
       )
       .returns(new Buffer(JSON.stringify(credentials)));
-
     return rpMockup;
   }
 
   it("Check the segment creation", function(done) {
-    // All the magic is here
     const plugin = new ExampleAudienceFeedConnector();
     const rpMockup = buildGatewayRpMockup();
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
-
-    // Payload
     const payload: core.ExternalSegmentCreationRequest = {
       feed_id: "1234",
       datamart_id: "9012",
       segment_id: "3456"
     };
-
-    // ExampleAudienceFeed results
     createSegmentStub = sinon.stub(ExampleAudienceFeed, "createCustomAudience")
       .returns({
         results: {
           audienceId: payload.segment_id
         }
       });
-    // Plugin init
     request(runner.plugin.app)
       .post("/v1/init")
       .send({ authentication_token: "Manny", worker_id: "Calavera" })
@@ -275,7 +250,6 @@ describe("Test Example Audience Feed Manager", function() {
           .send({ level: LOG_LEVEL })
           .end((err, res) => {
             expect(res.status).to.be.equal(200);
-            // Activity to process
             request(runner.plugin.app)
                 .post("/v1/external_segment_creation")
                 .send(payload)
@@ -293,38 +267,28 @@ describe("Test Example Audience Feed Manager", function() {
   });
 
   it("Check the segment creation when the segment already exists", function(done) {
-    // All the magic is here
     const plugin = new ExampleAudienceFeedConnector();
     const rpMockup = buildGatewayRpMockup();
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
-
-    // Payload
     const payload: core.ExternalSegmentCreationRequest = {
       feed_id: "1234",
       datamart_id: "9012",
       segment_id: "3456"
     };
-
-    // ExampleAudienceFeed results
     getAllSegmentsStub = sinon.stub(ExampleAudienceFeed, "getAllSegments")
       .returns({
         id: "1254"
       });
-
-    // Plugin init
     request(runner.plugin.app)
       .post("/v1/init")
       .send({ authentication_token: "Manny", worker_id: "Calavera" })
       .end((err, res) => {
         expect(res.status).to.equal(200);
-
         request(runner.plugin.app)
           .put("/v1/log_level")
           .send({ level: LOG_LEVEL })
           .end((err, res) => {
             expect(res.status).to.equal(200);
-
-            // Activity to process
             request(runner.plugin.app)
               .post("/v1/external_segment_creation")
               .send(payload)
@@ -335,7 +299,6 @@ describe("Test Example Audience Feed Manager", function() {
                     res.text
                   ) as core.ExternalSegmentCreationPluginResponse).status
                 ).to.be.eq("ok");
-
                 done();
               });
           });
@@ -343,38 +306,30 @@ describe("Test Example Audience Feed Manager", function() {
   });
 
   it("Check the segment connection when external API is OK", function(done) {
-    // All the magic is here
     const plugin = new ExampleAudienceFeedConnector();
     const rpMockup = buildGatewayRpMockup();
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
-
     const payload: core.ExternalSegmentConnectionRequest = {
       feed_id: "1234",
       datamart_id: "3434",
       segment_id: "3456"
     };
-
     populateEmailsAudience = sinon.stub(ExampleAudienceFeed, "pushEmailsAudience").returns(`{
         "instanceContext": 22,
         "id": 1,
         "payload": ${payload},
         "logger": 3.0722387
       }`);
-
-    // Plugin init
     request(runner.plugin.app)
       .post("/v1/init")
       .send({ authentication_token: "Manny", worker_id: "Calavera" })
       .end((err, res) => {
         expect(res.status).to.equal(200);
-
         request(runner.plugin.app)
           .put("/v1/log_level")
           .send({ level: LOG_LEVEL })
           .end((err, res) => {
             expect(res.status).to.equal(200);
-
-            // Activity to process
             request(runner.plugin.app)
               .post("/v1/external_segment_connection")
               .send(payload)
@@ -392,32 +347,24 @@ describe("Test Example Audience Feed Manager", function() {
   });
 
   it("Check the segment connection when external API is KO (e.g. the dummy user was not inserted in the segment)", function(done) {
-    // All the magic is here
     const plugin = new ExampleAudienceFeedConnector();
     const rpMockup = buildGatewayRpMockup();
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
-
     const payload: core.ExternalSegmentConnectionRequest = {
       feed_id: "1234",
       datamart_id: "9012",
       segment_id: "3456"
     };
-      
-    
-    // Plugin init
     request(runner.plugin.app)
       .post("/v1/init")
       .send({ authentication_token: "Manny", worker_id: "Calavera" })
       .end((err, res) => {
         expect(res.status).to.equal(200);
-
         request(runner.plugin.app)
           .put("/v1/log_level")
           .send({ level: LOG_LEVEL })
           .end((err, res) => {
             expect(res.status).to.equal(200);
-
-            // Activity to process
             request(runner.plugin.app)
               .post("/v1/external_segment_connection")
               .send(payload)
@@ -428,37 +375,28 @@ describe("Test Example Audience Feed Manager", function() {
                     res.text
                   ) as core.ExternalSegmentConnectionPluginResponse).status
                 ).to.be.eq("external_segment_not_ready_yet");        
-
                 const credentialsAPI = populateEmailsAudience.getCall(0).args[0];
                 const payloadAPI = populateEmailsAudience.getCall(0).args[1];
-
-                /* Authentication checks */
                 expect(credentialsAPI.dmpId).to.be.eq(
                   credentials.credentials.test.dmp_id
                 );
                 expect(credentialsAPI.token).to.be.eq(
                   credentials.credentials.test.token
                 );
-
-                /* Body checks */
                 expect(payloadAPI).to.be.eq(
                   payloadAPI
                 );
-
               });
               
           });
       });
-      
       done();
   });
 
   it("Check the user segment update", function(done) {
-    // All the magic is here
     const plugin = new ExampleAudienceFeedConnector();
     const rpMockup = buildGatewayRpMockup();
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
-
     const payload: core.UserSegmentUpdateRequest = {
       feed_id: "1234",
       session_id: "5678",
@@ -493,20 +431,16 @@ describe("Test Example Audience Feed Manager", function() {
       ]
     };
 
-    // Plugin init
-    
     request(runner.plugin.app)
       .post("/v1/init")
       .send({ authentication_token: "Manny", worker_id: "Calavera" })
       .end((err, res) => {
         expect(res.status).to.equal(200);
-
         request(runner.plugin.app)
           .put("/v1/log_level")
           .send({ level: LOG_LEVEL })
           .end((err, res) => {
             expect(res.status).to.be.equal(200);
-
             // Activity to process
             request(runner.plugin.app)
               .post("/v1/user_segment_update")
@@ -516,28 +450,21 @@ describe("Test Example Audience Feed Manager", function() {
                 expect(
                   (JSON.parse(res.text) as core.UserSegmentUpdatePluginResponse).status
                 ).to.be.eq("ok");
-                
                 done();
                 await delay(100);
-
               });
-              
           });
       });
-    // Plugin init
     request(runner.plugin.app)
       .post("/v1/init")
       .send({ authentication_token: "Manny", worker_id: "Calavera" })
       .end((err, res) => {
         expect(res.status).to.equal(200);
-
         request(runner.plugin.app)
           .put("/v1/log_level")
           .send({ level: LOG_LEVEL })
           .end((err, res) => {
             expect(res.status).to.equal(200);
-
-            // Activity to process
             request(runner.plugin.app)
               .post("/v1/user_segment_update")
               .send(payload)
@@ -551,10 +478,7 @@ describe("Test Example Audience Feed Manager", function() {
           });
       });
   });
-
-afterEach(() => {
-  
-      nock.restore();
-})
-
+  afterEach(() => {
+        nock.restore();
+  })
 });

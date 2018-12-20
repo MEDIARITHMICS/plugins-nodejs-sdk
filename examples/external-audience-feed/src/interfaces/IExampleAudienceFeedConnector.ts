@@ -2,14 +2,14 @@ import { core } from "@mediarithmics/plugins-nodejs-sdk";
 
 export interface IExampleAudienceFeedConnector extends core.AudienceFeedConnectorBaseInstanceContext {
     exampleApiKey: string;
-    audience_feed_id: string;
-    audience_feed_name: string;
+    audienceFeedId: string;
+    audienceFeedName: string;
 }
 
 export interface IExampleAudienceFeedPayloadPushUser {
     type: string;
 	id: IExampleAudienceFeedPayloadUserId;
-	payload: string;
+	payload: string[];
 	logger: string;
 }
 
@@ -36,7 +36,7 @@ export interface IExampleApiKey{
 }
 
 export interface MicsRequestData {
-	feedId: string;
+	feed_id: string;
 	datamartId: string;
 	segmentId: string;
 }

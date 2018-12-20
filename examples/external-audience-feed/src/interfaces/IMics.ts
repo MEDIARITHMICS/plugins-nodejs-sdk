@@ -4,7 +4,7 @@ export interface IExampleAudienceFeedConnectorConnectorInstanceContext extends c
   technicalConfiguration: ITechnicalConfiguration;
   exampleApiKey: string;
   micsApiToken: string;
-  audience_feed_id?: string;
+  audienceFeedId?: string;
 }
 
 export interface ITechnicalConfiguration {
