@@ -172,23 +172,20 @@ describe("Request Gateway helper API tests", function() {
 });
 
 describe("Data File helper Tests", function() {
-  class MyFakePlugin extends core.BasePlugin {}
 
+  class MyFakePlugin extends core.BasePlugin {}
   const authenticationToken = "Manny";
   const workerId = "Calavera";
-
   const fakeDataFile = new Buffer("Hello");  
-
-  const rpMockup = sinon.stub().returns(Promise.resolve(fakeDataFile));
-  
-      const plugin = new MyFakePlugin(false);
-      const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
   it("DataFile: Should call the proper gateway URL", function(done) {
     
     const dataFileGatewayURI = "/v1/data_file/data";
     const method = "GET";
     const fakeDataFileURI = "mics://fake_dir/fake_file";
+    const rpMockup = sinon.stub().returns(Promise.resolve(fakeDataFile));
+    const plugin = new MyFakePlugin(false);
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     // We init the plugin
     request(runner.plugin.app)
@@ -206,10 +203,75 @@ describe("Data File helper Tests", function() {
       });
   });
 
-  it("ConfigurationFile: Should call the proper gateway URL", function(
-    done
-  ) {
+  it("DataFile: Should use cache second time a file is called and ", function(done) {
 
+    const fileNotModifiedError = new Error('301 - {"type":"Buffer","data":[123,125]}');
+    // @ts-ignore
+    fileNotModifiedError.statusCode = 301;
+
+    const secondFile = new Buffer("Hola");
+    const fakeDataFileURI = "mics://fake_dir/fake_file";
+    const method = "GET";
+    const dataFileGatewayURI = "/v1/data_file/data";
+    const plugin = new MyFakePlugin(false);
+    const rpMockup = sinon
+      .stub()
+      .onFirstCall()
+      .returns(Promise.resolve(fakeDataFile))
+      .onSecondCall()
+      .throws(fileNotModifiedError)
+      .onThirdCall()
+      .returns(Promise.resolve(secondFile));
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+
+    // We init the plugin
+    request(runner.plugin.app)
+      .post('/v1/init')
+      .send({ authentication_token: authenticationToken, worker_id: workerId })
+      .end(async (err, res) => {
+
+        // At first, datafile cache is undefined.
+        // @ts-ignore
+        expect(runner.plugin.dataFileCacheRegistry.get(fakeDataFileURI)).to.be.undefined;
+
+        // Response and cached file must be eq to fake datafile.
+        const response1 = await runner.plugin.fetchDataFile(fakeDataFileURI);
+        expect(response1).to.be.eq(fakeDataFile);
+        // @ts-ignore
+        expect(runner.plugin.dataFileCacheRegistry.get(fakeDataFileURI).data).to.be.eq(fakeDataFile);
+
+        // Response and cached file must be eq to fake datafile.
+        const response2 = await runner.plugin.fetchDataFile(fakeDataFileURI);
+        expect(response2).to.be.eq(fakeDataFile);
+        // @ts-ignore
+        expect(runner.plugin.dataFileCacheRegistry.get(fakeDataFileURI).data).to.be.eq(fakeDataFile);
+
+        // Response and cached file must have changed.
+        const response3 = await runner.plugin.fetchDataFile(fakeDataFileURI);
+        expect(response3).to.be.eq(secondFile); 
+        // @ts-ignore
+        expect(runner.plugin.dataFileCacheRegistry.get(fakeDataFileURI).data).to.be.eq(secondFile);
+
+        // Stub must have been call three times.
+        expect(rpMockup.args[0][0].method).to.be.eq(method);
+        expect(rpMockup.args[0][0].uri).to.be.eq(`http://${runner.plugin.gatewayHost}:${runner.plugin.gatewayPort}${dataFileGatewayURI}`);
+        expect(rpMockup.args[0][0].qs['uri']).to.be.eq(fakeDataFileURI);
+        expect(rpMockup.args[1][0].method).to.be.eq(method);
+        expect(rpMockup.args[1][0].uri).to.be.eq(`http://${runner.plugin.gatewayHost}:${runner.plugin.gatewayPort}${dataFileGatewayURI}`);
+        expect(rpMockup.args[1][0].qs['uri']).to.be.eq(fakeDataFileURI);
+        expect(rpMockup.args[2][0].method).to.be.eq(method);
+        expect(rpMockup.args[2][0].uri).to.be.eq(`http://${runner.plugin.gatewayHost}:${runner.plugin.gatewayPort}${dataFileGatewayURI}`);
+        expect(rpMockup.args[2][0].qs['uri']).to.be.eq(fakeDataFileURI);
+        done();
+      });
+  });
+
+  it("ConfigurationFile: Should call the proper gateway URL", (done) => {
+
+    const rpMockup = sinon.stub().returns(Promise.resolve(fakeDataFile));
+    const plugin = new MyFakePlugin(false);
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
     const confFileName = "toto";
     const method = "GET";
     const confFileGatewayURI = `/v1/configuration/technical_name=${confFileName}`;
@@ -221,8 +283,9 @@ describe("Data File helper Tests", function() {
     .end((err, res) => {
       // We try a call to the Gateway
       runner.plugin.fetchConfigurationFile(confFileName).then(file => {
-        expect(rpMockup.args[1][0].method).to.be.eq(method);
-        expect(rpMockup.args[1][0].uri).to.be.eq(`http://${runner.plugin.gatewayHost}:${runner.plugin.gatewayPort}${confFileGatewayURI}`);
+        console.log(rpMockup.args)
+        expect(rpMockup.args[0][0].method).to.be.eq(method);
+        expect(rpMockup.args[0][0].uri).to.be.eq(`http://${runner.plugin.gatewayHost}:${runner.plugin.gatewayPort}${confFileGatewayURI}`);
         expect(file).to.be.eq(fakeDataFile);
         done();
       });

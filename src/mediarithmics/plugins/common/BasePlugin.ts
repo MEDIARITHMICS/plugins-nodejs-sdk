@@ -55,6 +55,11 @@ export interface Credentials {
   worker_id: string;
 }
 
+export interface DataFileCache {
+  date: Date;
+  data: Buffer;
+}
+
 export type ResponseStatusCode = "ok" | "error";
 
 export class PropertiesWrapper {
@@ -127,6 +132,7 @@ export abstract class BasePlugin {
   INSTANCE_CONTEXT_CACHE_EXPIRATION: number = 120000;
 
   pluginCache: any;
+  dataFileCacheRegistry: Map<string, DataFileCache> = new Map();
 
   gatewayHost: string;
   gatewayPort: number;
@@ -246,15 +252,35 @@ export abstract class BasePlugin {
     );
   }
 
-  fetchDataFile(uri: string): Promise<Buffer> {
-    return this.requestGatewayHelper(
-      "GET",
-      `${this.outboundPlatformUrl}/v1/data_file/data`,
-      undefined,
-      {uri: uri},
-      false,
-      true
-    );
+  async fetchDataFile(uri: string): Promise<Buffer> {
+
+    const cachedFile: DataFileCache | undefined = this.dataFileCacheRegistry.get(uri);
+    const headers = cachedFile ? { 'If-Modified-Since': cachedFile.date.toUTCString() } : undefined;
+
+    try {
+      const response = await this.requestGatewayHelper(
+        "GET",
+        `${this.outboundPlatformUrl}/v1/data_file/data`,
+        undefined,
+        {uri: uri},
+        false,
+        true,
+        headers,
+      );
+      this.dataFileCacheRegistry.set(uri, {
+        date: new Date(),
+        data: response,
+      });
+      return response;
+    } catch(e) {
+      // file not modified
+      if (e.statusCode === 301 && cachedFile) {
+        const msg = `Use cached file.`;
+        this.logger.debug(msg);
+        return cachedFile.data;
+      }
+      throw e;
+    }
   }
 
   fetchConfigurationFile(fileName: string): Promise<Buffer> {
@@ -273,7 +299,8 @@ export abstract class BasePlugin {
                              body?: any,
                              qs?: any,
                              isJson?: boolean,
-                             isBinary?: boolean): Promise<any> {
+                             isBinary?: boolean,
+                             headers?: any): Promise<any> {
     let options: request.OptionsWithUri = {
       method: method,
       uri: uri,
@@ -296,6 +323,9 @@ export abstract class BasePlugin {
 
     // Set the encoding to null if it is binary
     options.encoding = isBinary !== undefined && isBinary ? null : undefined;
+
+    // Set the headers if provided 
+    options.headers = headers ? { ...options.headers, ...headers } : options.headers;
 
     this.logger.silly(`Doing gateway call with ${JSON.stringify(options)}`);
 

@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.7.6 - 2019-03-28
+
+- Optimize `fetchDataFile` helper with caching.
+
 # 0.7.4 - 2018-11-13
 
 - Fix undefined port proxy url
