@@ -1,8 +1,9 @@
 import {expect} from 'chai';
 import 'mocha';
 import {core} from '../';
-import * as request from 'supertest';
-import * as sinon from 'sinon';
+import {newGatewaySdkMock} from '../mediarithmics/api/sdk/GatewaySdkMock';
+import {IRecommenderSdk} from '../mediarithmics/api/sdk/GatewaySdk';
+import {RecommenderApiTester} from '../helper';
 
 describe('Fetch recommender API', () => {
   class MyFakeRecommenderPlugin extends core.RecommenderPlugin {
@@ -25,46 +26,22 @@ describe('Fetch recommender API', () => {
     }
   }
 
-  const rpMockup: sinon.SinonStub = sinon.stub().returns(
-    new Promise((resolve, reject) => {
-      resolve('Yolo');
-    })
-  );
+  const gatewaySdk = newGatewaySdkMock<IRecommenderSdk>({
+    fetchRecommenderCatalogs: Promise.resolve({} as any),
+    fetchRecommenderProperties: Promise.resolve({} as any),
+  });
+  const plugin = new MyFakeRecommenderPlugin({gatewaySdk: gatewaySdk});
 
-  // All the magic is here
-  const plugin = new MyFakeRecommenderPlugin();
-  const runner = new core.TestingPluginRunner(plugin, rpMockup);
-
-  it('Check that recommenderId is passed correctly in fetchRecommenderProperties', function (done) {
+  it('Check that recommenderId is passed correctly in fetchRecommenderProperties', async function () {
     const fakeRecommenderId = '42000000';
-
-    // We try a call to the Gateway
-    (runner.plugin as MyFakeRecommenderPlugin)
-      .fetchRecommenderProperties(fakeRecommenderId)
-      .then(() => {
-        expect(rpMockup.args[0][0].uri).to.be.eq(
-          `${
-            runner.plugin.outboundPlatformUrl
-          }/v1/recommenders/${fakeRecommenderId}/properties`
-        );
-        done();
-      });
+    await plugin.gatewaySdk.fetchRecommenderProperties(fakeRecommenderId);
+    expect(gatewaySdk.calledMethods.fetchRecommenderProperties.getArgs(0)?.[0] === fakeRecommenderId);
   });
 
-  it('Check that RecommenderId is passed correctly in fetchRecommenderCatalogs', function (done) {
+  it('Check that RecommenderId is passed correctly in fetchRecommenderCatalogs', async function () {
     const fakeRecommenderId = '4255';
-
-    // We try a call to the Gateway
-    (runner.plugin as MyFakeRecommenderPlugin)
-      .fetchRecommenderCatalogs(fakeRecommenderId)
-      .then(() => {
-        expect(rpMockup.args[1][0].uri).to.be.eq(
-          `${
-            plugin.outboundPlatformUrl
-          }/v1/recommenders/${fakeRecommenderId}/catalogs`
-        );
-        done();
-      });
+    await plugin.gatewaySdk.fetchRecommenderCatalogs(fakeRecommenderId);
+    expect(gatewaySdk.calledMethods.fetchRecommenderCatalogs.getArgs(0)?.[0] === fakeRecommenderId);
   });
 });
 
@@ -83,53 +60,24 @@ describe('Recommender API test', function () {
     }
   }
 
-  // All the magic is here
-  const plugin = new MyFakeSimpleRecommenderPlugin();
-  let runner: core.TestingPluginRunner;
+  const gatewaySdk = newGatewaySdkMock<IRecommenderSdk>({
+    fetchRecommenderCatalogs: Promise.resolve({}) as any,
+    fetchRecommenderProperties: Promise.resolve([
+      {
+        technical_name: 'hello_world',
+        value: {value: 'Yay'},
+        property_type: 'STRING',
+        origin: 'PLUGIN',
+        writable: true,
+        deletable: false
+      }
+    ]),
+  });
+  const plugin = new MyFakeSimpleRecommenderPlugin({gatewaySdk: gatewaySdk});
 
-  it('Check that the plugin is giving good results with a simple onRecommendationRequest handler', function (done) {
-    const rpMockup = sinon.stub();
-
-    const fakeRecommenderProperties = {
-      status: 'ok',
-      count: 45,
-      data: [
-        {
-          technical_name: 'hello_world',
-          value: {
-            value: 'Yay'
-          },
-          property_type: 'STRING',
-          origin: 'PLUGIN',
-          writable: true,
-          deletable: false
-        }
-      ]
-    };
-
-    rpMockup
-      .withArgs(
-        sinon.match.has(
-          'uri',
-          sinon.match(function (value: string) {
-            return (
-              value.match(/\/v1\/recommenders\/(.){1,10}\/properties/) !==
-              null
-            );
-          })
-        )
-      )
-      .returns(fakeRecommenderProperties);
-
-    runner = new core.TestingPluginRunner(plugin, rpMockup);
-
-    // We init the plugin
-    request(runner.plugin.app)
-      .post('/v1/init')
-      .send({authentication_token: 'Manny', worker_id: 'Calavera'})
-      .end((err, res) => {
-        expect(res.status).to.equal(200);
-      });
+  it('Check that the plugin is giving good results with a simple onRecommendationRequest handler', async function () {
+    const tester = new RecommenderApiTester(plugin);
+    await tester.init();
 
     const requestBody = {
       recommender_id: '5',
@@ -140,19 +88,11 @@ describe('Recommender API test', function () {
       }
     };
 
-    request(runner.plugin.app)
-      .post('/v1/recommendations')
-      .send(requestBody)
-      .end(function (err, res) {
-        expect(res.status).to.equal(200);
-
-        done();
-      });
+    await tester.postRecommendation(requestBody);
   });
 
   afterEach(() => {
     // We clear the cache so that we don't have any processing still running in the background
-    runner.plugin.pluginCache.clear();
+    plugin.pluginCache.clear();
   });
-
 });

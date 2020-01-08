@@ -2,6 +2,7 @@ import {map} from '../../../utils';
 
 import {AdRendererBaseInstanceContext, AdRendererBasePlugin} from '../base/AdRendererBasePlugin';
 import {TemplatingEngine} from '../../common/TemplatingInterface';
+import {BasePluginProps} from '../../common';
 
 export interface AdRendererTemplateInstanceContext
   extends AdRendererBaseInstanceContext {
@@ -23,8 +24,8 @@ export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<AdRe
    */
   protected abstract engineBuilder: TemplatingEngine<any, any, any>;
 
-  constructor(enableThrottling = false) {
-    super(enableThrottling);
+  constructor(props?: BasePluginProps) {
+    super(props);
   }
 
   /**

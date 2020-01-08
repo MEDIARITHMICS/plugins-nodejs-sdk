@@ -18,12 +18,6 @@ import {
 
 import {Option} from '../../../utils';
 
-export interface PluginPropertyResponse {
-  status: string;
-  data: PluginProperty[];
-  count: number;
-}
-
 export type PluginProperty =
   | AssetFileProperty
   | AssetFolderProperty

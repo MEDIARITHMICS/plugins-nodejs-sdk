@@ -2,6 +2,7 @@ import {BasePlugin} from './BasePlugin';
 import {Server} from 'http';
 import * as cluster from 'cluster';
 import {Credentials} from './index';
+import {PluginConf} from '../../../conf/PluginConf';
 
 export enum MsgCmd {
   CREDENTIAL_UPDATE_FROM_WORKER,
@@ -160,8 +161,7 @@ export class ProductionPluginRunner {
    * @param port
    */
   start(port?: number, multiProcessEnabled = false) {
-    const pluginPort = process.env.PLUGIN_PORT;
-    this.pluginPort = pluginPort ? parseInt(pluginPort) : 8080;
+    this.pluginPort = new PluginConf().pluginPort || 8080;
 
     const serverPort = port ? port : this.pluginPort;
 

@@ -1,8 +1,9 @@
 import {expect} from 'chai';
 import 'mocha';
 import {core} from '../';
-import * as request from 'supertest';
-import * as sinon from 'sinon';
+import {newGatewaySdkMock} from '../mediarithmics/api/sdk/GatewaySdkMock';
+import {IEmailRouterSdk} from '../mediarithmics/api/sdk/GatewaySdk';
+import {EmailRouterApiTester} from '../helper';
 
 class MyFakeEmailRouterPlugin extends core.EmailRouterPlugin {
   protected onEmailRouting(
@@ -28,79 +29,42 @@ class MyFakeEmailRouterPlugin extends core.EmailRouterPlugin {
   }
 }
 
-const rpMockup: sinon.SinonStub = sinon.stub().returns(
-  new Promise((resolve, reject) => {
-    resolve('Yolo');
-  })
-);
 
 describe('Fetch Email Router API', () => {
 
-  // All the magic is here
-  const plugin = new MyFakeEmailRouterPlugin(false);
-  const runner = new core.TestingPluginRunner(plugin, rpMockup);
-
-  it('Check that email_router_id is passed correctly in fetchEmailRouterProperties', function (
-    done
-  ) {
-    const fakeId = '42000000';
-
-    // We try a call to the Gateway
-    (runner.plugin as MyFakeEmailRouterPlugin)
-      .fetchEmailRouterProperties(fakeId)
-      .then(() => {
-        expect(rpMockup.args[0][0].uri).to.be.eq(
-          `${runner.plugin
-            .outboundPlatformUrl}/v1/email_routers/${fakeId}/properties`
-        );
-        done();
-      });
+  const gatewayMock = newGatewaySdkMock<IEmailRouterSdk>({
+    fetchEmailRouterProperties: Promise.resolve({} as any),
+    sendEmail: Promise.resolve({} as any),
   });
+  const plugin = new MyFakeEmailRouterPlugin({gatewaySdk: gatewayMock});
 
+  it('Check that email_router_id is passed correctly in fetchEmailRouterProperties', async function () {
+    const fakeId = '42000000';
+    await plugin.gatewaySdk.fetchEmailRouterProperties(fakeId);
+    expect(gatewayMock.calledMethods.fetchEmailRouterProperties.getArgs(0)?.[0] === fakeId);
+  });
 });
 
 describe('Email Router API test', function () {
 
-  // All the magic is here
-  const plugin = new MyFakeEmailRouterPlugin(false);
-  let runner: core.TestingPluginRunner;
+  const gatewayMock = newGatewaySdkMock<IEmailRouterSdk>({
+    fetchEmailRouterProperties: Promise.resolve([
+      {
+        technical_name: 'hello_world',
+        value: {value: 'Yay'},
+        property_type: 'STRING',
+        origin: 'PLUGIN',
+        writable: true,
+        deletable: false
+      }
+    ]),
+    sendEmail: Promise.resolve({} as any),
+  });
+  const plugin = new MyFakeEmailRouterPlugin({gatewaySdk: gatewayMock});
 
-  it('Check that the plugin is giving good results with a simple onEmailRouting handler', function (
-    done
-  ) {
-    const rpMockup = sinon.stub();
-
-    rpMockup.onCall(0).returns(
-      new Promise((resolve, reject) => {
-        const pluginInfo: core.PluginPropertyResponse = {
-          status: 'ok',
-          count: 45,
-          data: [
-            {
-              technical_name: 'hello_world',
-              value: {
-                value: 'Yay'
-              },
-              property_type: 'STRING',
-              origin: 'PLUGIN',
-              writable: true,
-              deletable: false
-            }
-          ]
-        };
-        resolve(pluginInfo);
-      })
-    );
-
-    runner = new core.TestingPluginRunner(plugin, rpMockup);
-
-    // We init the plugin
-    request(runner.plugin.app)
-      .post('/v1/init')
-      .send({authentication_token: 'Manny', worker_id: 'Calavera'})
-      .end((err, res) => {
-        expect(res.status).to.equal(200);
-      });
+  it('Check that the plugin is giving good results with a simple onEmailRouting handler', async function () {
+    const tester = new EmailRouterApiTester(plugin);
+    await tester.init();
 
     const requestBody = JSON.parse(`{
       "email_router_id": "2",
@@ -162,32 +126,14 @@ describe('Email Router API test', function () {
       "data": {}
     }`);
 
-    request(runner.plugin.app)
-      .post('/v1/email_router_check')
-      .send(requestBody)
-      .end(function (err, res) {
-        expect(res.status).to.equal(200);
-
-        expect(JSON.parse(res.text).result).to.be.true;
-
-        request(runner.plugin.app)
-          .post('/v1/email_routing')
-          .send(requestBody)
-          .end(function (err, res) {
-            expect(res.status).to.equal(200);
-
-            expect(JSON.parse(res.text).result).to.be.true;
-
-            done();
-          });
-
-      });
-
+    const resCheck = await tester.postEmailCheck(requestBody);
+    expect(resCheck.parsedText.result).to.be.true;
+    const resRouting = await tester.postEmailRouting(requestBody);
+    expect(resRouting.parsedText.result).to.be.true;
   });
 
   afterEach(() => {
     // We clear the cache so that we don't have any processing still running in the background
-    runner.plugin.pluginCache.clear();
+    plugin.pluginCache.clear();
   });
-
 });

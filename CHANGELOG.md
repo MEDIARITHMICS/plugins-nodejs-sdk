@@ -1,5 +1,26 @@
 # Changelog
 
+# 1.0.0 - 2020-01-08
+
+- Creation of HttpClient which factorizes logic regarding http calls
+- Creation of ApiSdk which consumes HttpClient and groups all the http calls done to the gateway
+- Creation of GatewaySdk which consume HttpClient and groups all http calls done to the gateway
+- Creation of GatewaySdkMock which provides features similar to sinon to mock and spy the calls to the gateway in a typesafe way.
+- Refactoring of BasePlugin: _transport variable which was used to override request-promise by sinon stubs have been removed in favor of injecting GatewaySdk and ApiSdk.
+- Creation of PluginApiTester which allows to simulate http call to the plugins.
+- Creation of AdRendererTester and ActivityAnalyzerTester to tests the related plugin easily. This kind of helper could be created for other plugins as well.
+- Refactoring of all the tests using theses new toys without skipping a single one. I swear.
+
+### Breaking Changes
+
+- `BasePlugin` constructor signature has changed. It’s now an object which can contains `config`, - `gatewaySdk`, `apiSdk` and the original `enableThrottling` property.
+- Properties `gatewayHost`, `gatewayPort`, `outboundPlatformUrl`, `proxyHost, `proxyPort`, `proxyUrl` and `pluginPort` of `BasePlugin` must be now accessed from the property `config`.
+- All gateway calls (like `fetchActivityAnalyzer`, `fetchRecommenderProperties`, …) of `BasePlugin` must be now accessed from the property `gatewaySdk`.
+- Mics API calls (`fetchDatamarts`, `fetchDatamartCompartments`) must be now accessed from the property `apiSdk`
+- `ifFactory` helper designed to tests Activity analyzers has been removed in favor of `ActivityAnalyzerTester`
+- `TestingPluginRunner` class has been removed since it’s no longer relevant (not really sure it was before :D).
+- `_transport` has been removed from `BasePlugin`.
+
 # 0.7.9 - 2019-09-20
 
 - Fix this.logger and /log_level routes that were broken since winston 3.x upgrade.

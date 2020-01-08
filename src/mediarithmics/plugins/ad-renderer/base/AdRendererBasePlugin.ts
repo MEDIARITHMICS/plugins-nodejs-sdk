@@ -2,9 +2,8 @@ import * as express from 'express';
 import * as _ from 'lodash';
 import * as jsesc from 'jsesc';
 
-import {BasePlugin, PropertiesWrapper} from '../../common/BasePlugin';
+import {BasePlugin, BasePluginProps, PropertiesWrapper} from '../../common/BasePlugin';
 import {DisplayAd} from '../../../api/core/creative/index';
-import {PluginProperty} from '../../../api/core/plugin/PluginPropertyInterface';
 import {AdRendererPluginResponse, AdRendererRequest, ClickUrlInfo} from './AdRendererInterface';
 import {generateEncodedClickUrl} from '../utils/index';
 
@@ -15,64 +14,15 @@ export class AdRendererBaseInstanceContext {
 
 export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceContext> extends BasePlugin {
 
-  displayContextHeader = 'x-mics-display-context';
+  readonly displayContextHeader = 'x-mics-display-context';
 
-  constructor(enableThrottling = false) {
-    super(enableThrottling);
-
+  constructor(props?: BasePluginProps) {
+    super(props);
     this.initAdContentsRoute();
     this.setErrorHandler();
   }
 
-  // Helper to fetch the Display Ad resource with caching
-  async fetchDisplayAd(displayAdId: string, forceReload = false): Promise<DisplayAd> {
-    const response = await super.requestGatewayHelper(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/creatives/${displayAdId}`,
-      undefined,
-      {'force-reload': forceReload}
-    );
-
-    this.logger.debug(
-      `Fetched Creative: ${displayAdId} - ${JSON.stringify(response.data)}`
-    );
-
-    if ((response.data as DisplayAd).type !== 'DISPLAY_AD') {
-      throw new Error(
-        `crid: ${
-          displayAdId
-        } - When fetching DisplayAd, another creative type was returned!`
-      );
-    }
-
-    return response.data;
-  }
-
-  // Helper to fetch the Display Ad properties resource with caching
-  async fetchDisplayAdProperties(
-    displayAdId: string,
-    forceReload = false
-  ): Promise<PluginProperty[]> {
-    const creativePropertyResponse = await super.requestGatewayHelper(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/creatives/${
-        displayAdId
-      }/renderer_properties`,
-      undefined,
-      {'force-reload': forceReload}
-    );
-
-    this.logger.debug(
-      `Fetched Creative Properties: ${displayAdId} - ${JSON.stringify(
-        creativePropertyResponse.data
-      )}`
-    );
-
-    return creativePropertyResponse.data;
-  }
-
   // Method to build an instance context
-
   getEncodedClickUrl(redirectUrls: ClickUrlInfo[]) {
     return generateEncodedClickUrl(redirectUrls);
   }
@@ -80,8 +30,8 @@ export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceConte
   // To be overriden to get a custom behavior
   protected async instanceContextBuilder(creativeId: string, forceReload = false): Promise<T> {
 
-    const displayAdP = this.fetchDisplayAd(creativeId, forceReload);
-    const displayAdPropsP = this.fetchDisplayAdProperties(creativeId, forceReload);
+    const displayAdP = this.gatewaySdk.fetchDisplayAd(creativeId, forceReload);
+    const displayAdPropsP = this.gatewaySdk.fetchDisplayAdProperties(creativeId, forceReload);
 
     const results = await Promise.all([displayAdP, displayAdPropsP]);
 

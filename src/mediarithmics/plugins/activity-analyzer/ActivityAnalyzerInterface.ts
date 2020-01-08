@@ -1,8 +1,6 @@
 import {DataResponse} from '../../api/core/common/Response';
 import {UserActivity, UserVisitActivity} from '../../index';
 
-export type ActivityAnalyzerResponse = DataResponse<ActivityAnalyzer>;
-
 export interface ActivityAnalyzer {
   id: string;
   organisation_id: string;

@@ -1,16 +1,13 @@
 import {expect} from 'chai';
 import 'mocha';
 import {core, extra} from '../';
-import * as sinon from 'sinon';
 import {PropertiesWrapper} from '../mediarithmics/index';
+import {newGatewaySdkMock} from '../mediarithmics/api/sdk/GatewaySdkMock';
+import {IAdRendererRecoSdk} from '../mediarithmics/api/sdk/GatewaySdk';
 
 describe('Fetch recommendation API', () => {
   class MyDummyHandlebarsAdRenderer extends core.AdRendererRecoTemplatePlugin {
     engineBuilder = new extra.HandlebarsEngine();
-
-    constructor(enableThrottling = false) {
-      super(false);
-    }
 
     protected async onAdContents(
       adRenderRequest: core.AdRendererRequest,
@@ -22,68 +19,56 @@ describe('Fetch recommendation API', () => {
     }
   }
 
-  const fakeRecommenderResponse: core.DataResponse<core.RecommendationsWrapper> = {
-    status: 'ok',
-    data: {
-      ts: 1496939189652,
-      proposals: [
-        {
-          $type: 'ITEM_PROPOSAL',
-          $item_id: '8',
-          $id: '8',
-          $catalog_id: '16',
-          $name: 'Résidence Les Terrasses de Veret***',
-          $brand: 'Madame Vacance',
-          $url:
-            'https://www.madamevacances.com/locations/france/alpes-du-nord/flaine/residence-les-terrasses-de-veret/',
-          $image_url:
-            'http://hbs.madamevacances.com/photos/etab/87/235x130/residence_les_terrasses_de_veret_piscine.jpg',
-          $price: 160.3,
-          $sale_price: undefined,
-          city: 'Flaine',
-          country: 'France',
-          region: 'Alpes du Nord',
-          zip_code: '74300'
-        },
-        {
-          $type: 'ITEM_PROPOSAL',
-          $item_id: '7',
-          $id: '7',
-          $catalog_id: '16',
-          $name: 'Le Chalet Altitude*****',
-          $brand: 'Madame Vacance',
-          $url:
-            'https://www.madamevacances.com/locations/france/alpes-du-nord/val-thorens/le-chalet-altitude/',
-          $image_url:
-            'http://hbs.madamevacances.com/photos/etab/335/235x130/chalet_altitude_exterieure_2.jpg',
-          $price: undefined,
-          $sale_price: undefined,
-          city: 'Val Thorens',
-          country: 'France',
-          region: 'Alpes du Nord',
-          zip_code: '73440'
-        },
-        {
-          $type: 'ITEM_PROPOSAL',
-          $item_id: '6',
-          $id: '6',
-          $catalog_id: '16',
-          $name: 'Les Chalets du Thabor***',
-          $brand: 'Madame Vacance',
-          $url:
-            'https://www.madamevacances.com/locations/france/alpes-du-nord/valfrejus/les-chalets-du-thabor/',
-          $image_url:
-            'http://hbs.madamevacances.com/photos/etab/65/235x130/valfrejus_chalet_thabor_exterieure_2.jpg',
-          $price: 143.2,
-          $sale_price: undefined,
-          city: 'Valfréjus',
-          country: 'France',
-          region: 'Alpes du Nord',
-          zip_code: '73500'
-        }
-      ]
+  const fakeRecommenderResponse: core.ItemProposal[] = [
+    {
+      $type: 'ITEM_PROPOSAL',
+      $item_id: '8',
+      $id: '8',
+      $catalog_id: '16',
+      $name: 'Résidence Les Terrasses de Veret***',
+      $brand: 'Madame Vacance',
+      $url: 'https://www.madamevacances.com/locations/france/alpes-du-nord/flaine/residence-les-terrasses-de-veret/',
+      $image_url: 'http://hbs.madamevacances.com/photos/etab/87/235x130/residence_les_terrasses_de_veret_piscine.jpg',
+      $price: 160.3,
+      $sale_price: undefined,
+      city: 'Flaine',
+      country: 'France',
+      region: 'Alpes du Nord',
+      zip_code: '74300'
+    },
+    {
+      $type: 'ITEM_PROPOSAL',
+      $item_id: '7',
+      $id: '7',
+      $catalog_id: '16',
+      $name: 'Le Chalet Altitude*****',
+      $brand: 'Madame Vacance',
+      $url: 'https://www.madamevacances.com/locations/france/alpes-du-nord/val-thorens/le-chalet-altitude/',
+      $image_url: 'http://hbs.madamevacances.com/photos/etab/335/235x130/chalet_altitude_exterieure_2.jpg',
+      $price: undefined,
+      $sale_price: undefined,
+      city: 'Val Thorens',
+      country: 'France',
+      region: 'Alpes du Nord',
+      zip_code: '73440'
+    },
+    {
+      $type: 'ITEM_PROPOSAL',
+      $item_id: '6',
+      $id: '6',
+      $catalog_id: '16',
+      $name: 'Les Chalets du Thabor***',
+      $brand: 'Madame Vacance',
+      $url: 'https://www.madamevacances.com/locations/france/alpes-du-nord/valfrejus/les-chalets-du-thabor/',
+      $image_url: 'http://hbs.madamevacances.com/photos/etab/65/235x130/valfrejus_chalet_thabor_exterieure_2.jpg',
+      $price: 143.2,
+      $sale_price: undefined,
+      city: 'Valfréjus',
+      country: 'France',
+      region: 'Alpes du Nord',
+      zip_code: '73500'
     }
-  };
+  ];
 
   const fakeCreative: core.DisplayAd = {
     type: 'DISPLAY_AD',
@@ -107,18 +92,14 @@ describe('Fetch recommendation API', () => {
     format: '300x250'
   };
 
-  const fakeCreativeProperty: core.StringProperty =
-    {
-      technical_name: 'hello_world',
-      value: {
-        value: 'Yay'
-      },
-      property_type: 'STRING',
-      origin: 'PLUGIN',
-      writable: true,
-      deletable: false
-    }
-  ;
+  const fakeCreativeProperty: core.StringProperty = {
+    technical_name: 'hello_world',
+    value: {value: 'Yay'},
+    property_type: 'STRING',
+    origin: 'PLUGIN',
+    writable: true,
+    deletable: false
+  };
 
   const fakeInstanceContext: core.AdRendererRecoTemplateInstanceContext = {
     recommender_id: '74',
@@ -131,57 +112,23 @@ describe('Fetch recommendation API', () => {
 
   const fakeUserAgentId = 'vec:888888';
 
-  const rpMockup: sinon.SinonStub = sinon.stub();
-
-  rpMockup
-    .withArgs(
-      sinon.match.has(
-        'uri',
-        sinon.match(/\/v1\/recommenders\/(.){1,10}\/recommendations/)
-      )
-    )
-    .returns(fakeRecommenderResponse);
-
-  it('Check that recommenderId and userAgentId are passed correctly in fetchRecommendations', function (
-    done
-  ) {
-    const plugin = new MyDummyHandlebarsAdRenderer(false);
-    const runner = new core.TestingPluginRunner(plugin, rpMockup);
-
-    // We try a call to the Gateway
-    (runner.plugin as MyDummyHandlebarsAdRenderer)
-      .fetchRecommendations(fakeInstanceContext, fakeUserAgentId)
-      .then(() => {
-        expect(rpMockup.args[0][0].uri).to.be.eq(
-          `${plugin.outboundPlatformUrl}/v1/recommenders/${fakeInstanceContext.recommender_id}/recommendations`
-        );
-        expect(rpMockup.args[0][0].body.input_data.user_agent_id).to.be.eq(
-          fakeUserAgentId
-        );
-        done();
-      });
+  const gatewayMock = newGatewaySdkMock<IAdRendererRecoSdk>({
+    fetchRecommendations: Promise.resolve(fakeRecommenderResponse),
+    fetchUserCampaign: Promise.resolve({} as any),
   });
 
-  it('Check that fetched itemProposal are the same as sent by the recommender', function (
-    done
-  ) {
-    const plugin = new MyDummyHandlebarsAdRenderer(false);
-    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+  it('Check that recommenderId and userAgentId are passed correctly in fetchRecommendations', async function () {
+    const plugin = new MyDummyHandlebarsAdRenderer({gatewaySdk: gatewayMock});
+    await plugin.gatewaySdk.fetchRecommendations(fakeInstanceContext, fakeUserAgentId);
+    expect(gatewayMock.calledMethods.fetchRecommendations.getArgs(0)?.[0].recommender_id === fakeInstanceContext.recommender_id);
+    expect(gatewayMock.calledMethods.fetchRecommendations.getArgs(0)?.[1] === fakeUserAgentId);
+  });
 
-    // We try a call to the Gateway
-    (runner.plugin as MyDummyHandlebarsAdRenderer)
-      .fetchRecommendations(fakeInstanceContext, fakeUserAgentId)
-      .then((proposals: Array<core.ItemProposal>) => {
-        expect(proposals[0]).to.deep.eq(
-          fakeRecommenderResponse.data.proposals[0]
-        );
-        expect(proposals[1]).to.deep.eq(
-          fakeRecommenderResponse.data.proposals[1]
-        );
-        expect(proposals[2]).to.deep.eq(
-          fakeRecommenderResponse.data.proposals[2]
-        );
-        done();
-      });
+  it('Check that fetched itemProposal are the same as sent by the recommender', async function () {
+    const plugin = new MyDummyHandlebarsAdRenderer({gatewaySdk: gatewayMock});
+    const proposals = await plugin.gatewaySdk.fetchRecommendations(fakeInstanceContext, fakeUserAgentId);
+    expect(proposals[0]).to.deep.eq(fakeRecommenderResponse[0]);
+    expect(proposals[1]).to.deep.eq(fakeRecommenderResponse[1]);
+    expect(proposals[2]).to.deep.eq(fakeRecommenderResponse[2]);
   });
 });

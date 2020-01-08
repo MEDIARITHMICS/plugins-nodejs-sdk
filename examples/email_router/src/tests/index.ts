@@ -1,58 +1,40 @@
 import {expect} from 'chai';
 import 'mocha';
-import {core} from '@mediarithmics/plugins-nodejs-sdk';
-import * as request from 'supertest';
-import * as sinon from 'sinon';
+import {core, helper} from '@mediarithmics/plugins-nodejs-sdk';
 import {MailjetSentResponse, MySimpleEmailRouter} from '../MyPluginImpl';
+
+const emailRouterProperties: core.PluginProperty[] = [
+  {
+    technical_name: 'authentication_token',
+    value: {
+      value: 'asd'
+    },
+    property_type: 'STRING',
+    origin: 'PLUGIN',
+    writable: true,
+    deletable: false
+  }
+];
+
+const mjResponse: MailjetSentResponse = {
+  Sent: [
+    {
+      Email: 'caroline_maier@bd.com',
+      MessageID: 16888659454515816
+    }
+  ]
+};
 
 describe('Test Example Email Router', function () {
 
-  function buildRpMockup() {
-// We stub the Gateway calls
-    const rpMockup: sinon.SinonStub = sinon.stub();
+  it('Check behavior of dummy Email Router', async function () {
 
-    // Activity Analyzer stub
-    const emailRouterProperties: core.DataListResponse<core.PluginProperty> = {
-      status: 'ok',
-      data: [
-        {
-          technical_name: 'authentication_token',
-          value: {
-            value: 'asd'
-          },
-          property_type: 'STRING',
-          origin: 'PLUGIN',
-          writable: true,
-          deletable: false
-        }
-      ],
-      count: 1
-    };
+    const gatewayMock = core.newGatewaySdkMock<core.IEmailRouterSdk>({
+      sendEmail: Promise.resolve(mjResponse),
+      fetchEmailRouterProperties: Promise.resolve(emailRouterProperties),
+    });
 
-    rpMockup
-      .withArgs(
-        sinon.match.has(
-          'uri',
-          sinon.match(function (value: string) {
-            return (
-              value.match(/\/v1\/email_routers\/(.){1,10}\/properties/) !== null
-            );
-          })
-        )
-      )
-      .returns(emailRouterProperties);
-
-
-    return rpMockup;
-  }
-
-
-  it('Check behavior of dummy Email Router', function (done) {
-    // All the magic is here
-    const plugin = new MySimpleEmailRouter(false);
-    const rpMockup = buildRpMockup();
-    const runner = new core.TestingPluginRunner(plugin, rpMockup);
-
+    const plugin = new MySimpleEmailRouter({gatewaySdk: gatewayMock});
     const emailRoutingRequest: core.EmailRoutingRequest = {
       email_router_id: '2',
       call_id: 'ba568918-2f06-4f16-bd0e-f50e04b92d34',
@@ -113,69 +95,24 @@ describe('Test Example Email Router', function () {
       data: '{}'
     };
 
-    const mjResponse: MailjetSentResponse = {
-      Sent: [
-        {
-          Email: 'caroline_maier@bd.com',
-          MessageID: 16888659454515816
-        }
-      ]
-    };
-
-    rpMockup
-      .withArgs(
-        sinon.match.has(
-          'uri',
-          sinon.match(function (value: string) {
-            return (
-              value.match(
-                /\/v1\/external_services\/technical_name=(.){1,20}\/call/
-              ) !== null
-            );
-          })
-        )
-      )
-      .returns(mjResponse);
-
-    // Plugin init
-    request(runner.plugin.app)
-      .post('/v1/init')
-      .send({authentication_token: 'Manny', worker_id: 'Calavera'})
-      .end((err, res) => {
-        expect(res.status).to.equal(200);
-
-        // Plugin log level to debug
-        request(runner.plugin.app)
-          .put('/v1/log_level')
-          .send({level: 'debug'})
-          .end((err, res) => {
-            expect(res.status).to.equal(200);
-
-            // Activity to process
-            request(runner.plugin.app)
-              .post('/v1/email_routing')
-              .send(emailRoutingRequest)
-              .end((err, res) => {
-                expect(res.status).to.eq(200);
-
-                expect(
-                  (JSON.parse(res.text) as core.EmailRoutingPluginResponse)
-                    .result
-                ).to.be.true;
-                done();
-              });
-          });
-      });
+    const tester = new helper.EmailRouterApiTester(plugin);
+    await tester.initAndSetLogLevel('debug');
+    const res = await tester.postEmailRouting(emailRoutingRequest);
+    expect(res.parsedText.result).to.be.true;
   });
 
-  it('Check the Email Routeur retry', function (done) {
+  it('Check the Email Routeur retry', async function () {
 
     this.timeout(50000);
-
-    // All the magic is here
-    const plugin = new MySimpleEmailRouter(false);
-    const rpMockup = buildRpMockup();
-    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+    const gatewayMock = core.newGatewaySdkMock<core.IEmailRouterSdk>({
+      sendEmail: [
+        Promise.reject('Fake error'),
+        Promise.resolve({Sent: []}),
+        Promise.resolve(mjResponse),
+      ],
+      fetchEmailRouterProperties: Promise.resolve(emailRouterProperties),
+    });
+    const plugin = new MySimpleEmailRouter({gatewaySdk: gatewayMock});
 
     const emailRoutingRequest: core.EmailRoutingRequest = {
       email_router_id: '2',
@@ -237,62 +174,9 @@ describe('Test Example Email Router', function () {
       data: '{}'
     };
 
-    const mjResponse: MailjetSentResponse = {
-      Sent: [
-        {
-          Email: 'caroline_maier@bd.com',
-          MessageID: 16888659454515816
-        }
-      ]
-    };
-
-    const mjMock = rpMockup.withArgs(
-      sinon.match.has(
-        'uri',
-        sinon.match(function (value: string) {
-          return (
-            value.match(
-              /\/v1\/external_services\/technical_name=(.){1,20}\/call/
-            ) !== null
-          );
-        })
-      )
-    );
-
-    mjMock.onCall(1).throws('FakeError');
-    mjMock.onCall(2).returns({
-      Sent: []
-    });
-    mjMock.onCall(3).returns(mjResponse);
-
-    // Plugin init
-    request(runner.plugin.app)
-      .post('/v1/init')
-      .send({authentication_token: 'Manny', worker_id: 'Calavera'})
-      .end((err, res) => {
-        expect(res.status).to.equal(200);
-
-        // Plugin log level to debug
-        request(runner.plugin.app)
-          .put('/v1/log_level')
-          .send({level: 'debug'})
-          .end((err, res) => {
-            expect(res.status).to.equal(200);
-
-            // Activity to process
-            request(runner.plugin.app)
-              .post('/v1/email_routing')
-              .send(emailRoutingRequest)
-              .end((err, res) => {
-                expect(res.status).to.eq(200);
-
-                expect(
-                  (JSON.parse(res.text) as core.EmailRoutingPluginResponse)
-                    .result
-                ).to.be.true;
-                done();
-              });
-          });
-      });
+    const tester = new helper.EmailRouterApiTester(plugin);
+    await tester.initAndSetLogLevel('debug');
+    const res = await tester.postEmailRouting(emailRoutingRequest);
+    expect(res.parsedText.result).to.be.true;
   });
 });

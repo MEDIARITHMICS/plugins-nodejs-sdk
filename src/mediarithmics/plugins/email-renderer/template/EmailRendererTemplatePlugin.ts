@@ -18,8 +18,4 @@ export abstract class EmailRendererTemplatePlugin extends EmailRendererPlugin<Em
    * Have to be overriden (see examples)
    */
   protected abstract engineBuilder: ExploreableInternalsTemplatingEngine<any, any, any, any> & ProfileDataTemplater;
-
-  constructor(enableThrottling = false) {
-    super(enableThrottling);
-  }
 }

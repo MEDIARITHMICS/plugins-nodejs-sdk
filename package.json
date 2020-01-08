@@ -41,16 +41,14 @@
     "@types/mocha": "^5.2.7",
     "@types/mockery": "^1.4.29",
     "@types/numeral": "0.0.25",
-    "@types/sinon": "^7.0.13",
     "@types/supertest": "^2.0.7",
     "chai": "^4.2.0",
     "mocha": "^6.1.4",
     "mockery": "^2.1.0",
     "proxyquire": "^2.1.0",
-    "sinon": "^7.3.2",
     "supertest": "^4.0.2",
     "ts-node": "^8.3.0",
-    "typedoc": "^0.15.0",
-    "typescript": "^3.5.2"
+    "typedoc": "^0.15.6",
+    "typescript": "^3.7.3"
   }
 }

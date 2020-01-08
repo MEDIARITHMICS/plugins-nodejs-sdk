@@ -1,8 +1,7 @@
 import * as express from 'express';
 import * as _ from 'lodash';
-import {BasePlugin, PropertiesWrapper} from '../common';
+import {BasePlugin, BasePluginProps, PropertiesWrapper} from '../common';
 import {BidOptimizer} from '../../api/core/bidoptimizer/BidOptimizerInterface';
-import {PluginProperty} from '../../api/core/plugin/PluginPropertyInterface';
 import {BidOptimizerRequest, SaleCondition} from '../../api/plugin/bidoptimizer/BidOptimizerRequestInterface';
 import {BidDecision} from '../../api/plugin/bidoptimizer/BidDecision';
 
@@ -16,50 +15,10 @@ export interface BidOptimizerBaseInstanceContext {
 export abstract class BidOptimizerPlugin extends BasePlugin {
   instanceContext: Promise<BidOptimizerBaseInstanceContext>;
 
-  constructor(enableThrottling = false) {
-    super(enableThrottling);
-
+  constructor(props?: BasePluginProps) {
+    super(props);
     this.initBidDecisions();
     this.setErrorHandler();
-  }
-
-  /**
-   *
-   * @param bidOptimizerId
-   */
-  async fetchBidOptimizer(bidOptimizerId: string): Promise<BidOptimizer> {
-    const bidOptimizerResponse = await super.requestGatewayHelper(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/bid_optimizers/${bidOptimizerId}`
-    );
-    this.logger.debug(
-      `Fetched Bid Optimizer: ${bidOptimizerId} - ${JSON.stringify(
-        bidOptimizerResponse.data
-      )}`
-    );
-    return bidOptimizerResponse.data;
-  }
-
-  /**
-   *
-   * @param bidOptimizerId
-   */
-
-  async fetchBidOptimizerProperties(
-    bidOptimizerId: string
-  ): Promise<PluginProperty[]> {
-    const bidOptimizerPropertyResponse = await super.requestGatewayHelper(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/bid_optimizers/${
-        bidOptimizerId
-      }/properties`
-    );
-    this.logger.debug(
-      `Fetched BidOptimizer Properties: ${bidOptimizerId} - ${JSON.stringify(
-        bidOptimizerPropertyResponse.data
-      )}`
-    );
-    return bidOptimizerPropertyResponse.data;
   }
 
   findBestSalesConditions(
@@ -111,8 +70,8 @@ export abstract class BidOptimizerPlugin extends BasePlugin {
   protected async instanceContextBuilder(
     bidOptimizerId: string
   ): Promise<BidOptimizerBaseInstanceContext> {
-    const bidOptimizerP = this.fetchBidOptimizer(bidOptimizerId);
-    const bidOptimizerPropsP = this.fetchBidOptimizerProperties(bidOptimizerId);
+    const bidOptimizerP = this.gatewaySdk.fetchBidOptimizer(bidOptimizerId);
+    const bidOptimizerPropsP = this.gatewaySdk.fetchBidOptimizerProperties(bidOptimizerId);
 
     const results = await Promise.all([bidOptimizerP, bidOptimizerPropsP]);
 

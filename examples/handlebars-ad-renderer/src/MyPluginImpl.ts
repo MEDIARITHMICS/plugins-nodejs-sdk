@@ -8,10 +8,6 @@ export class MyHandlebarsAdRenderer extends core.AdRendererRecoTemplatePlugin {
 
   engineBuilder = new extra.RecommendationsHandlebarsEngine();
 
-  constructor(enableThrottling = false) {
-    super(enableThrottling);
-  }
-
   protected async instanceContextBuilder(creativeId: string, forceReload = false): Promise<MyInstanceContext> {
 
     const baseInstanceContext = await super.instanceContextBuilder(creativeId);
@@ -23,7 +19,7 @@ export class MyHandlebarsAdRenderer extends core.AdRendererRecoTemplatePlugin {
       throw Error('No template URI found in properties');
     }
 
-    const template = (await this.fetchDataFile(templateURI)).toString('utf8');
+    const template = (await this.gatewaySdk.fetchDataFile(templateURI)).toString('utf8');
 
     const compiledTemplate = this.engineBuilder.compile(template);
 
@@ -38,7 +34,7 @@ export class MyHandlebarsAdRenderer extends core.AdRendererRecoTemplatePlugin {
     instanceContext: MyInstanceContext
   ): Promise<core.AdRendererPluginResponse> {
 
-    const recommendations: Array<core.ItemProposal> = await this.fetchRecommendations(
+    const recommendations: Array<core.ItemProposal> = await this.gatewaySdk.fetchRecommendations(
       instanceContext,
       adRenderRequest.user_agent_id
     );

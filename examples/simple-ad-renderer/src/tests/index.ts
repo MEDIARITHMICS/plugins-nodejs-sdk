@@ -1,141 +1,104 @@
 import {expect} from 'chai';
 import 'mocha';
-import {core} from '@mediarithmics/plugins-nodejs-sdk';
-import * as request from 'supertest';
-import * as sinon from 'sinon';
 import {MySimpleAdRenderer} from '../MyPluginImpl';
+import {core, helper} from '@mediarithmics/plugins-nodejs-sdk';
 
-// Creative stub
-const creative: core.DataResponse<core.Creative> = {
-  status: 'ok',
-  data: {
-    type: 'DISPLAY_AD',
-    id: '7168',
-    organisation_id: '1126',
-    name: 'Toto',
-    technical_name: null,
-    archived: false,
-    editor_version_id: '5',
-    editor_version_value: '1.0.0',
-    editor_group_id: 'com.mediarithmics.creative.display',
-    editor_artifact_id: 'default-editor',
-    editor_plugin_id: '5',
-    renderer_version_id: '1054',
-    renderer_version_value: '1.0.0',
-    renderer_group_id: 'com.trololo.creative.display',
-    renderer_artifact_id: 'multi-advertisers-display-ad-renderer',
-    renderer_plugin_id: '1041',
-    creation_date: 1492785056278,
-    subtype: 'BANNER'
+const creative: core.DisplayAd = {
+  type: 'DISPLAY_AD',
+  id: '7168',
+  organisation_id: '1126',
+  name: 'Toto',
+  technical_name: null,
+  archived: false,
+  editor_version_id: '5',
+  editor_version_value: '1.0.0',
+  editor_group_id: 'com.mediarithmics.creative.display',
+  editor_artifact_id: 'default-editor',
+  editor_plugin_id: '5',
+  renderer_version_id: '1054',
+  renderer_version_value: '1.0.0',
+  renderer_group_id: 'com.trololo.creative.display',
+  renderer_artifact_id: 'multi-advertisers-display-ad-renderer',
+  renderer_plugin_id: '1041',
+  creation_date: 1492785056278,
+  subtype: 'BANNER',
+  format: '',
+};
+
+const creativePropertiesResponse: core.PluginProperty[] = [
+  {
+    technical_name: 'click_url',
+    value: {
+      url:
+        'http://www.april.fr/mon-assurance-de-pret-formulaire?cmpid=disp_datacomp_formadp_bann_300x250'
+    },
+    property_type: 'URL',
+    origin: 'PLUGIN',
+    writable: true,
+    deletable: false
+  },
+  {
+    technical_name: 'ad_layout',
+    value: {id: '144', version: '145'},
+    property_type: 'AD_LAYOUT',
+    origin: 'PLUGIN',
+    writable: true,
+    deletable: false
+  },
+  {
+    technical_name: 'backup_image',
+    value: {original_file_name: null, asset_id: null, file_path: null},
+    property_type: 'ASSET',
+    origin: 'PLUGIN',
+    writable: true,
+    deletable: false
+  },
+  {
+    technical_name: 'datamart_id',
+    value: {value: null},
+    property_type: 'STRING',
+    origin: 'PLUGIN',
+    writable: true,
+    deletable: false
+  },
+  {
+    technical_name: 'default_items',
+    value: {value: null},
+    property_type: 'STRING',
+    origin: 'PLUGIN',
+    writable: true,
+    deletable: false
+  },
+  {
+    technical_name: 'style_sheet',
+    value: {id: null, version: null},
+    property_type: 'STYLE_SHEET',
+    origin: 'PLUGIN',
+    writable: true,
+    deletable: false
+  },
+  {
+    technical_name: 'recommender_id',
+    value: {value: '1'},
+    property_type: 'STRING',
+    origin: 'PLUGIN',
+    writable: true,
+    deletable: false
+  },
+  {
+    technical_name: 'tag_type',
+    value: {value: null},
+    property_type: 'STRING',
+    origin: 'PLUGIN_STATIC',
+    writable: false,
+    deletable: false
   }
-};
+];
 
-const creativePropertiesResponse: core.PluginPropertyResponse = {
-  status: 'ok',
-  data: [
-    {
-      technical_name: 'click_url',
-      value: {
-        url:
-          'http://www.april.fr/mon-assurance-de-pret-formulaire?cmpid=disp_datacomp_formadp_bann_300x250'
-      },
-      property_type: 'URL',
-      origin: 'PLUGIN',
-      writable: true,
-      deletable: false
-    },
-    {
-      technical_name: 'ad_layout',
-      value: {id: '144', version: '145'},
-      property_type: 'AD_LAYOUT',
-      origin: 'PLUGIN',
-      writable: true,
-      deletable: false
-    },
-    {
-      technical_name: 'backup_image',
-      value: {original_file_name: null, asset_id: null, file_path: null},
-      property_type: 'ASSET',
-      origin: 'PLUGIN',
-      writable: true,
-      deletable: false
-    },
-    {
-      technical_name: 'datamart_id',
-      value: {value: null},
-      property_type: 'STRING',
-      origin: 'PLUGIN',
-      writable: true,
-      deletable: false
-    },
-    {
-      technical_name: 'default_items',
-      value: {value: null},
-      property_type: 'STRING',
-      origin: 'PLUGIN',
-      writable: true,
-      deletable: false
-    },
-    {
-      technical_name: 'style_sheet',
-      value: {id: null, version: null},
-      property_type: 'STYLE_SHEET',
-      origin: 'PLUGIN',
-      writable: true,
-      deletable: false
-    },
-    {
-      technical_name: 'recommender_id',
-      value: {value: '1'},
-      property_type: 'STRING',
-      origin: 'PLUGIN',
-      writable: true,
-      deletable: false
-    },
-    {
-      technical_name: 'tag_type',
-      value: {value: null},
-      property_type: 'STRING',
-      origin: 'PLUGIN_STATIC',
-      writable: false,
-      deletable: false
-    }
-  ],
-  count: 8
-};
-
-function buildRpMockup(): sinon.SinonStub {
-  const rpMockup: sinon.SinonStub = sinon.stub();
-
-  rpMockup
-    .withArgs(
-      sinon.match.has(
-        'uri',
-        sinon.match(function (value: string) {
-          return value.match(/\/v1\/creatives\/(.){1,10}/) !== null;
-        })
-      )
-    )
-    .returns(creative);
-
-  rpMockup
-    .withArgs(
-      sinon.match.has(
-        'uri',
-        sinon.match(function (value: string) {
-          return (
-            value.match(/\/v1\/creatives\/(.){1,10}\/renderer_properties/) !==
-            null
-          );
-        })
-      )
-    )
-    .returns(creativePropertiesResponse);
-
-  return rpMockup;
-}
-
-// Fake AdCall
+const gatewayMock = core.newGatewaySdkMock<core.IAdRendererSdk>({
+  fetchDisplayAd: Promise.resolve(creative),
+  fetchDisplayAdProperties: Promise.resolve(creativePropertiesResponse),
+});
 
 const adRequest: core.AdRendererRequest = {
   call_id: 'auc:goo:58346725000689de0a16ac4f120ecc41-0',
@@ -176,39 +139,12 @@ const adRequest: core.AdRendererRequest = {
 };
 
 describe('Test Example Handlebar Ad Renderer', function () {
-  it('Check overall execution of dummy handlebar adRenderer', function (done) {
-    // All the magic is here
+  it('Check overall execution of dummy handlebar adRenderer', async function () {
+    const plugin = new MySimpleAdRenderer({gatewaySdk: gatewayMock});
 
-    const rpMockup = buildRpMockup();
-
-    const plugin = new MySimpleAdRenderer(false);
-    const runner = new core.TestingPluginRunner(plugin, rpMockup);
-
-    // Plugin init
-    request(runner.plugin.app)
-      .post('/v1/init')
-      .send({authentication_token: 'Manny', worker_id: 'Calavera'})
-      .end((err, res) => {
-        expect(res.status).to.equal(200);
-
-        // Plugin log level to debug
-        request(runner.plugin.app)
-          .put('/v1/log_level')
-          .send({level: 'silly'})
-          .end((err, res) => {
-            expect(res.status).to.equal(200);
-
-            // Activity to process
-            request(runner.plugin.app)
-              .post('/v1/ad_contents')
-              .send(adRequest)
-              .end((err, res) => {
-                expect(res.status).to.eq(200);
-                expect(res.header['x-mics-display-context']).to.eq('{"hello":"\\u2764"}');
-
-                done();
-              });
-          });
-      });
+    const tester = new helper.AdRendererApiTester(plugin);
+    await tester.initAndSetLogLevel('silly');
+    const res = await tester.postAdContents(adRequest);
+    expect(res.header['x-mics-display-context']).to.eq('{"hello":"\\u2764"}');
   });
 });

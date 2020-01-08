@@ -216,8 +216,8 @@ The 0.5.x release of the Plugin SDK is mainly aiming at simplifying the use of t
 * `engineBuilder` property of `EmailRendererTemplate` and `AdRendererTemplatePlugin` is now declared `abstract` in the SDK and should no longer be instanciated in the Plugin Impl. `constructor` but directly in the class itself.
 
 ```js
-  constructor(enableThrottling = false) {
-    super(enableThrottling);
+  constructor(props?: BasePluginProps) {
+    super(props);
     this.engineBuilder = new extra.RecommendationsHandlebarsEngine();
   }
 ```
@@ -227,8 +227,8 @@ should become
 ```js
   engineBuilder = new extra.RecommendationsHandlebarsEngine();
 
-  constructor(enableThrottling = false) {
-    super(enableThrottling);
+  constructor(props?: BasePluginProps) {
+    super(props);
   }
 ```
 

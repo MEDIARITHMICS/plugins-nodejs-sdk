@@ -1,8 +1,6 @@
 import {DataResponse} from '../../api/core/common/Response';
 import {Customizable} from '../../api/core/common/Customizable';
 
-export type RecommenderResponse = DataResponse<RecommendationsWrapper>;
-
 export interface RecommendationsWrapper {
   ts: number;
   proposals: ItemProposal[];
