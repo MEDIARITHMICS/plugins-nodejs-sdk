@@ -1,6 +1,8 @@
 import * as express from 'express';
 import * as _ from 'lodash';
 
+import { StatsD } from 'hot-shots';
+
 import { activateDatadog } from '../../../helpers/Datadog';
 import {AudienceSegmentExternalFeedResource, AudienceSegmentResource} from '../../api/core/audiencesegment/AudienceSegmentInterface';
 import {PluginProperty} from '../../';
@@ -23,9 +25,14 @@ export interface AudienceFeedConnectorBaseInstanceContext {
 }
 
 export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<AudienceFeedConnectorBaseInstanceContext> {
+  private statsD: StatsD | null;
+  private enableDatadog: boolean;
 
   constructor(enableThrottling = false, enableDatadog = false) {
     super(enableThrottling);
+
+    this.enableDatadog = enableDatadog;
+    this.statsD = null;
 
     if (enableDatadog) {
       activateDatadog(this.proxyUrl, this.logger);
@@ -80,6 +87,7 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
   ): Promise<AudienceFeedConnectorBaseInstanceContext> {
     const audienceFeedP = this.fetchAudienceFeed(feedId);
     const audienceFeedPropsP = this.fetchAudienceFeedProperties(feedId);
+    const segment = await this.fetchAudienceSegment(feedId);
 
     const results = await Promise.all([audienceFeedP, audienceFeedPropsP]);
 
@@ -90,6 +98,11 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
       feed: audienceFeed,
       feedProperties: new PropertiesWrapper(audienceFeedProps)
     };
+
+    if (this.enableDatadog) {
+      const globalTags = { feedId, segmentId: segment.id, datamartId: segment.datamart_id };
+      this.statsD = new StatsD({ globalTags });
+    }
 
     return context;
   }
