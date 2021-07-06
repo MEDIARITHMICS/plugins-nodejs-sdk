@@ -1,4 +1,4 @@
-import * as express from 'express';
+import express from 'express';
 import * as request from 'request';
 import * as rp from 'request-promise-native';
 import * as winston from 'winston';

@@ -1,5 +1,5 @@
 import 'mocha';
-import * as request from 'supertest';
+import request from 'supertest';
 import * as sinon from 'sinon';
 import {expect} from 'chai';
 import {ActivityAnalyzerPlugin} from '../mediarithmics';

@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as _ from 'lodash';
-import * as jsesc from 'jsesc';
+import jsesc from 'jsesc';
 
 import {BasePlugin, PropertiesWrapper} from '../../common/BasePlugin';
 import {DisplayAd} from '../../../api/core/creative/index';
