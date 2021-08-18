@@ -28,7 +28,7 @@ export interface UserEmailIdentifierInfo extends UserIdentifierInfo {
 export interface UserAccountIdentifierInfo extends UserIdentifierInfo {
   user_account_id: string;
   creation_ts: TimeStamp;
-  compartment_id?: number; //To Be changed to `string` when the back will be updated
+  compartment_id?: string;
 }
 
 export interface UserAgentIdentifierInfo extends UserIdentifierInfo {
