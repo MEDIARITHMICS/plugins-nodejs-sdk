@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.9.4 - 2022-04-22
+
+- Fix StatsClient in tests
+
 # 0.9.3 - 2022-03-22
 
 - Move test helper dependencies
