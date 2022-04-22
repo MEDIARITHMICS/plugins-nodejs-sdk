@@ -53,7 +53,7 @@ export class StatsClient {
 		this.metrics = new Map();
 		this.logger = logger;
 		this.client = new StatsD({
-			protocol: 'uds',
+			protocol: process.env.NODE_ENV === 'production' ? 'uds' : undefined,
 		});
 
 		if (!this.interval) {
