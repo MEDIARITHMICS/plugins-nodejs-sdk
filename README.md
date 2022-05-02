@@ -363,6 +363,7 @@ Global tags with relevant datas such as artifact_id, build_id or version_id will
 
 ```js
 this.statsClient = helpers.StatsClient.init({
+	NODE_ENV: process.env.NODE_ENV,
 	logger: this.logger,
 });
 ```

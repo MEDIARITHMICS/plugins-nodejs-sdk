@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.9.5 - 2022-05-02
+
+- Update StatsClient to use development or production env
+
 # 0.9.4 - 2022-04-22
 
 - Fix StatsClient in tests
@@ -20,8 +24,7 @@
 # 0.9.0 - 2022-01-14
 
 - Added email renderer example.
-- Simplify the init workflow as credentials are now pushed via the environment.
-  This is a breaking change for tests, see the README file.
+- Simplify the init workflow as credentials are now pushed via the environment. This is a breaking change for tests, see the README file.
 
 # 0.8.4 - 2021-04-13
 
@@ -37,9 +40,7 @@
 
 # 0.8.1 - 2021-01-25
 
-- Fix CustomActionBasePlugin, `instanceContextBuilder` does not fetch plugin properties as it needs
-  a mics API token. Now to retrieve the CustomAction plugin and properties a token is needed, see
-  functions `fetchCustomAction` and `fetchCustomActionProperties`.
+- Fix CustomActionBasePlugin, `instanceContextBuilder` does not fetch plugin properties as it needs a mics API token. Now to retrieve the CustomAction plugin and properties a token is needed, see functions `fetchCustomAction` and `fetchCustomActionProperties`.
 
 # 0.8.0 - 2020-12-08
 
@@ -51,6 +52,7 @@
 - Refuse to process calls before the initialization
 
 # 0.7.12 - 2020-10-27
+
 - Fix : properly pass data and stats object in the onUserSegmentUpdate response
 
 # 0.7.11 - 2020-10-06
@@ -125,10 +127,10 @@
 - Support for EmailRenderer with Templating features
 - New Handlebar templating engine that list the macros used in the template
 - New Templating engine interface to implement if you want to let the Plugin Impl. have a look into the Templating macros
-- New `BasePlugin` helpers: 
-    - `requestPublicMicsApiHelper()` to do API requests on the mediarithmics API
-    - `fetchDatamarts()` to fetch the list of Datamarts inside an organisation
-    - `fetchDatamartCompartments()` to fetch the list of Compartments inside a Datamart
+- New `BasePlugin` helpers:
+  - `requestPublicMicsApiHelper()` to do API requests on the mediarithmics API
+  - `fetchDatamarts()` to fetch the list of Datamarts inside an organisation
+  - `fetchDatamartCompartments()` to fetch the list of Compartments inside a Datamart
 - New types definition for `Datamart` and `Compartment`
 - New `PropertyWrapper` method `findBooleanProperty()`
 
@@ -198,7 +200,6 @@
 - Add async middleware to all plugin routes
 - Remove legacy log
 - Update IAS Tag integration
-
 
 # 0.3.0 - 2017-11-15
 
