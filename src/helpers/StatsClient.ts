@@ -14,9 +14,10 @@ export interface InitOptions {
 
 	/**
 	 * Used to init or not the stats client.
-	 * If running tests, NODE_ENV should not be production
+	 * When running production, NODE_ENV should be "production".
+	 * If running tests, NODE_ENV should be "development".
 	 */
-	NODE_ENV: string;
+	NODE_ENV: string | undefined;
 
 	/**
 	 * An optional logger to send Metrics into logs (in debug mode)
@@ -55,7 +56,7 @@ export class StatsClient {
 	private client: StatsD;
 	private logger?: winston.Logger;
 
-	private constructor(timerInMs: number, NODE_ENV: string, logger?: winston.Logger) {
+	private constructor(timerInMs: number, NODE_ENV: string | undefined, logger?: winston.Logger) {
 		this.metrics = new Map();
 		this.logger = logger;
 		this.client = new StatsD({
@@ -78,11 +79,16 @@ export class StatsClient {
 	 */
 	static init({ timerInMs = 10 * 60 * 1000, NODE_ENV, logger }: InitOptions): StatsClient | undefined {
 		if (NODE_ENV === 'production') {
-			logger?.info(`StatsClient - Production mode - Initialization.`);
+			logger?.info(`StatsClient - Production mode - Protocole set to uds - Initialization.`);
 			return this.instance || (this.instance = new StatsClient(timerInMs, NODE_ENV, logger));
 		}
 
-		logger?.info(`StatsClient - Dev mode - No Initialization.`);
+		if (NODE_ENV === 'development') {
+			logger?.info(`StatsClient - Development mode - No protocole set - Initialization.`);
+			return this.instance || (this.instance = new StatsClient(timerInMs, NODE_ENV, logger));
+		}
+
+		logger?.info(`StatsClient - No ENV mode - No Initialization.`);
 		return;
 	}
 
