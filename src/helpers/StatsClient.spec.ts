@@ -17,7 +17,6 @@ describe('statsClient', () => {
 		statsClient = StatsClient.init({
 			timerInMs: 50,
 			logger,
-			environement: 'development',
 		});
 	});
 
