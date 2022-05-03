@@ -17,7 +17,7 @@ export interface InitOptions {
 	 * When running production, NODE_ENV should be "production".
 	 * If running tests, NODE_ENV should be "development".
 	 */
-	NODE_ENV: string | undefined;
+	environement?: string | undefined;
 
 	/**
 	 * An optional logger to send Metrics into logs (in debug mode)
@@ -56,11 +56,11 @@ export class StatsClient {
 	private client: StatsD;
 	private logger?: winston.Logger;
 
-	private constructor(timerInMs: number, NODE_ENV: string | undefined, logger?: winston.Logger) {
+	private constructor(timerInMs: number, environement: string | undefined, logger?: winston.Logger) {
 		this.metrics = new Map();
 		this.logger = logger;
 		this.client = new StatsD({
-			protocol: NODE_ENV === 'production' ? 'uds' : undefined,
+			protocol: environement === 'production' ? 'uds' : undefined,
 		});
 
 		if (!this.interval) {
@@ -73,19 +73,14 @@ export class StatsClient {
 	 * ```
 	 * private this.statsClient: StatsClient
 	 * constructor() {
-	 *   this.statsClient = StatsClient.init({ NODE_ENV: process.env.NODE_ENV });
+	 *   this.statsClient = StatsClient.init({ environement: process.env.NODE_ENV });
 	 * }
 	 * ```
 	 */
-	static init({ timerInMs = 10 * 60 * 1000, NODE_ENV, logger }: InitOptions): StatsClient | undefined {
-		if (NODE_ENV === 'production') {
-			logger?.info(`StatsClient - Production mode - Protocole set to uds - Initialization.`);
-			return this.instance || (this.instance = new StatsClient(timerInMs, NODE_ENV, logger));
-		}
-
-		if (NODE_ENV === 'development') {
-			logger?.info(`StatsClient - Development mode - No protocole set - Initialization.`);
-			return this.instance || (this.instance = new StatsClient(timerInMs, NODE_ENV, logger));
+	static init({ timerInMs = 10 * 60 * 1000, environement = process.env.NODE_ENV, logger }: InitOptions): StatsClient | undefined {
+		if (environement) {
+			logger?.info(`StatsClient - Environement is ${environement} mode - Timer is ${timerInMs} - Initialization.`);
+			return this.instance || (this.instance = new StatsClient(timerInMs, environement, logger));
 		}
 
 		logger?.info(`StatsClient - No ENV mode - No Initialization.`);
