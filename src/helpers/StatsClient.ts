@@ -13,6 +13,13 @@ export interface InitOptions {
 	timerInMs?: number;
 
 	/**
+	 * Used to init or not the stats client.
+	 * When running production, NODE_ENV should be "production".
+	 * If running tests, NODE_ENV should be "development".
+	 */
+	environment?: string | undefined;
+
+	/**
 	 * An optional logger to send Metrics into logs (in debug mode)
 	 */
 	logger?: winston.Logger;
@@ -23,7 +30,7 @@ export interface addOrUpdateMetricsOptions {
 	 * @example
 	 * ```
 	 * declare your metrics, their types, value and optionals tags.
-	 * {metrics: {processed_users: {type: MetricsType.GAUGE, value: 4, tags: {datamart_id: '4521'}}, users_with_mobile_id_count: {type: MetricsType.INCREMENT, value: 1, tags: {datamart_id: '4521'}}}}
+	 * {metrics: {processed_users: { type: MetricsType.GAUGE, value: 4, tags: {datamart_id: '4521'}}, users_with_mobile_id_count: {type: MetricsType.INCREMENT, value: 1, tags: {datamart_id: '4521'}}}}
 	 * {processed_users: 4}
 	 */
 	metrics: {
@@ -31,12 +38,16 @@ export interface addOrUpdateMetricsOptions {
 	};
 }
 
-export type MetricsSet = Map<string, MetricOptions>;
-
 export interface MetricOptions {
 	type: MetricsType;
 	value: number;
 	tags?: Tags;
+}
+
+export type MetricsSet = Map<string, MetricsOptionsWithName>;
+
+export interface MetricsOptionsWithName extends MetricOptions {
+	metricName: string;
 }
 
 /**
@@ -47,13 +58,11 @@ export class StatsClient {
 	private interval: NodeJS.Timer;
 	private metrics: MetricsSet;
 	private client: StatsD;
-	private logger?: winston.Logger;
 
-	private constructor(timerInMs: number, logger?: winston.Logger) {
+	private constructor(timerInMs: number, environment: string | undefined) {
 		this.metrics = new Map();
-		this.logger = logger;
 		this.client = new StatsD({
-			protocol: process.env.NODE_ENV === 'production' ? 'uds' : undefined,
+			protocol: environment === 'production' ? 'uds' : undefined,
 		});
 
 		if (!this.interval) {
@@ -66,33 +75,37 @@ export class StatsClient {
 	 * ```
 	 * private this.statsClient: StatsClient
 	 * constructor() {
-	 *   this.statsClient = StatsClient.init();
+	 *   this.statsClient = StatsClient.init({ environment: process.env.NODE_ENV });
 	 * }
 	 * ```
 	 */
-	static init({ timerInMs = 10 * 60 * 1000, logger }: InitOptions): StatsClient {
-		return this.instance || (this.instance = new StatsClient(timerInMs, logger));
+	static init({ timerInMs = 10 * 60 * 1000, environment = process.env.NODE_ENV, logger }: InitOptions): StatsClient {
+		logger?.info(`StatsClient - environment is ${environment} mode - Timer is ${timerInMs} - Initialization.`);
+		return this.instance || (this.instance = new StatsClient(timerInMs, environment));
 	}
 
 	/**
 	 * Increment some metrics
 	 * @example
 	 * ```
-	 * this.statClient.addOrUpdateMetrics({metrics: {processed_users: {type: MetricsType.GAUGE, value: 4, tags: {datamart_id: '4521'}}, users_with_mobile_id_count: {type: MetricsType.INCREMENT, value: 1, tags: {datamart_id: '4521'}}}})
-	 * this.statClient.addOrUpdateMetrics({metrics: {apiCallsError: {type: MetricsType.GAUGE, value: 10, tags: {statusCode: '500'}}}})
+	 * this.statClient.addOrUpdateMetrics({metrics: {processed_users: { type: MetricsType.GAUGE, value: 4, tags: {datamart_id: '4521'}}, users_with_mobile_id_count: {type: MetricsType.INCREMENT, value: 1, tags: {datamart_id: '4521'}}}})
+	 * this.statClient.addOrUpdateMetrics({metrics: {apiCallsError: { type: MetricsType.GAUGE, value: 10, tags: {statusCode: '500'}}}})
 	 * ```
 	 */
 	public addOrUpdateMetrics({ metrics }: addOrUpdateMetricsOptions): void {
 		Object.entries(metrics).forEach(([metricName, options]) => {
-			if (this.metrics.has(metricName)) {
-				const metricOptions = this.metrics.get(metricName) as MetricOptions;
-				this.metrics.set(metricName, {
+			const customKey = metricName + '/' + JSON.stringify(options.tags);
+			if (this.metrics.has(customKey)) {
+				const metricOptions = this.metrics.get(customKey) as MetricsOptionsWithName;
+				this.metrics.set(customKey, {
+					metricName,
 					type: metricOptions.type,
 					value: metricOptions.value + options.value,
 					tags: { ...options.tags },
 				});
 			} else {
-				this.metrics.set(metricName, {
+				this.metrics.set(customKey, {
+					metricName,
 					type: options.type,
 					value: options.value,
 					tags: options.tags,
@@ -102,19 +115,20 @@ export class StatsClient {
 	}
 
 	private sendStats(): void {
-		[...this.metrics.entries()].forEach(([metricName, options]) => {
+		[...this.metrics.entries()].forEach(([customKey, options]) => {
 			if (options.type === MetricsType.GAUGE) {
-				this.client.gauge(metricName, options.value, { ...options.tags });
+				this.client.gauge(options.metricName, options.value, { ...options.tags });
 			} else {
-				this.client.increment(metricName, options.value, { ...options.tags });
-				this.resetIncrementMetric(metricName);
+				this.client.increment(options.metricName, options.value, { ...options.tags });
+				this.resetIncrementMetric(customKey, options.metricName);
 			}
 		});
 	}
 
-	private resetIncrementMetric(metricName: string) {
-		const metricOptions = this.metrics.get(metricName) as MetricOptions;
-		this.metrics.set(metricName, {
+	private resetIncrementMetric(customKey: string, metricName: string) {
+		const metricOptions = this.metrics.get(customKey) as MetricOptions;
+		this.metrics.set(customKey, {
+			metricName,
 			type: metricOptions.type,
 			value: 0,
 			tags: { ...metricOptions.tags },
