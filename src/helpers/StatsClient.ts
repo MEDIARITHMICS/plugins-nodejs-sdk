@@ -30,20 +30,24 @@ export interface addOrUpdateMetricsOptions {
 	 * @example
 	 * ```
 	 * declare your metrics, their types, value and optionals tags.
-	 * {metrics: {processed_users: { metricName: 'processed_users', type: MetricsType.GAUGE, value: 4, tags: {datamart_id: '4521'}}, users_with_mobile_id_count: {type: MetricsType.INCREMENT, value: 1, tags: {datamart_id: '4521'}}}}
+	 * {metrics: {processed_users: { type: MetricsType.GAUGE, value: 4, tags: {datamart_id: '4521'}}, users_with_mobile_id_count: {type: MetricsType.INCREMENT, value: 1, tags: {datamart_id: '4521'}}}}
 	 * {processed_users: 4}
 	 */
 	metrics: {
 		[metricName: string]: MetricOptions;
 	};
 }
-export type MetricsSet = Map<string, MetricOptions>;
 
 export interface MetricOptions {
-	metricName: string;
 	type: MetricsType;
 	value: number;
 	tags?: Tags;
+}
+
+export type MetricsSet = Map<string, MetricsOptionsWithName>;
+
+export interface MetricsOptionsWithName extends MetricOptions {
+	metricName: string;
 }
 
 /**
@@ -91,15 +95,15 @@ export class StatsClient {
 	 * Increment some metrics
 	 * @example
 	 * ```
-	 * this.statClient.addOrUpdateMetrics({metrics: {processed_users: { metricName: 'processed_users', type: MetricsType.GAUGE, value: 4, tags: {datamart_id: '4521'}}, users_with_mobile_id_count: {type: MetricsType.INCREMENT, value: 1, tags: {datamart_id: '4521'}}}})
-	 * this.statClient.addOrUpdateMetrics({metrics: {apiCallsError: { metricName: 'apiCallsError', type: MetricsType.GAUGE, value: 10, tags: {statusCode: '500'}}}})
+	 * this.statClient.addOrUpdateMetrics({metrics: {processed_users: { type: MetricsType.GAUGE, value: 4, tags: {datamart_id: '4521'}}, users_with_mobile_id_count: {type: MetricsType.INCREMENT, value: 1, tags: {datamart_id: '4521'}}}})
+	 * this.statClient.addOrUpdateMetrics({metrics: {apiCallsError: { type: MetricsType.GAUGE, value: 10, tags: {statusCode: '500'}}}})
 	 * ```
 	 */
 	public addOrUpdateMetrics({ metrics }: addOrUpdateMetricsOptions): void {
 		Object.entries(metrics).forEach(([metricName, options]) => {
 			const customKey = metricName + '/' + JSON.stringify(options.tags);
 			if (this.metrics.has(customKey)) {
-				const metricOptions = this.metrics.get(customKey) as MetricOptions;
+				const metricOptions = this.metrics.get(customKey) as MetricsOptionsWithName;
 				this.metrics.set(customKey, {
 					metricName,
 					type: metricOptions.type,
