@@ -30,17 +30,17 @@ export interface addOrUpdateMetricsOptions {
 	 * @example
 	 * ```
 	 * declare your metrics, their types, value and optionals tags.
-	 * {metrics: {processed_users: {type: MetricsType.GAUGE, value: 4, tags: {datamart_id: '4521'}}, users_with_mobile_id_count: {type: MetricsType.INCREMENT, value: 1, tags: {datamart_id: '4521'}}}}
+	 * {metrics: {processed_users: { metricName: 'processed_users', type: MetricsType.GAUGE, value: 4, tags: {datamart_id: '4521'}}, users_with_mobile_id_count: {type: MetricsType.INCREMENT, value: 1, tags: {datamart_id: '4521'}}}}
 	 * {processed_users: 4}
 	 */
 	metrics: {
 		[metricName: string]: MetricOptions;
 	};
 }
-
 export type MetricsSet = Map<string, MetricOptions>;
 
 export interface MetricOptions {
+	metricName: string;
 	type: MetricsType;
 	value: number;
 	tags?: Tags;
@@ -91,21 +91,24 @@ export class StatsClient {
 	 * Increment some metrics
 	 * @example
 	 * ```
-	 * this.statClient.addOrUpdateMetrics({metrics: {processed_users: {type: MetricsType.GAUGE, value: 4, tags: {datamart_id: '4521'}}, users_with_mobile_id_count: {type: MetricsType.INCREMENT, value: 1, tags: {datamart_id: '4521'}}}})
-	 * this.statClient.addOrUpdateMetrics({metrics: {apiCallsError: {type: MetricsType.GAUGE, value: 10, tags: {statusCode: '500'}}}})
+	 * this.statClient.addOrUpdateMetrics({metrics: {processed_users: { metricName: 'processed_users', type: MetricsType.GAUGE, value: 4, tags: {datamart_id: '4521'}}, users_with_mobile_id_count: {type: MetricsType.INCREMENT, value: 1, tags: {datamart_id: '4521'}}}})
+	 * this.statClient.addOrUpdateMetrics({metrics: {apiCallsError: { metricName: 'apiCallsError', type: MetricsType.GAUGE, value: 10, tags: {statusCode: '500'}}}})
 	 * ```
 	 */
 	public addOrUpdateMetrics({ metrics }: addOrUpdateMetricsOptions): void {
 		Object.entries(metrics).forEach(([metricName, options]) => {
-			if (this.metrics.has(metricName)) {
-				const metricOptions = this.metrics.get(metricName) as MetricOptions;
-				this.metrics.set(metricName, {
+			const customKey = metricName + '/' + JSON.stringify(options.tags);
+			if (this.metrics.has(customKey)) {
+				const metricOptions = this.metrics.get(customKey) as MetricOptions;
+				this.metrics.set(customKey, {
+					metricName,
 					type: metricOptions.type,
 					value: metricOptions.value + options.value,
 					tags: { ...options.tags },
 				});
 			} else {
-				this.metrics.set(metricName, {
+				this.metrics.set(customKey, {
+					metricName,
 					type: options.type,
 					value: options.value,
 					tags: options.tags,
@@ -115,19 +118,20 @@ export class StatsClient {
 	}
 
 	private sendStats(): void {
-		[...this.metrics.entries()].forEach(([metricName, options]) => {
+		[...this.metrics.entries()].forEach(([customKey, options]) => {
 			if (options.type === MetricsType.GAUGE) {
-				this.client.gauge(metricName, options.value, { ...options.tags });
+				this.client.gauge(options.metricName, options.value, { ...options.tags });
 			} else {
-				this.client.increment(metricName, options.value, { ...options.tags });
-				this.resetIncrementMetric(metricName);
+				this.client.increment(options.metricName, options.value, { ...options.tags });
+				this.resetIncrementMetric(customKey, options.metricName);
 			}
 		});
 	}
 
-	private resetIncrementMetric(metricName: string) {
-		const metricOptions = this.metrics.get(metricName) as MetricOptions;
-		this.metrics.set(metricName, {
+	private resetIncrementMetric(customKey: string, metricName: string) {
+		const metricOptions = this.metrics.get(customKey) as MetricOptions;
+		this.metrics.set(customKey, {
+			metricName,
 			type: metricOptions.type,
 			value: 0,
 			tags: { ...metricOptions.tags },

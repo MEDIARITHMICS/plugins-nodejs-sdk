@@ -373,8 +373,8 @@ Using StatsD, the StatsClient, can aggregate and send your stats to services suc
 ```js
 this.statsClient.addOrUpdateMetrics({
 	metrics: {
-		processed_users: { type: MetricsType.GAUGE, value: 4, tags: { datamart_id: '4521' } },
-		users_with_mobile_id_count: { type: MetricsType.GAUGE, value: 1, tags: { datamart_id: '4521' } },
+		processed_users: { metricName: 'processed_users', type: MetricsType.GAUGE, value: 4, tags: { datamart_id: '4521' } },
+		users_with_mobile_id_count: { metricName: 'users_with_mobile_id_count', type: MetricsType.GAUGE, value: 1, tags: { datamart_id: '4521' } },
 	},
 });
 this.statsClient.addOrUpdateMetrics({
@@ -382,5 +382,5 @@ this.statsClient.addOrUpdateMetrics({
 		processed_users: { type: MetricsType.GAUGE, value: 10, tags: { datamart_id: '4521' } },
 	},
 });
-this.statsClient.addOrUpdateMetrics({ metrics: { apiCallsError: { type: MetricsType.GAUGE, value: 10, tags: { statusCode: '500' } } } });
+this.statsClient.addOrUpdateMetrics({ metrics: { apiCallsError: { metricName: 'apiCallsError', type: MetricsType.GAUGE, value: 10, tags: { statusCode: '500' } } } });
 ```

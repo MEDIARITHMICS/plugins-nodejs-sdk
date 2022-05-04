@@ -2,7 +2,7 @@
 
 # 0.9.5 - 2022-05-02
 
-- Update StatsClient to use development or production env
+- Update StatsClient: to use development or production env / to correctly target metrics in Map
 
 # 0.9.4 - 2022-04-22
 

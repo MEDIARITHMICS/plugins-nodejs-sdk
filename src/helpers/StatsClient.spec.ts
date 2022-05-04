@@ -33,8 +33,8 @@ describe('statsClient', () => {
 
 		statsClient?.addOrUpdateMetrics({
 			metrics: {
-				processed_users: { type: MetricsType.INCREMENT, value: 4, tags: { datamart_id: '4521' } },
-				users_with_mobile_id_count: { type: MetricsType.GAUGE, value: 1, tags: { datamart_id: '4521' } },
+				processed_users: { metricName: 'processed_users', type: MetricsType.INCREMENT, value: 4, tags: { datamart_id: '4521' } },
+				users_with_mobile_id_count: { metricName: 'users_with_mobile_id_count', type: MetricsType.GAUGE, value: 1, tags: { datamart_id: '4521' } },
 			},
 		});
 
@@ -50,12 +50,12 @@ describe('statsClient', () => {
 
 		statsClient?.addOrUpdateMetrics({
 			metrics: {
-				processed_users: { type: MetricsType.INCREMENT, value: 2, tags: { datamart_id: '4521' } },
-				users_with_mobile_id_count: { type: MetricsType.GAUGE, value: 1, tags: { datamart_id: '4521' } },
+				processed_users: { metricName: 'processed_users', type: MetricsType.INCREMENT, value: 2, tags: { datamart_id: '4521' } },
+				users_with_mobile_id_count: { metricName: 'users_with_mobile_id_count', type: MetricsType.GAUGE, value: 1, tags: { datamart_id: '4521' } },
 			},
 		});
 
-		statsClient?.addOrUpdateMetrics({ metrics: { apiCallsError: { type: MetricsType.INCREMENT, value: 3, tags: { statusCode: '500' } } } });
+		statsClient?.addOrUpdateMetrics({ metrics: { apiCallsError: { metricName: 'apiCallsError', type: MetricsType.INCREMENT, value: 3, tags: { statusCode: '500' } } } });
 
 		await delay(25);
 
