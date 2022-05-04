@@ -58,11 +58,9 @@ export class StatsClient {
 	private interval: NodeJS.Timer;
 	private metrics: MetricsSet;
 	private client: StatsD;
-	private logger?: winston.Logger;
 
-	private constructor(timerInMs: number, environement: string | undefined, logger?: winston.Logger) {
+	private constructor(timerInMs: number, environement: string | undefined) {
 		this.metrics = new Map();
-		this.logger = logger;
 		this.client = new StatsD({
 			protocol: environement === 'production' ? 'uds' : undefined,
 		});
@@ -81,14 +79,9 @@ export class StatsClient {
 	 * }
 	 * ```
 	 */
-	static init({ timerInMs = 10 * 60 * 1000, environement = process.env.NODE_ENV, logger }: InitOptions): StatsClient | undefined {
-		if (environement) {
-			logger?.info(`StatsClient - Environement is ${environement} mode - Timer is ${timerInMs} - Initialization.`);
-			return this.instance || (this.instance = new StatsClient(timerInMs, environement, logger));
-		}
-
-		logger?.info(`StatsClient - No ENV mode - No Initialization.`);
-		return;
+	static init({ timerInMs = 10 * 60 * 1000, environement = 'development', logger }: InitOptions): StatsClient {
+		logger?.info(`StatsClient - Environement is ${environement} mode - Timer is ${timerInMs} - Initialization.`);
+		return this.instance || (this.instance = new StatsClient(timerInMs, environement));
 	}
 
 	/**

@@ -6,7 +6,7 @@ import * as winston from 'winston';
 const delay = (interval: number) => new Promise((resolve) => setTimeout(resolve, interval));
 
 describe('statsClient', () => {
-	let statsClient: StatsClient | undefined;
+	let statsClient: StatsClient;
 	const logger = winston.createLogger({
 		format: winston.format.simple(),
 		transports: [new winston.transports.Console()],
@@ -31,7 +31,7 @@ describe('statsClient', () => {
 		// @ts-ignore
 		const spyFnGauge = sinon.spy(statsClient.client, 'gauge');
 
-		statsClient?.addOrUpdateMetrics({
+		statsClient.addOrUpdateMetrics({
 			metrics: {
 				processed_users: { type: MetricsType.INCREMENT, value: 4, tags: { datamart_id: '4521' } },
 				users_with_mobile_id_count: { type: MetricsType.GAUGE, value: 1, tags: { datamart_id: '4521' } },
@@ -48,7 +48,7 @@ describe('statsClient', () => {
 
 		await delay(50);
 
-		statsClient?.addOrUpdateMetrics({
+		statsClient.addOrUpdateMetrics({
 			metrics: {
 				processed_users: { type: MetricsType.INCREMENT, value: 2, tags: { datamart_id: '4521' } },
 				users_with_mobile_id_count: { type: MetricsType.GAUGE, value: 1, tags: { datamart_id: '4521' } },
