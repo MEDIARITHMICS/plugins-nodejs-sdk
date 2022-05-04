@@ -1,6 +1,6 @@
 # Changelog
 
-# 0.9.5 - 2022-05-02
+# 0.9.5 - 2022-05-04
 
 - Update StatsClient: to use development or production env / to correctly target metrics in Map
 
