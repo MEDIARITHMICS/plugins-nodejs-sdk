@@ -55,7 +55,7 @@ describe('statsClient', () => {
 			},
 		});
 
-		statsClient?.addOrUpdateMetrics({ metrics: { apiCallsError: { type: MetricsType.INCREMENT, value: 3, tags: { statusCode: '500' } } } });
+		statsClient.addOrUpdateMetrics({ metrics: { apiCallsError: { type: MetricsType.INCREMENT, value: 3, tags: { statusCode: '500' } } } });
 
 		await delay(25);
 
