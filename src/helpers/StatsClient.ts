@@ -17,7 +17,7 @@ export interface InitOptions {
 	 * When running production, NODE_ENV should be "production".
 	 * If running tests, NODE_ENV should be "development".
 	 */
-	environement?: string | undefined;
+	environment?: string | undefined;
 
 	/**
 	 * An optional logger to send Metrics into logs (in debug mode)
@@ -59,10 +59,10 @@ export class StatsClient {
 	private metrics: MetricsSet;
 	private client: StatsD;
 
-	private constructor(timerInMs: number, environement: string | undefined) {
+	private constructor(timerInMs: number, environment: string | undefined) {
 		this.metrics = new Map();
 		this.client = new StatsD({
-			protocol: environement === 'production' ? 'uds' : undefined,
+			protocol: environment === 'production' ? 'uds' : undefined,
 		});
 
 		if (!this.interval) {
@@ -75,13 +75,13 @@ export class StatsClient {
 	 * ```
 	 * private this.statsClient: StatsClient
 	 * constructor() {
-	 *   this.statsClient = StatsClient.init({ environement: process.env.NODE_ENV });
+	 *   this.statsClient = StatsClient.init({ environment: process.env.NODE_ENV });
 	 * }
 	 * ```
 	 */
-	static init({ timerInMs = 10 * 60 * 1000, environement = process.env.NODE_ENV, logger }: InitOptions): StatsClient {
-		logger?.info(`StatsClient - Environement is ${environement} mode - Timer is ${timerInMs} - Initialization.`);
-		return this.instance || (this.instance = new StatsClient(timerInMs, environement));
+	static init({ timerInMs = 10 * 60 * 1000, environment = process.env.NODE_ENV, logger }: InitOptions): StatsClient {
+		logger?.info(`StatsClient - environment is ${environment} mode - Timer is ${timerInMs} - Initialization.`);
+		return this.instance || (this.instance = new StatsClient(timerInMs, environment));
 	}
 
 	/**

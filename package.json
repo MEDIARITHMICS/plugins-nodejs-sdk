@@ -11,7 +11,7 @@
 		"prepublishOnly": "tsc",
 		"build": "tsc",
 		"docs": "typedoc --out docs/ --mode modules --target es6 --module commonjs ./src",
-		"test:Helper": "npm run build && NODE_ENV=developement mocha lib/helpers/StatsClient.spec.js"
+		"test:Helper": "npm run build && NODE_ENV=development mocha lib/helpers/StatsClient.spec.js"
 	},
 	"author": "",
 	"license": "Apache-2.0",
