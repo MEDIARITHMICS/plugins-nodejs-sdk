@@ -16,7 +16,7 @@ export interface UserIdentifierInfo {
   type: UserIdentifierInfoType;
 }
 
-export enum TechnicalIdentifier {
+export enum UserDeviceTechnicalIdentifierType {
   MUM_ID = "MUM_ID",
   MOBILE_ADVERTSING_ID = "MOBILE_ADVERTSING_ID",
   MOBILE_VENDOR_ID = "MOBILE_VENDOR_ID",
@@ -26,7 +26,7 @@ export enum TechnicalIdentifier {
 }
 
 export interface UserDevicePointIdentifierTechnicalIdentifierResource {
-  type: TechnicalIdentifier;
+  type: UserDeviceTechnicalIdentifierType;
   user_agent_id: string;
   registry_id: string;
   creation_ts: TimeStamp;
