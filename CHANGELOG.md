@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.9.7 - 2022-05-31
+
+- Fix missing `type` in user identifier info
+
 # 0.9.6 - 2022-05-31
 
 - Add `USER_DEVICE_POINT` to `UserIdentifierInfoType`
