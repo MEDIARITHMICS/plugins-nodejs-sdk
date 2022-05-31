@@ -1,4 +1,9 @@
-export type UserIdentifierInfoType = 'USER_POINT' | 'USER_ACCOUNT' | 'USER_EMAIL' | 'USER_AGENT';
+export type UserIdentifierInfoType =
+  | "USER_POINT"
+  | "USER_ACCOUNT"
+  | "USER_EMAIL"
+  | "USER_AGENT"
+  | "USER_DEVICE_POINT";
 
 export type UUID = string;
 
@@ -9,6 +14,32 @@ export type UserAgentInfo = any; //TODO
 
 export interface UserIdentifierInfo {
   type: UserIdentifierInfoType;
+}
+
+export enum UserDeviceTechnicalIdentifierType {
+  MUM_ID = "MUM_ID",
+  MOBILE_ADVERTSING_ID = "MOBILE_ADVERTSING_ID",
+  MOBILE_VENDOR_ID = "MOBILE_VENDOR_ID",
+  INSTALLATION_ID = "INSTALLATION_ID",
+  CUSTOM_DEVICE_ID = "CUSTOM_DEVICE_ID",
+  NETWORK_DEVICE_ID = "NETWORK_DEVICE_ID",
+}
+
+export interface UserDevicePointIdentifierTechnicalIdentifierResource {
+  type: UserDeviceTechnicalIdentifierType;
+  user_agent_id: string;
+  registry_id: string;
+  creation_ts: TimeStamp;
+  last_activity_ts: TimeStamp;
+  expiration_ts?: TimeStamp;
+}
+
+export interface UserDevicePointIdentifierInfo {
+  id?: string;
+  device?: UserAgentInfo;
+  creation_ts: TimeStamp;
+  last_activity_ts: TimeStamp;
+  technical_identifiers: Array<UserDevicePointIdentifierTechnicalIdentifierResource>;
 }
 
 export interface UserPointIdentifierInfo extends UserIdentifierInfo {
