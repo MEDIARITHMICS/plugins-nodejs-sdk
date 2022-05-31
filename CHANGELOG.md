@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.9.6 - 2022-05-31
+
+- Add `USER_DEVICE_POINT` to `UserIdentifierInfoType`
+
 # 0.9.5 - 2022-05-04
 
 - Update StatsClient: to use development or production env / to correctly target metrics in Map
