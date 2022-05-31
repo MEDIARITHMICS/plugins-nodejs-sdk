@@ -34,7 +34,8 @@ export interface UserDevicePointIdentifierTechnicalIdentifierResource {
   expiration_ts?: TimeStamp;
 }
 
-export interface UserDevicePointIdentifierInfo {
+export interface UserDevicePointIdentifierInfo extends UserIdentifierInfo {
+  type: "USER_DEVICE_POINT";
   id?: string;
   device?: UserAgentInfo;
   creation_ts: TimeStamp;
@@ -43,11 +44,13 @@ export interface UserDevicePointIdentifierInfo {
 }
 
 export interface UserPointIdentifierInfo extends UserIdentifierInfo {
+  type: "USER_POINT";
   user_point_id: UUID;
   creation_ts: TimeStamp;
 }
 
 export interface UserEmailIdentifierInfo extends UserIdentifierInfo {
+  type: "USER_EMAIL";
   hash: string;
   email?: string;
   operator?: string;
@@ -57,12 +60,14 @@ export interface UserEmailIdentifierInfo extends UserIdentifierInfo {
 }
 
 export interface UserAccountIdentifierInfo extends UserIdentifierInfo {
+  type: "USER_ACCOUNT";
   user_account_id: string;
   creation_ts: TimeStamp;
   compartment_id?: number; //To Be changed to `string` when the back will be updated
 }
 
 export interface UserAgentIdentifierInfo extends UserIdentifierInfo {
+  type: "USER_AGENT";
   vector_id: VectorId;
   device?: UserAgentInfo;
   creation_ts: TimeStamp;
