@@ -57,7 +57,7 @@ export class StatsClient {
 	private static instance: StatsClient;
 	private interval: NodeJS.Timer;
 	private metrics: MetricsSet;
-	private client: StatsD;
+  public client: StatsD;
 
 	private constructor(timerInMs: number, environment: string | undefined) {
 		this.metrics = new Map();

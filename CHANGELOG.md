@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.9.7 - 2022-06-29
+
+- MOD: StastClient.client is now public
+
 # 0.9.6 - 2022-05-31
 
 - Add `USER_DEVICE_POINT` to `UserIdentifierInfoType`
