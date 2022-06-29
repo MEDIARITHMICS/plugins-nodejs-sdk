@@ -379,7 +379,12 @@ this.statsClient.addOrUpdateMetrics({
 });
 this.statsClient.addOrUpdateMetrics({
 	metrics: {
-		processed_users: { type: MetricsType.GAUGE, value: 10, tags: { datamart_id: '4521' } },
+    apiCallsError: {
+      metricName: "apiCallsError",
+      type: MetricsType.GAUGE,
+      value: 10,
+      tags: { statusCode: "500" },
+    },
 	},
 });
 ```
