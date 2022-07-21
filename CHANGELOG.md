@@ -1,8 +1,19 @@
 # Changelog
 
-# 0.9.5
+# 0.9.8 - 2022-07-21
 
 - Add additional keys to CustomActionRequest interface (datamart_id, node_id, scenario_id)
+# 0.9.7 - 2022-05-31
+
+- Fix missing `type` in user identifier info
+
+# 0.9.6 - 2022-05-31
+
+- Add `USER_DEVICE_POINT` to `UserIdentifierInfoType`
+
+# 0.9.5 - 2022-05-04
+
+- Update StatsClient: to use development or production env / to correctly target metrics in Map
 
 # 0.9.4 - 2022-04-22
 
@@ -24,8 +35,7 @@
 # 0.9.0 - 2022-01-14
 
 - Added email renderer example.
-- Simplify the init workflow as credentials are now pushed via the environment.
-  This is a breaking change for tests, see the README file.
+- Simplify the init workflow as credentials are now pushed via the environment. This is a breaking change for tests, see the README file.
 
 # 0.8.4 - 2021-04-13
 
@@ -41,9 +51,7 @@
 
 # 0.8.1 - 2021-01-25
 
-- Fix CustomActionBasePlugin, `instanceContextBuilder` does not fetch plugin properties as it needs
-  a mics API token. Now to retrieve the CustomAction plugin and properties a token is needed, see
-  functions `fetchCustomAction` and `fetchCustomActionProperties`.
+- Fix CustomActionBasePlugin, `instanceContextBuilder` does not fetch plugin properties as it needs a mics API token. Now to retrieve the CustomAction plugin and properties a token is needed, see functions `fetchCustomAction` and `fetchCustomActionProperties`.
 
 # 0.8.0 - 2020-12-08
 

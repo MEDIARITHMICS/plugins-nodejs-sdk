@@ -363,6 +363,7 @@ Global tags with relevant datas such as artifact_id, build_id or version_id will
 
 ```js
 this.statsClient = helpers.StatsClient.init({
+	environment: process.env.NODE_ENV,
 	logger: this.logger,
 });
 ```
@@ -381,5 +382,5 @@ this.statsClient.addOrUpdateMetrics({
 		processed_users: { type: MetricsType.GAUGE, value: 10, tags: { datamart_id: '4521' } },
 	},
 });
-this.statsClient.addOrUpdateMetrics({ metrics: { apiCallsError: { type: MetricsType.GAUGE, value: 10, tags: { statusCode: '500' } } } });
+this.statsClient.addOrUpdateMetrics({ metrics: { apiCallsError: { metricName: 'apiCallsError', type: MetricsType.GAUGE, value: 10, tags: { statusCode: '500' } } } });
 ```
