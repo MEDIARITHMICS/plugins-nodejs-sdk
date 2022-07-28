@@ -1,8 +1,9 @@
 # Changelog
 
-# 0.9.8 - 2022-07-21
+# 0.9.8 - 2022-07-28
 
 - Add additional keys to CustomActionRequest interface (datamart_id, node_id, scenario_id)
+
 # 0.9.7 - 2022-05-31
 
 - Fix missing `type` in user identifier info
