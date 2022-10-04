@@ -1,10 +1,11 @@
 export type AudienceFeedConnectorStatus = 'ok' | 'error' | 'retry';
 export type AudienceFeedConnectorContentType = 'text/csv' | 'application/json' | 'text/plain';
+export type DeliveryType = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData;
 export declare type AudienceFeedConnectorConnectionStatus = 'ok' | 'error' | 'external_segment_not_ready_yet';
 
 export interface AudienceFeedConnectorPluginResponse {
   status: AudienceFeedConnectorStatus;
-  data?: UserSegmentUpdatePluginResponseData[];
+  data?: DeliveryType[];
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
 }
@@ -21,7 +22,7 @@ export interface ExternalSegmentConnectionPluginResponse {
 
 export interface UserSegmentUpdatePluginResponse {
   status: AudienceFeedConnectorStatus;
-  data?: UserSegmentUpdatePluginResponseData[];
+  data?: DeliveryType[];
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
   nextMsgDelayInMs?: number;
