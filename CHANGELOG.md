@@ -1,5 +1,10 @@
 # Changelog
 
+# 0.9.9 - 2022-10-07
+
+- Add new parameter visibility on ExternalSegmentCreationPluginResponse (`public` to show the message on navigator, `private` to obfuscate it)
+- Improve audience segment feed types (`sync_result`, `retry` status)
+
 # 0.9.8 - 2022-07-28
 
 - Add additional keys to CustomActionRequest interface (datamart_id, node_id, scenario_id)
