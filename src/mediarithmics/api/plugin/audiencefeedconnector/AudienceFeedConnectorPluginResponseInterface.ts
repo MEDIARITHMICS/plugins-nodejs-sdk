@@ -11,7 +11,7 @@ export type AudienceFeedConnectorContentType =
 export interface ExternalSegmentCreationPluginResponse {
   status: AudienceFeedConnectorStatus;
   message?: string;
-  visibility?: 'private' | 'public';
+  visibility?: 'PRIVATE' | 'PUBLIC';
 }
 
 export interface ExternalSegmentConnectionPluginResponse {

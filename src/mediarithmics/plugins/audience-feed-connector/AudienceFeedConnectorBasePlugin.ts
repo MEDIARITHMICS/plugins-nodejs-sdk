@@ -179,7 +179,7 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
 
           const pluginResponse: ExternalSegmentCreationPluginResponse = {
             status: response.status,
-            visibility: response.visibility || 'public',
+            visibility: response.visibility || 'PUBLIC',
           };
 
           if (response.message) {
@@ -196,7 +196,7 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
           const pluginResponse: ExternalSegmentCreationPluginResponse = {
             status: 'error',
             message: `${error.message}`,
-            visibility: 'private',
+            visibility: 'PRIVATE',
           };
           return res.status(500).send(pluginResponse);
         }
