@@ -1,8 +1,12 @@
 # Changelog
 
+# 0.9.10 - 2022-10-07
+
+- fix visibility case (the release 0.9.9 missed a commit)
+
 # 0.9.9 - 2022-10-07
 
-- Add new parameter visibility on ExternalSegmentCreationPluginResponse (`public` to show the message on navigator, `private` to obfuscate it)
+- Add new parameter visibility on ExternalSegmentCreationPluginResponse (`PUBLIC` to show the message on navigator, `PRIVATE` to obfuscate it)
 - Improve audience segment feed types (`sync_result`, `retry` status)
 
 # 0.9.8 - 2022-07-28
