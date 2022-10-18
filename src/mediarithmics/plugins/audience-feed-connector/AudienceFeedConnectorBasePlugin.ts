@@ -343,6 +343,9 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
             case 'retry':
               statusCode = 429;
               break;
+            case 'no_eligible_identifier':
+              statusCode = 400;
+              break;
             default:
               statusCode = 500;
           }

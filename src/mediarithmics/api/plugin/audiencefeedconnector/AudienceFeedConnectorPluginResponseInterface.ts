@@ -19,8 +19,13 @@ export interface ExternalSegmentConnectionPluginResponse {
   message?: string;
 }
 
+export type UserSegmentUpdatePluginResponseStatus = 
+  | AudienceFeedConnectorStatus
+  | 'retry'
+  | 'no_eligible_identifier';
+
 export interface UserSegmentUpdatePluginResponse {
-  status: AudienceFeedConnectorStatus | 'retry';
+  status: UserSegmentUpdatePluginResponseStatus;
   data?: UserSegmentUpdatePluginResponseData[];
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
@@ -36,12 +41,16 @@ export interface UserSegmentUpdatePluginResponseData {
 
 type SyncResult =
   | 'PROCESSED'
-  | 'FAILURE'
-  | 'NO_ELIGIBLE_IDENTIFIER'
-  | 'SUCCESS';
+  | 'SUCCESS'
+  | 'REJECTED';
 
 export interface UserSegmentUpdatePluginResponseStats {
-  identifier?: string;
-  sync_result?: SyncResult;
-  tags?: { key: string; value: string };
+  identifier: string;
+  sync_result: SyncResult;
+  tags?: AudienceFeedStatTag[];
+}
+
+export interface AudienceFeedStatTag {
+  key: string;
+  value: string;
 }
