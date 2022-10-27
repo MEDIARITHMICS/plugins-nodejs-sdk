@@ -1,9 +1,5 @@
 # Changelog
 
-# 0.9.11 - 2022-10-27
-
-- add Batch DeliveryType to UserSegmentUpdatePluginResponse data
-
 # 0.9.10 - 2022-10-07
 
 - fix visibility case (the release 0.9.9 missed a commit)
