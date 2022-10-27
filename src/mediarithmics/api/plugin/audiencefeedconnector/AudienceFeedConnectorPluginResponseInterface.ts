@@ -32,9 +32,9 @@ export interface UserSegmentUpdatePluginBatchDeliveryResponseData extends UserSe
 type SyncResult = 'PROCESSED' | 'SUCCESS' | 'REJECTED';
 
 export interface UserSegmentUpdatePluginResponseStats {
-  identifier?: string;
-  sync_result?: SyncResult;
-  tags?: { key: string; value: string };
+  identifier: string;
+  sync_result: SyncResult;
+  tags?: AudienceFeedStatTag[];
 }
 
 export interface ExternalSegmentCreationPluginResponse {
