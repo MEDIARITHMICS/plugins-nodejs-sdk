@@ -1,7 +1,6 @@
 export type AudienceFeedConnectorStatus = 'ok' | 'error';
 export declare type AudienceFeedConnectorConnectionStatus = 'ok' | 'error' | 'external_segment_not_ready_yet';
 export type AudienceFeedConnectorContentType = 'text/csv' | 'application/json' | 'text/plain';
-export type DeliveryType = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData;
 
 export interface UserSegmentUpdatePluginResponse {
   status: AudienceFeedConnectorStatus | 'retry';
@@ -9,6 +8,26 @@ export interface UserSegmentUpdatePluginResponse {
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
   nextMsgDelayInMs?: number;
+}
+
+export type DeliveryType = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData;
+
+export interface UserSegmentUpdatePluginFileDeliveryResponseData extends UserSegmentUpdatePluginResponseData {
+  type: 'FILE_DELIVERY';
+  destination_token?: string;
+}
+
+export interface UserSegmentUpdatePluginBatchDeliveryResponseData extends UserSegmentUpdatePluginResponseData {
+  type: 'BATCH_DELIVERY';
+  batch_token?: string;
+}
+
+type SyncResult = 'PROCESSED' | 'FAILURE' | 'NO_ELIGIBLE_IDENTIFIER' | 'SUCCESS';
+
+export interface UserSegmentUpdatePluginResponseStats {
+  identifier?: string;
+  sync_result?: SyncResult;
+  tags?: { key: string; value: string };
 }
 
 export interface ExternalSegmentCreationPluginResponse {
@@ -27,22 +46,4 @@ export interface UserSegmentUpdatePluginResponseData {
   grouping_key?: string;
   content?: string;
   binary_content?: BinaryType;
-}
-
-export interface UserSegmentUpdatePluginFileDeliveryResponseData extends UserSegmentUpdatePluginResponseData {
-  type: 'FILE_DELIVERY';
-  destination_token?: string;
-}
-
-export interface UserSegmentUpdatePluginBatchDeliveryResponseData extends UserSegmentUpdatePluginResponseData {
-  type: 'BATCH_DELIVERY';
-  batch_token?: string;
-}
-
-type SyncResult = 'PROCESSED' | 'FAILURE' | 'NO_ELIGIBLE_IDENTIFIER' | 'SUCCESS';
-
-export interface UserSegmentUpdatePluginResponseStats {
-  identifier?: string;
-  sync_result?: SyncResult;
-  tags?: { key: string; value: string };
 }
