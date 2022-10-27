@@ -3,7 +3,7 @@ export declare type AudienceFeedConnectorConnectionStatus = 'ok' | 'error' | 'ex
 export type AudienceFeedConnectorContentType = 'text/csv' | 'application/json' | 'text/plain';
 
 export interface UserSegmentUpdatePluginResponse {
-  status: AudienceFeedConnectorStatus | 'retry';
+  status: UserSegmentUpdatePluginResponseStatus;
   data?: DeliveryType[];
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
@@ -11,6 +11,13 @@ export interface UserSegmentUpdatePluginResponse {
 }
 
 export type DeliveryType = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData;
+
+export interface UserSegmentUpdatePluginResponseData {
+  destination_token?: string;
+  grouping_key?: string;
+  content?: string;
+  binary_content?: BinaryType;
+}
 
 export interface UserSegmentUpdatePluginFileDeliveryResponseData extends UserSegmentUpdatePluginResponseData {
   type: 'FILE_DELIVERY';
@@ -22,7 +29,7 @@ export interface UserSegmentUpdatePluginBatchDeliveryResponseData extends UserSe
   batch_token?: string;
 }
 
-type SyncResult = 'PROCESSED' | 'FAILURE' | 'NO_ELIGIBLE_IDENTIFIER' | 'SUCCESS';
+type SyncResult = 'PROCESSED' | 'SUCCESS' | 'REJECTED';
 
 export interface UserSegmentUpdatePluginResponseStats {
   identifier?: string;
@@ -41,36 +48,7 @@ export interface ExternalSegmentConnectionPluginResponse {
   message?: string;
 }
 
-export type UserSegmentUpdatePluginResponseStatus = 
-  | AudienceFeedConnectorStatus
-  | 'retry'
-  | 'no_eligible_identifier';
-
-export interface UserSegmentUpdatePluginResponse {
-  status: UserSegmentUpdatePluginResponseStatus;
-  data?: UserSegmentUpdatePluginResponseData[];
-  stats?: UserSegmentUpdatePluginResponseStats[];
-  message?: string;
-  nextMsgDelayInMs?: number;
-}
-
-export interface UserSegmentUpdatePluginResponseData {
-  destination_token?: string;
-  grouping_key?: string;
-  content?: string;
-  binary_content?: BinaryType;
-}
-
-type SyncResult =
-  | 'PROCESSED'
-  | 'SUCCESS'
-  | 'REJECTED';
-
-export interface UserSegmentUpdatePluginResponseStats {
-  identifier: string;
-  sync_result: SyncResult;
-  tags?: AudienceFeedStatTag[];
-}
+export type UserSegmentUpdatePluginResponseStatus = AudienceFeedConnectorStatus | 'retry' | 'no_eligible_identifier';
 
 export interface AudienceFeedStatTag {
   key: string;
