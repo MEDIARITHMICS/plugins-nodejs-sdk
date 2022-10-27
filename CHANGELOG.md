@@ -1,6 +1,6 @@
 # Changelog
 
-# 0.9.10 - 2022-10-27
+# 0.9.11 - 2022-10-27
 
 - add Batch DeliveryType to UserSegmentUpdatePluginResponse data
 
