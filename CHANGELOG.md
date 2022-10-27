@@ -1,5 +1,15 @@
 # Changelog
 
+# XXX
+
+Breaking changes in UserSegmentUpdatePluginResponse.
+- update the Audience feed onUserSegmentUpdate method return type. Interface UserSegmentUpdatePluginResponse data optional element is now of type DeliveryType.
+- status can be 'no_eligible_identifier' now (status code 400);
+- stats field is changed (UserSegmentUpdatePluginResponseStats);
+- in stats, identifier and sync_result become compulsory;
+- SyncResult can now have only 3 values (PROCESSED, SUCCESS and REJECTED) in stats;
+- tags in stats is now an optional list of tags;
+
 # 0.9.10 - 2022-10-07
 
 - fix visibility case (the release 0.9.9 missed a commit)
