@@ -6,7 +6,6 @@ import { PluginProperty } from '../../';
 import { BasePlugin, PropertiesWrapper } from '../common';
 import { ExternalSegmentConnectionRequest, ExternalSegmentCreationRequest, UserSegmentUpdateRequest } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
 import {
-  AudienceFeedConnectorPluginResponse,
   ExternalSegmentConnectionPluginResponse,
   ExternalSegmentCreationPluginResponse,
   UserSegmentUpdatePluginResponse,
@@ -122,8 +121,9 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
 
         this.logger.debug(`Returning: ${JSON.stringify(response)}`);
 
-        const pluginResponse: AudienceFeedConnectorPluginResponse = {
+        const pluginResponse: ExternalSegmentCreationPluginResponse = {
           status: response.status,
+          visibility: response.visibility || 'PUBLIC',
         };
 
         if (response.message) {
@@ -135,7 +135,12 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
         return res.status(statusCode).send(JSON.stringify(pluginResponse));
       } catch (error) {
         this.logger.error(`Something bad happened : ${error.message} - ${error.stack}`);
-        return res.status(500).send({ status: 'error', message: `${error.message}` });
+        const pluginResponse: ExternalSegmentCreationPluginResponse = {
+          status: 'error',
+          message: `${error.message}`,
+          visibility: 'PRIVATE',
+        };
+        return res.status(500).send(pluginResponse);
       }
     });
   }
@@ -212,7 +217,7 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
 
         this.logger.debug(`Returning: ${JSON.stringify(response)}`);
 
-        const pluginResponse: AudienceFeedConnectorPluginResponse = {
+        const pluginResponse: UserSegmentUpdatePluginResponse = {
           status: response.status,
         };
 
