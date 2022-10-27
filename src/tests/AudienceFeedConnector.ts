@@ -1,6 +1,6 @@
-import { expect } from 'chai';
+import {expect} from 'chai';
 import 'mocha';
-import { core } from '../';
+import {core} from '../';
 import * as request from 'supertest';
 import * as sinon from 'sinon';
 
@@ -14,28 +14,35 @@ process.env.PLUGIN_WORKER_ID = PLUGIN_WORKER_ID;
 class MyFakeAudienceFeedConnector extends core.AudienceFeedConnectorBasePlugin {
   protected onExternalSegmentCreation(
     request: core.ExternalSegmentCreationRequest,
-    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext
   ): Promise<core.ExternalSegmentCreationPluginResponse> {
     const response: core.ExternalSegmentCreationPluginResponse = {
-      status: 'ok',
+      status: 'ok'
     };
     return Promise.resolve(response);
   }
 
   protected onExternalSegmentConnection(
     request: core.ExternalSegmentConnectionRequest,
-    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext
   ): Promise<core.ExternalSegmentConnectionPluginResponse> {
     const response: core.ExternalSegmentConnectionPluginResponse = {
-      status: 'ok',
+      status: 'ok'
     };
     return Promise.resolve(response);
   }
 
-  protected onUserSegmentUpdate(request: core.UserSegmentUpdateRequest, instanceContext: core.AudienceFeedConnectorBaseInstanceContext): Promise<core.UserSegmentUpdatePluginResponse> {
+  protected onUserSegmentUpdate(
+    request: core.UserSegmentUpdateRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext
+  ): Promise<core.UserSegmentUpdatePluginResponse> {
     const response: core.UserSegmentUpdatePluginResponse = {
       status: 'ok',
-      data: [{ type: 'FILE_DELIVERY', destination_token: 'destToken', grouping_key: 'segId', content: 'my_string' }],
+      data: [{ type: 'FILE_DELIVERY', 
+      destination_token: 'destToken', 
+      grouping_key: 'segId', 
+      content: 'my_string' 
+      }]
     };
     return Promise.resolve(response);
   }
@@ -44,7 +51,7 @@ class MyFakeAudienceFeedConnector extends core.AudienceFeedConnectorBasePlugin {
 const rpMockup: sinon.SinonStub = sinon.stub().returns(
   new Promise((resolve, reject) => {
     resolve('Yolo');
-  }),
+  })
 );
 
 describe('Fetch Audience Feed Gateway API', () => {
@@ -52,24 +59,38 @@ describe('Fetch Audience Feed Gateway API', () => {
   const plugin = new MyFakeAudienceFeedConnector(false);
   const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-  it('Check that feed_id is passed correctly in fetchAudienceFeedProperties', function (done) {
+  it('Check that feed_id is passed correctly in fetchAudienceFeedProperties', function (
+    done
+  ) {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeAudienceFeedConnector).fetchAudienceFeedProperties(fakeId).then(() => {
-      expect(rpMockup.args[0][0].uri).to.be.eq(`${runner.plugin.outboundPlatformUrl}/v1/audience_segment_external_feeds/${fakeId}/properties`);
-      done();
-    });
+    (runner.plugin as MyFakeAudienceFeedConnector)
+      .fetchAudienceFeedProperties(fakeId)
+      .then(() => {
+        expect(rpMockup.args[0][0].uri).to.be.eq(
+          `${runner.plugin
+            .outboundPlatformUrl}/v1/audience_segment_external_feeds/${fakeId}/properties`
+        );
+        done();
+      });
   });
 
-  it('Check that feed_id is passed correctly in fetchAudienceSegment', function (done) {
+  it('Check that feed_id is passed correctly in fetchAudienceSegment', function (
+    done
+  ) {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeAudienceFeedConnector).fetchAudienceSegment(fakeId).then(() => {
-      expect(rpMockup.args[1][0].uri).to.be.eq(`${runner.plugin.outboundPlatformUrl}/v1/audience_segment_external_feeds/${fakeId}/audience_segment`);
-      done();
-    });
+    (runner.plugin as MyFakeAudienceFeedConnector)
+      .fetchAudienceSegment(fakeId)
+      .then(() => {
+        expect(rpMockup.args[1][0].uri).to.be.eq(
+          `${runner.plugin
+            .outboundPlatformUrl}/v1/audience_segment_external_feeds/${fakeId}/audience_segment`
+        );
+        done();
+      });
   });
 });
 
@@ -78,7 +99,9 @@ describe.only('External Audience Feed API test', function () {
   const plugin = new MyFakeAudienceFeedConnector(false);
   let runner: core.TestingPluginRunner;
 
-  it('Check that the plugin is giving good results with a simple handler', function (done) {
+  it('Check that the plugin is giving good results with a simple handler', function (
+    done
+  ) {
     const rpMockup: sinon.SinonStub = sinon.stub();
 
     const audienceFeed: core.DataResponse<core.AudienceSegmentExternalFeedResource> = {
@@ -89,8 +112,8 @@ describe.only('External Audience Feed API test', function () {
         organisation_id: '95',
         group_id: 'com.mediarithmics.audience-feed',
         artifact_id: 'awesome-audience-feed',
-        version_id: '1254',
-      },
+        version_id: '1254'
+      }
     };
 
     rpMockup
@@ -98,9 +121,12 @@ describe.only('External Audience Feed API test', function () {
         sinon.match.has(
           'uri',
           sinon.match(function (value: string) {
-            return value.match(/\/v1\/audience_segment_external_feeds\/(.){1,10}/) !== null;
-          }),
-        ),
+            return (
+              value.match(/\/v1\/audience_segment_external_feeds\/(.){1,10}/) !==
+              null
+            );
+          })
+        )
       )
       .returns(audienceFeed);
 
@@ -111,14 +137,14 @@ describe.only('External Audience Feed API test', function () {
         {
           technical_name: 'hello_world',
           value: {
-            value: 'Yay',
+            value: 'Yay'
           },
           property_type: 'STRING',
           origin: 'PLUGIN',
           writable: true,
-          deletable: false,
-        },
-      ],
+          deletable: false
+        }
+      ]
     };
 
     rpMockup
@@ -126,9 +152,12 @@ describe.only('External Audience Feed API test', function () {
         sinon.match.has(
           'uri',
           sinon.match(function (value: string) {
-            return value.match(/\/v1\/audience_segment_external_feeds\/(.){1,10}\/properties/) !== null;
-          }),
-        ),
+            return (
+              value.match(/\/v1\/audience_segment_external_feeds\/(.){1,10}\/properties/) !==
+              null
+            );
+          })
+        )
       )
       .returns(properties);
 
@@ -137,13 +166,13 @@ describe.only('External Audience Feed API test', function () {
     const externalSegmentCreation: core.ExternalSegmentCreationRequest = {
       feed_id: '42',
       datamart_id: '1023',
-      segment_id: '451256',
+      segment_id: '451256'
     };
 
     const externalSegmentConnection: core.ExternalSegmentConnectionRequest = {
       feed_id: '42',
       datamart_id: '1023',
-      segment_id: '451256',
+      segment_id: '451256'
     };
 
     const userSegmentUpdateRequest: core.UserSegmentUpdateRequest = {
@@ -156,12 +185,12 @@ describe.only('External Audience Feed API test', function () {
       user_identifiers: [
         {
           type: 'USER_POINT',
-          user_point_id: '26340584-f777-404c-82c5-56220667464b',
+          user_point_id: '26340584-f777-404c-82c5-56220667464b'
         } as core.UserPointIdentifierInfo,
         {
           type: 'USER_ACCOUNT',
           user_account_id: '914eb2aa50cef7f3a8705b6bb54e50bb',
-          creation_ts: 1493118667529,
+          creation_ts: 1493118667529
         } as core.UserAccountIdentifierInfo,
         {
           type: 'USER_EMAIL',
@@ -170,7 +199,7 @@ describe.only('External Audience Feed API test', function () {
           operator: undefined,
           creation_ts: 1493118667529,
           last_activity_ts: 1493127642622,
-          providers: [],
+          providers: []
         } as core.UserEmailIdentifierInfo,
         {
           type: 'USER_AGENT',
@@ -182,14 +211,14 @@ describe.only('External Audience Feed API test', function () {
             brand: undefined,
             model: undefined,
             os_version: undefined,
-            carrier: undefined,
+            carrier: undefined
           },
           creation_ts: 1493118667529,
           last_activity_ts: 1493126966889,
           providers: [],
-          mappings: [],
-        } as core.UserAgentIdentifierInfo,
-      ],
+          mappings: []
+        } as core.UserAgentIdentifierInfo
+      ]
     };
 
     request(runner.plugin.app)
@@ -213,17 +242,25 @@ describe.only('External Audience Feed API test', function () {
               .send(userSegmentUpdateRequest)
               .end(function (err, res) {
                 expect(res.status).to.equal(200);
-                expect(JSON.parse(res.text).data).to.deep.equal([{ type: 'FILE_DELIVERY', destination_token: 'destToken', grouping_key: 'segId', content: 'my_string' }]);
+                expect(JSON.parse(res.text).data).to.deep.equal([{ type: 'FILE_DELIVERY', 
+                destination_token: 'destToken', 
+                grouping_key: 'segId', 
+                content: 'my_string' 
+                }])
                 expect(JSON.parse(res.text).status).to.be.eq('ok');
 
                 done();
               });
+
           });
+
       });
+
   });
 
   afterEach(() => {
     // We clear the cache so that we don't have any processing still running in the background
     runner.plugin.pluginCache.clear();
   });
+
 });
