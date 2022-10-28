@@ -161,7 +161,7 @@ The Plugin examples provided with the SDK are all tested and you can read their 
 
 Testing Plugins is highly recommended.
 
-## Migration from 0.9.x to XXX
+## Migration from 0.9.x to 0.10.x
 
 - Breaking changes in UserSegmentUpdatePluginResponse:
 

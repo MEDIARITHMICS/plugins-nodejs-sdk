@@ -1,6 +1,6 @@
 # Changelog
 
-# XXX
+# 0.10.0 - 2022-10-28
 
 Breaking changes in UserSegmentUpdatePluginResponse.
 - update the Audience feed onUserSegmentUpdate method return type. Interface UserSegmentUpdatePluginResponse data optional element is now of type DeliveryType.
