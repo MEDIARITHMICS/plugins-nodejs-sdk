@@ -163,7 +163,10 @@ describe.only("Custom Action API test", function () {
     const customActionRequest: core.CustomActionRequest = {
       user_point_id: "26340584-f777-404c-82c5-56220667464b",
       custom_action_id: "62",
-    };
+      datamart_id: '1234',
+      node_id: '25',
+      scenario_id: '888'
+    }
 
     request(runner.plugin.app)
       .post("/v1/scenario_custom_actions")

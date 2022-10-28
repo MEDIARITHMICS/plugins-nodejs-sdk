@@ -179,7 +179,7 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
 
           const pluginResponse: ExternalSegmentCreationPluginResponse = {
             status: response.status,
-            visibility: response.visibility || 'PUBLIC',
+            visibility: response.visibility || 'PUBLIC',
           };
 
           if (response.message) {

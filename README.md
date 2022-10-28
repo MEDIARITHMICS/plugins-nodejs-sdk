@@ -161,6 +161,52 @@ The Plugin examples provided with the SDK are all tested and you can read their 
 
 Testing Plugins is highly recommended.
 
+## Migration from 0.9.x to XXX
+
+- Breaking changes in UserSegmentUpdatePluginResponse:
+
+AudienceFeedConnector's onUserSegmentUpdate method return type has been updated. 
+The optional data element used to be a of type:
+
+```ts
+export interface UserSegmentUpdatePluginResponseData {
+  destination_token?: string;
+  grouping_key?: string;
+  content?: string;
+  binary_content?: BinaryType;
+}
+```
+
+it has been updated, depending on the delivery type used, to:
+
+```ts
+export type DeliveryType = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData;
+
+export interface UserSegmentUpdatePluginResponseData {
+  grouping_key?: string;
+  content?: string;
+  binary_content?: BinaryType;
+}
+
+export interface UserSegmentUpdatePluginFileDeliveryResponseData extends UserSegmentUpdatePluginResponseData {
+  type: 'FILE_DELIVERY';
+  destination_token?: string;
+}
+
+export interface UserSegmentUpdatePluginBatchDeliveryResponseData extends UserSegmentUpdatePluginResponseData {
+  type: 'BATCH_DELIVERY';
+  batch_token?: string;
+}
+```
+
+Other changes in the interface:
+- status can be 'no_eligible_identifier' now (status code 400);
+- stats field is changed (UserSegmentUpdatePluginResponseStats);
+- in stats, identifier and sync_result become compulsory;
+- SyncResult can now have only 3 values (PROCESSED, SUCCESS and REJECTED) in stats;
+- tags in stats is now an optional list of tags;
+
+
 ## Migration from 0.8.x to 0.9.x
 
 The init workflow changed, from a `POST /v1/init` call to tokens given in the environment. The **tests** need to be updated:
