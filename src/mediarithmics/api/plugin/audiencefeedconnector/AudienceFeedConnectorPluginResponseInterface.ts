@@ -2,7 +2,7 @@ export type AudienceFeedConnectorStatus = 'ok' | 'error';
 export declare type AudienceFeedConnectorConnectionStatus = 'ok' | 'error' | 'external_segment_not_ready_yet';
 export type AudienceFeedConnectorContentType = 'text/csv' | 'application/json' | 'text/plain';
 
-export interface UserSegmentUpdatePluginResponse {
+export interface UserSegmentUpdatePluginResponse extends AudienceFeedMethodErrorResponse {
   status: UserSegmentUpdatePluginResponseStatus;
   data?: DeliveryType[];
   stats?: UserSegmentUpdatePluginResponseStats[];
@@ -37,13 +37,13 @@ export interface UserSegmentUpdatePluginResponseStats {
   tags?: AudienceFeedStatTag[];
 }
 
-export interface ExternalSegmentCreationPluginResponse {
+export interface ExternalSegmentCreationPluginResponse extends AudienceFeedMethodErrorResponse {
   status: AudienceFeedConnectorStatus;
   message?: string;
   visibility?: 'PRIVATE' | 'PUBLIC';
 }
 
-export interface ExternalSegmentConnectionPluginResponse {
+export interface ExternalSegmentConnectionPluginResponse extends AudienceFeedMethodErrorResponse {
   status: AudienceFeedConnectorConnectionStatus;
   message?: string;
 }
@@ -53,4 +53,9 @@ export type UserSegmentUpdatePluginResponseStatus = AudienceFeedConnectorStatus 
 export interface AudienceFeedStatTag {
   key: string;
   value: string;
+}
+
+export interface AudienceFeedMethodErrorResponse {
+  error_code?: string;
+  error_origin?: string;
 }
