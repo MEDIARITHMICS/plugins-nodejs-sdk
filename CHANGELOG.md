@@ -1,8 +1,21 @@
 # Changelog
 
+# 0.10.1
+
+- add new AudienceFeedMethodErrorResponse interface in prevision of the error handling:
+
+```
+export interface AudienceFeedMethodErrorResponse {
+  error_code?: string;
+  error_origin?: string;
+}
+
+```
+
 # 0.10.0 - 2022-10-28
 
 Breaking changes in UserSegmentUpdatePluginResponse.
+
 - update the Audience feed onUserSegmentUpdate method return type. Interface UserSegmentUpdatePluginResponse data optional element is now of type DeliveryType.
 - status can be 'no_eligible_identifier' now (status code 400);
 - stats field is changed (UserSegmentUpdatePluginResponseStats);
