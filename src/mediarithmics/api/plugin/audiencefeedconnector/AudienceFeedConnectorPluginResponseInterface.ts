@@ -4,29 +4,26 @@ export type AudienceFeedConnectorContentType = 'text/csv' | 'application/json' |
 
 export interface UserSegmentUpdatePluginResponse {
   status: UserSegmentUpdatePluginResponseStatus;
-  data?: DeliveryType[];
+  data?: DeliveryType<unknown>[];
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
   nextMsgDelayInMs?: number;
 }
 
-export type DeliveryType = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData;
+export type DeliveryType<T> = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData<T>;
 
-export interface UserSegmentUpdatePluginResponseData {
-  destination_token?: string;
-  grouping_key?: string;
-  content?: string;
-  binary_content?: BinaryType;
-}
-
-export interface UserSegmentUpdatePluginFileDeliveryResponseData extends UserSegmentUpdatePluginResponseData {
+export interface UserSegmentUpdatePluginFileDeliveryResponseData extends UserSegmentUpdatePluginDeliveryContent<string> {
   type: 'FILE_DELIVERY';
   destination_token?: string;
+  grouping_key?: string;
 }
 
-export interface UserSegmentUpdatePluginBatchDeliveryResponseData extends UserSegmentUpdatePluginResponseData {
+export interface UserSegmentUpdatePluginBatchDeliveryResponseData<T> extends UserSegmentUpdatePluginDeliveryContent<T> {
   type: 'BATCH_DELIVERY';
-  batch_token?: string;
+}
+
+export interface UserSegmentUpdatePluginDeliveryContent<T> {
+  content?: T;
 }
 
 type SyncResult = 'PROCESSED' | 'SUCCESS' | 'REJECTED';
