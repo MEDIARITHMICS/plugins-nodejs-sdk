@@ -3,7 +3,7 @@ export declare type AudienceFeedConnectorConnectionStatus = 'ok' | 'error' | 'ex
 export type AudienceFeedConnectorContentType = 'text/csv' | 'application/json' | 'text/plain';
 
 export interface UserSegmentUpdatePluginResponse {
-  status: UserSegmentUpdatePluginResponseStatus;
+  status: DeliveredDataPluginResponseStatus;
   data?: DeliveryType[];
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
@@ -48,9 +48,29 @@ export interface ExternalSegmentConnectionPluginResponse {
   message?: string;
 }
 
-export type UserSegmentUpdatePluginResponseStatus = AudienceFeedConnectorStatus | 'retry' | 'no_eligible_identifier';
-
 export interface AudienceFeedStatTag {
   key: string;
   value: string;
 }
+
+export interface BatchUpdateRequest<T> {
+  batch_content: T[];
+  ts: number;
+  context: AudienceFeedBatchContext;
+}
+
+export interface AudienceFeedBatchContext {
+  endpoint: string;
+  feed_id: string;
+  feed_session_id: string;
+  segment_id: string;
+  datamart_id:string;
+}
+
+export interface BatchUpdatePluginResponse {
+  status: DeliveredDataPluginResponseStatus;
+  message?: string;
+  nextMsgDelayInMs?: number;
+}
+
+export type DeliveredDataPluginResponseStatus = AudienceFeedConnectorStatus | 'retry' | 'no_eligible_identifier';
