@@ -5,10 +5,11 @@
 Breaking changes in UserSegmentUpdatePluginResponse (UPDATE). 
 - update the Audience feed onUserSegmentUpdate method return type. 
 - Interface UserSegmentUpdatePluginResponse data optional element is now of type DeliveryType.
-- DeliveryType takes a `T` type argument that is declared when invoking `onUserSegmentUpdate` method: 
+- DeliveryType takes a `T` type argument that is unknown by default: 
   - If target is **FILE_DELIVERY** type of the returned data will be `string`;
   - If target is **BATCH_DELIVERY** type of the returned data will be `T`;
 - batch_token no longer exists.
+- binary_content no longer exists (if needed send binary in content).
 - remove duplicate destination_token (filed is only used of **FILE_DELIVERY**).
 
 # 0.10.0 - 2022-10-28

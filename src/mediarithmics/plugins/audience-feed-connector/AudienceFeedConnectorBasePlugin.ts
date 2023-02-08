@@ -104,10 +104,10 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
     instanceContext: AudienceFeedConnectorBaseInstanceContext
   ): Promise<ExternalSegmentConnectionPluginResponse>;
 
-  protected abstract onUserSegmentUpdate<T>(
+  protected abstract onUserSegmentUpdate(
     request: UserSegmentUpdateRequest,
     instanceContext: AudienceFeedConnectorBaseInstanceContext
-  ): Promise<UserSegmentUpdatePluginResponse<T>>;
+  ): Promise<UserSegmentUpdatePluginResponse>;
 
   protected async getInstanceContext(
     feedId: string
@@ -304,12 +304,12 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
             request.feed_id
           );
 
-          const response: UserSegmentUpdatePluginResponse<unknown> =
+          const response: UserSegmentUpdatePluginResponse =
             await this.onUserSegmentUpdate(request, instanceContext);
 
           this.logger.debug(`Returning: ${JSON.stringify(response)}`);
 
-          const pluginResponse: UserSegmentUpdatePluginResponse<unknown> = {
+          const pluginResponse: UserSegmentUpdatePluginResponse = {
             status: response.status,
           };
 

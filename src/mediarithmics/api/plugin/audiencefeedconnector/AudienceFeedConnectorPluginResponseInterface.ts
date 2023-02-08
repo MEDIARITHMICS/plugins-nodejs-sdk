@@ -2,9 +2,9 @@ export type AudienceFeedConnectorStatus = 'ok' | 'error';
 export declare type AudienceFeedConnectorConnectionStatus = 'ok' | 'error' | 'external_segment_not_ready_yet';
 export type AudienceFeedConnectorContentType = 'text/csv' | 'application/json' | 'text/plain';
 
-export interface UserSegmentUpdatePluginResponse<T> {
+export interface UserSegmentUpdatePluginResponse {
   status: UserSegmentUpdatePluginResponseStatus;
-  data?: DeliveryType<T>[];
+  data?: DeliveryType<unknown>[];
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
   nextMsgDelayInMs?: number;
@@ -24,7 +24,6 @@ export interface UserSegmentUpdatePluginBatchDeliveryResponseData<T> extends Use
 
 export interface UserSegmentUpdatePluginDeliveryContent<T> {
   content?: T;
-  binary_content?: BinaryType;
 }
 
 type SyncResult = 'PROCESSED' | 'SUCCESS' | 'REJECTED';
