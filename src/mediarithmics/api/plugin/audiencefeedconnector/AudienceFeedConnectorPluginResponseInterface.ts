@@ -2,31 +2,29 @@ export type AudienceFeedConnectorStatus = 'ok' | 'error';
 export declare type AudienceFeedConnectorConnectionStatus = 'ok' | 'error' | 'external_segment_not_ready_yet';
 export type AudienceFeedConnectorContentType = 'text/csv' | 'application/json' | 'text/plain';
 
-export interface UserSegmentUpdatePluginResponse {
+export interface UserSegmentUpdatePluginResponse<T> {
   status: UserSegmentUpdatePluginResponseStatus;
-  data?: DeliveryType[];
+  data?: DeliveryType<T>[];
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
   nextMsgDelayInMs?: number;
 }
 
-export type DeliveryType = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData;
+export type DeliveryType<T> = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData<T>;
 
-export interface UserSegmentUpdatePluginResponseData {
-  destination_token?: string;
-  grouping_key?: string;
-  content?: string;
-  binary_content?: BinaryType;
-}
-
-export interface UserSegmentUpdatePluginFileDeliveryResponseData extends UserSegmentUpdatePluginResponseData {
+export interface UserSegmentUpdatePluginFileDeliveryResponseData extends UserSegmentUpdatePluginDeliveryContent<string> {
   type: 'FILE_DELIVERY';
   destination_token?: string;
+  grouping_key?: string;
 }
 
-export interface UserSegmentUpdatePluginBatchDeliveryResponseData extends UserSegmentUpdatePluginResponseData {
+export interface UserSegmentUpdatePluginBatchDeliveryResponseData<T> extends UserSegmentUpdatePluginDeliveryContent<T> {
   type: 'BATCH_DELIVERY';
-  batch_token?: string;
+}
+
+export interface UserSegmentUpdatePluginDeliveryContent<T> {
+  content?: T;
+  binary_content?: BinaryType;
 }
 
 type SyncResult = 'PROCESSED' | 'SUCCESS' | 'REJECTED';

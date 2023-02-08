@@ -32,11 +32,11 @@ class MyFakeAudienceFeedConnector extends core.AudienceFeedConnectorBasePlugin {
     return Promise.resolve(response);
   }
 
-  protected onUserSegmentUpdate(
+  protected onUserSegmentUpdate<T>(
     request: core.UserSegmentUpdateRequest,
     instanceContext: core.AudienceFeedConnectorBaseInstanceContext
-  ): Promise<core.UserSegmentUpdatePluginResponse> {
-    const response: core.UserSegmentUpdatePluginResponse = {
+  ): Promise<core.UserSegmentUpdatePluginResponse<T>> {
+    const response: core.UserSegmentUpdatePluginResponse<T> = {
       status: 'ok',
       data: [{ type: 'FILE_DELIVERY', 
       destination_token: 'destToken', 
