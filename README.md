@@ -161,12 +161,45 @@ The Plugin examples provided with the SDK are all tested and you can read their 
 
 Testing Plugins is highly recommended.
 
+## Migration from 0.10.x to 0.11.x
+
+- Breaking changes in UserSegmentUpdatePluginResponse (UPDATE): <br/>
+
+When responding in the `onUserSegmentUpdate` method, we can send data to **FILE_DELIVERY** or **BATCH_DELIVERY**. <br/>
+**FILE_DELIVERY** accepts a `DeliveryType.content` of type `string`. <br/>
+**BATCH_DELIVERY** accepts a `DeliveryType.content` of type `T`. <br/>
+
+```ts
+export interface UserSegmentUpdatePluginResponse {
+  status: UserSegmentUpdatePluginResponseStatus;
+  data?: DeliveryType<unknown>[];
+  stats?: UserSegmentUpdatePluginResponseStats[];
+  message?: string;
+  nextMsgDelayInMs?: number;
+}
+
+export type DeliveryType<T> = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData<T>;
+
+export interface UserSegmentUpdatePluginFileDeliveryResponseData extends UserSegmentUpdatePluginDeliveryContent<string> {
+  type: 'FILE_DELIVERY';
+  destination_token?: string;
+  grouping_key?: string;
+}
+
+export interface UserSegmentUpdatePluginBatchDeliveryResponseData<T> extends UserSegmentUpdatePluginDeliveryContent<T> {
+  type: 'BATCH_DELIVERY';
+}
+
+export interface UserSegmentUpdatePluginDeliveryContent<T> {
+  content?: T;
+}
+```
+
 ## Migration from 0.9.x to 0.10.x
 
 - Breaking changes in UserSegmentUpdatePluginResponse:
 
-AudienceFeedConnector's onUserSegmentUpdate method return type has been updated. 
-The optional data element used to be a of type:
+AudienceFeedConnector's onUserSegmentUpdate method return type has been updated. The optional data element used to be a of type:
 
 ```ts
 export interface UserSegmentUpdatePluginResponseData {
@@ -200,12 +233,12 @@ export interface UserSegmentUpdatePluginBatchDeliveryResponseData extends UserSe
 ```
 
 Other changes in the interface:
+
 - status can be 'no_eligible_identifier' now (status code 400);
 - stats field is changed (UserSegmentUpdatePluginResponseStats);
 - in stats, identifier and sync_result become compulsory;
 - SyncResult can now have only 3 values (PROCESSED, SUCCESS and REJECTED) in stats;
 - tags in stats is now an optional list of tags;
-
 
 ## Migration from 0.8.x to 0.9.x
 
@@ -235,8 +268,8 @@ The `UserActivity.$email_hash` interface (`EmailHash`) was updated from:
 
 ```js
 export interface EmailHash {
-	hash: string;
-	email?: string;
+  hash: string;
+  email?: string;
 }
 ```
 
@@ -244,8 +277,8 @@ to
 
 ```js
 export interface EmailHash {
-	$hash: string;
-	$email?: string;
+  $hash: string;
+  $email?: string;
 }
 ```
 
@@ -269,7 +302,7 @@ To push a url in the redirect chain and build an encoded url, for example
 
 ```js
 if (instanceContext.creative_click_url) {
-	adRenderRequest.click_urls.push(instanceContext.creative_click_url);
+  adRenderRequest.click_urls.push(instanceContext.creative_click_url);
 }
 
 clickUrl = this.getEncodedClickUrl(adRenderRequest.click_urls);
@@ -279,10 +312,10 @@ should become
 
 ```js
 if (instanceContext.creative_click_url) {
-	adRenderRequest.click_urls_info.push({
-		url: instanceContext.creative_click_url,
-		redirect_count: 0,
-	});
+  adRenderRequest.click_urls_info.push({
+    url: instanceContext.creative_click_url,
+    redirect_count: 0,
+  });
 }
 clickUrl = this.getEncodedClickUrl(adRenderRequest.click_urls_info);
 ```
@@ -409,8 +442,8 @@ Global tags with relevant datas such as artifact_id, build_id or version_id will
 
 ```js
 this.statsClient = helpers.StatsClient.init({
-	environment: process.env.NODE_ENV,
-	logger: this.logger,
+  environment: process.env.NODE_ENV,
+  logger: this.logger,
 });
 ```
 
@@ -418,15 +451,15 @@ Using StatsD, the StatsClient, can aggregate and send your stats to services suc
 
 ```js
 this.statsClient.addOrUpdateMetrics({
-	metrics: {
-		processed_users: { type: MetricsType.GAUGE, value: 4, tags: { datamart_id: '4521' } },
-		users_with_mobile_id_count: { type: MetricsType.GAUGE, value: 1, tags: { datamart_id: '4521' } },
-	},
+  metrics: {
+    processed_users: { type: MetricsType.GAUGE, value: 4, tags: { datamart_id: '4521' } },
+    users_with_mobile_id_count: { type: MetricsType.GAUGE, value: 1, tags: { datamart_id: '4521' } },
+  },
 });
 this.statsClient.addOrUpdateMetrics({
-	metrics: {
-		processed_users: { type: MetricsType.GAUGE, value: 10, tags: { datamart_id: '4521' } },
-	},
+  metrics: {
+    processed_users: { type: MetricsType.GAUGE, value: 10, tags: { datamart_id: '4521' } },
+  },
 });
 this.statsClient.addOrUpdateMetrics({ metrics: { apiCallsError: { metricName: 'apiCallsError', type: MetricsType.GAUGE, value: 10, tags: { statusCode: '500' } } } });
 ```
