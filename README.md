@@ -163,11 +163,36 @@ Testing Plugins is highly recommended.
 
 ## Migration from 0.10.x to 0.11.x
 
+- new AudienceFeedConnector BatchUpdate route and methode:
+
+- POST: `'/v1/batch_update'` <br/>
+- The purpose of this route is to receive a set of batchs of type `T` that were sent one by one in the `onUserSegmentUpdate` response.
+
+```ts
+export interface BatchUpdateRequest<T> {
+  batch_content: T[];
+  ts: number;
+  context: AudienceFeedBatchContext;
+}
+
+export interface AudienceFeedBatchContext {
+  endpoint: string;
+  feed_id: string;
+  feed_session_id: string;
+  segment_id: string;
+  datamart_id: string;
+}
+
+export interface BatchUpdatePluginResponse {
+  status: DeliveredDataPluginResponseStatus;
+  message?: string;
+  nextMsgDelayInMs?: number;
+}
+```
+
 - Breaking changes in UserSegmentUpdatePluginResponse (UPDATE): <br/>
 
-When responding in the `onUserSegmentUpdate` method, we can send data to **FILE_DELIVERY** or **BATCH_DELIVERY**. <br/>
-**FILE_DELIVERY** accepts a `DeliveryType.content` of type `string`. <br/>
-**BATCH_DELIVERY** accepts a `DeliveryType.content` of type `T`. <br/>
+When responding in the `onUserSegmentUpdate` method, we can send data to **FILE_DELIVERY** or **BATCH_DELIVERY**. <br/> **FILE_DELIVERY** accepts a `DeliveryType.content` of type `string`. <br/> **BATCH_DELIVERY** accepts a `DeliveryType.content` of type `T`. <br/>
 
 ```ts
 export interface UserSegmentUpdatePluginResponse {
