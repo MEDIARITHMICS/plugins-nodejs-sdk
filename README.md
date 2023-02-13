@@ -186,7 +186,7 @@ export interface AudienceFeedBatchContext {
 export interface BatchUpdatePluginResponse {
   status: DeliveredDataPluginResponseStatus;
   message?: string;
-  nextMsgDelayInMs?: number;
+  next_msg_delay_in_ms?: number;
 }
 ```
 
@@ -200,7 +200,7 @@ export interface UserSegmentUpdatePluginResponse {
   data?: DeliveryType<unknown>[];
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
-  nextMsgDelayInMs?: number;
+  next_msg_delay_in_ms?: number;
 }
 
 export type DeliveryType<T> = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData<T>;

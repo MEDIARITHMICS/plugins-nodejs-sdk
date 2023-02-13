@@ -7,7 +7,7 @@ export interface UserSegmentUpdatePluginResponse {
   data?: DeliveryType<unknown>[];
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
-  nextMsgDelayInMs?: number;
+  next_msg_delay_in_ms?: number;
 }
 
 export type DeliveryType<T> = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData<T>;
@@ -50,24 +50,10 @@ export interface AudienceFeedStatTag {
   value: string;
 }
 
-export interface BatchUpdateRequest<T> {
-  batch_content: T[];
-  ts: number;
-  context: AudienceFeedBatchContext;
-}
-
-export interface AudienceFeedBatchContext {
-  endpoint: string;
-  feed_id: string;
-  feed_session_id: string;
-  segment_id: string;
-  datamart_id: string;
-}
-
 export interface BatchUpdatePluginResponse {
   status: DeliveredDataPluginResponseStatus;
   message?: string;
-  nextMsgDelayInMs?: number;
+  next_msg_delay_in_ms?: number;
 }
 
 export type DeliveredDataPluginResponseStatus = AudienceFeedConnectorStatus | 'retry' | 'no_eligible_identifier';

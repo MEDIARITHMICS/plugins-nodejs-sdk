@@ -8,13 +8,13 @@ import {
 import { PluginProperty } from '../../';
 import { BasePlugin, PropertiesWrapper } from '../common';
 import {
+  BatchUpdateRequest,
   ExternalSegmentConnectionRequest,
   ExternalSegmentCreationRequest,
   UserSegmentUpdateRequest,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
 import {
   BatchUpdatePluginResponse,
-  BatchUpdateRequest,
   ExternalSegmentConnectionPluginResponse,
   ExternalSegmentCreationPluginResponse,
   UserSegmentUpdatePluginResponse,
@@ -113,7 +113,8 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
   ): Promise<UserSegmentUpdatePluginResponse>;
 
   protected abstract onBatchUpdate(
-    request: BatchUpdateRequest<unknown>
+    request: BatchUpdateRequest<unknown>,
+    instanceContext: AudienceFeedConnectorBaseInstanceContext
   ): Promise<BatchUpdatePluginResponse>
 
   protected async getInstanceContext(
@@ -320,10 +321,10 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
             status: response.status,
           };
 
-          if (response.nextMsgDelayInMs) {
+          if (response.next_msg_delay_in_ms) {
             res.set(
               'x-mics-next-msg-delay',
-              response.nextMsgDelayInMs.toString()
+              response.next_msg_delay_in_ms.toString()
             );
           }
 
@@ -386,8 +387,12 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
             throw new Error('No Batch Update listener registered!');
           }
 
+          const instanceContext = await this.getInstanceContext(
+            request.context.feed_id
+          );
+
           const response: BatchUpdatePluginResponse =
-            await this.onBatchUpdate(request);
+            await this.onBatchUpdate(request, instanceContext);
 
           this.logger.debug(`Returning: ${JSON.stringify(response)}`);
 
@@ -395,10 +400,10 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
             status: response.status,
           };
 
-            if (response.nextMsgDelayInMs) {
+          if (response.next_msg_delay_in_ms) {
             res.set(
               'x-mics-next-msg-delay',
-              response.nextMsgDelayInMs.toString()
+              response.next_msg_delay_in_ms.toString()
             );
           }
 
