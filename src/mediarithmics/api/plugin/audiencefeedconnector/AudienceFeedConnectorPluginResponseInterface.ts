@@ -3,11 +3,11 @@ export declare type AudienceFeedConnectorConnectionStatus = 'ok' | 'error' | 'ex
 export type AudienceFeedConnectorContentType = 'text/csv' | 'application/json' | 'text/plain';
 
 export interface UserSegmentUpdatePluginResponse {
-  status: UserSegmentUpdatePluginResponseStatus;
+  status: DeliveredDataPluginResponseStatus;
   data?: DeliveryType<unknown>[];
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
-  nextMsgDelayInMs?: number;
+  next_msg_delay_in_ms?: number;
 }
 
 export type DeliveryType<T> = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData<T>;
@@ -45,9 +45,15 @@ export interface ExternalSegmentConnectionPluginResponse {
   message?: string;
 }
 
-export type UserSegmentUpdatePluginResponseStatus = AudienceFeedConnectorStatus | 'retry' | 'no_eligible_identifier';
-
 export interface AudienceFeedStatTag {
   key: string;
   value: string;
 }
+
+export interface BatchUpdatePluginResponse {
+  status: DeliveredDataPluginResponseStatus;
+  message?: string;
+  next_msg_delay_in_ms?: number;
+}
+
+export type DeliveredDataPluginResponseStatus = AudienceFeedConnectorStatus | 'retry' | 'no_eligible_identifier';

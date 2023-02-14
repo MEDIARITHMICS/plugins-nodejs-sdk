@@ -23,3 +23,17 @@ export interface ExternalSegmentCreationRequest {
   datamart_id: string;
   segment_id: string;
 }
+
+export interface BatchUpdateRequest<T> {
+  batch_content: T[];
+  ts: number;
+  context: AudienceFeedBatchContext;
+}
+
+export interface AudienceFeedBatchContext {
+  endpoint: string;
+  feed_id: string;
+  feed_session_id: string;
+  segment_id: string;
+  datamart_id: string;
+}

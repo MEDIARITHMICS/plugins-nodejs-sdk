@@ -8,11 +8,13 @@ import {
 import { PluginProperty } from '../../';
 import { BasePlugin, PropertiesWrapper } from '../common';
 import {
+  BatchUpdateRequest,
   ExternalSegmentConnectionRequest,
   ExternalSegmentCreationRequest,
   UserSegmentUpdateRequest,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
 import {
+  BatchUpdatePluginResponse,
   ExternalSegmentConnectionPluginResponse,
   ExternalSegmentCreationPluginResponse,
   UserSegmentUpdatePluginResponse,
@@ -30,6 +32,7 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
     this.initExternalSegmentCreation();
     this.initExternalSegmentConnection();
     this.initUserSegmentUpdate();
+    this.initBatchUpdate()
   }
 
   async fetchAudienceSegment(feedId: string): Promise<AudienceSegmentResource> {
@@ -108,6 +111,11 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
     request: UserSegmentUpdateRequest,
     instanceContext: AudienceFeedConnectorBaseInstanceContext
   ): Promise<UserSegmentUpdatePluginResponse>;
+
+  protected abstract onBatchUpdate(
+    request: BatchUpdateRequest<unknown>,
+    instanceContext: AudienceFeedConnectorBaseInstanceContext
+  ): Promise<BatchUpdatePluginResponse>
 
   protected async getInstanceContext(
     feedId: string
@@ -313,10 +321,10 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
             status: response.status,
           };
 
-          if (response.nextMsgDelayInMs) {
+          if (response.next_msg_delay_in_ms) {
             res.set(
               'x-mics-next-msg-delay',
-              response.nextMsgDelayInMs.toString()
+              response.next_msg_delay_in_ms.toString()
             );
           }
 
@@ -361,5 +369,76 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
         }
       }
     );
+  }
+
+  private initBatchUpdate(): void {
+    this.app.post(
+      '/v1/batch_update',
+      this.emptyBodyFilter,
+      async (req: express.Request, res: express.Response) => {
+        try {
+          this.logger.debug(
+            `POST /v1/batch_update ${JSON.stringify(req.body)}`
+          );
+
+          const request = req.body as BatchUpdateRequest<unknown>;
+
+          if (!this.onBatchUpdate) {
+            throw new Error('No Batch Update listener registered!');
+          }
+
+          const instanceContext = await this.getInstanceContext(
+            request.context.feed_id
+          );
+
+          const response: BatchUpdatePluginResponse =
+            await this.onBatchUpdate(request, instanceContext);
+
+          this.logger.debug(`Returning: ${JSON.stringify(response)}`);
+
+          const pluginResponse: BatchUpdatePluginResponse = {
+            status: response.status,
+          };
+
+          if (response.next_msg_delay_in_ms) {
+            res.set(
+              'x-mics-next-msg-delay',
+              response.next_msg_delay_in_ms.toString()
+            );
+          }
+
+          if (response.message) {
+            pluginResponse.message = response.message;
+          }
+
+          let statusCode: number;
+          switch (response.status) {
+            case 'ok':
+              statusCode = 200;
+              break;
+            case 'error':
+              statusCode = 500;
+              break;
+            case 'retry':
+              statusCode = 429;
+              break;
+            case 'no_eligible_identifier':
+              statusCode = 400;
+              break;
+            default:
+              statusCode = 500;
+          }
+
+          return res.status(statusCode).send(JSON.stringify(pluginResponse));
+        } catch (error) {
+          this.logger.error(
+            `Something bad happened : ${error.message} - ${error.stack}`
+          );
+          return res
+            .status(500)
+            .send({ status: 'error', message: `${error.message}` });
+        }
+      }
+    )
   }
 }

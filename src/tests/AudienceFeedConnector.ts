@@ -50,6 +50,13 @@ class MyFakeAudienceFeedConnector extends core.AudienceFeedConnectorBasePlugin {
 
     return Promise.resolve(response);
   }
+
+    protected onBatchUpdate(request: core.BatchUpdateRequest<unknown>): Promise<core.BatchUpdatePluginResponse> {
+    const response: core.BatchUpdatePluginResponse = {
+      status: 'ok'
+    };
+    return Promise.resolve(response);
+  }
 }
 
 const rpMockup: sinon.SinonStub = sinon.stub().returns(
@@ -225,6 +232,18 @@ describe.only('External Audience Feed API test', function () {
       ]
     };
 
+    const batchUpdateRequest: core.BatchUpdateRequest<string> = {
+      batch_content: ['subBatch_1','subBatch_2', 'subBatch_3'],
+      ts: new Date().getTime(),
+      context: {  
+        endpoint: '/v1/user-segment-update',
+        feed_id: '42',
+        feed_session_id: '43',
+        segment_id: '451256',
+        datamart_id: '1023'
+        }
+    }
+
     request(runner.plugin.app)
       .post('/v1/external_segment_creation')
       .send(externalSegmentCreation)
@@ -251,9 +270,18 @@ describe.only('External Audience Feed API test', function () {
                      content: 'my_string' 
                   }])
                 expect(JSON.parse(res.text).status).to.be.eq('ok');
-
-                done();
               });
+
+                request(runner.plugin.app)
+                  .post('/v1/batch_update')
+                  .send(batchUpdateRequest)
+                  .end(function (err, res) {
+                    expect(res.status).to.equal(200);
+
+                    expect(JSON.parse(res.text).status).to.be.eq('ok');
+
+                    done();
+                  });
 
           });
 
