@@ -10,9 +10,12 @@ export interface UserSegmentUpdatePluginResponse {
   next_msg_delay_in_ms?: number;
 }
 
-export type DeliveryType<T> = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData<T>;
+export type DeliveryType<T> =
+  | UserSegmentUpdatePluginFileDeliveryResponseData
+  | UserSegmentUpdatePluginBatchDeliveryResponseData<T>;
 
-export interface UserSegmentUpdatePluginFileDeliveryResponseData extends UserSegmentUpdatePluginDeliveryContent<string> {
+export interface UserSegmentUpdatePluginFileDeliveryResponseData
+  extends UserSegmentUpdatePluginDeliveryContent<string> {
   type: 'FILE_DELIVERY';
   destination_token?: string;
   grouping_key?: string;

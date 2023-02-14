@@ -1,22 +1,24 @@
 {
   "compilerOptions": {
+    "lib": ["es2019"],
     "noImplicitAny": true,
     "strictNullChecks": true,
+    "strictBindCallApply": true,
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "module": "commonjs",
-    "outDir": "./lib",
-    "target": "es6",
+    "target": "es2019",
+    "sourceMap": true,
+    "alwaysStrict": true,
     "rootDir": "./src",
+    "typeRoots": ["node_modules/@types"],
+    "outDir": "./lib",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "declaration": true,
-    "alwaysStrict": true
+    "resolveJsonModule": true,
+    "skipLibCheck": true
   },
-  "include": [
-    "./src/**/*"
-  ],
-  "exclude": [
-    "./lib",
-    "./node_modules",
-    "./examples",
-    "./src/tests"
-  ]
+  "include": ["./src/**/*"],
+  "exclude": ["./lib", "./node_modules", "./examples", "./src/tests"]
 }

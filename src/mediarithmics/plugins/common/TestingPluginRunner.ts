@@ -1,8 +1,8 @@
-import {BasePlugin} from './BasePlugin';
-import {Server} from 'http';
+import { Server } from 'http';
+
+import { BasePlugin } from './BasePlugin';
 
 export class TestingPluginRunner {
-
   plugin: BasePlugin;
   server: Server;
 
@@ -16,7 +16,5 @@ export class TestingPluginRunner {
 
   // Start a server serving the plugin app
   // A port can be provided to run the server on it
-  start() {
-
-  }
+  start() {}
 }

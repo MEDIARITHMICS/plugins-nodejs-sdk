@@ -13,7 +13,7 @@
  * @param {*} arr input array of object to convert
  * @param {*} key object key to extract
  */
-import {Index} from './index';
+import { Index } from './index';
 
 export function normalizeArray<T, K extends keyof T>(arr: Array<T>, key: K): Index<T> {
   if (!Array.isArray(arr)) throw new Error(`${arr} is not an array`);
@@ -27,5 +27,5 @@ export function normalizeArray<T, K extends keyof T>(arr: Array<T>, key: K): Ind
 }
 
 export function denormalize<T>(index: Index<T>): Array<[string, T]> {
-  return Object.keys(index).map(k => [k, index[k]] as [string, T]);
+  return Object.keys(index).map((k) => [k, index[k]] as [string, T]);
 }

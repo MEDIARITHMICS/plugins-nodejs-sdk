@@ -1,8 +1,10 @@
-import {expect} from 'chai';
 import 'mocha';
-import {core, extra} from '../';
-import * as sinon from 'sinon';
-import {PropertiesWrapper} from '../mediarithmics/index';
+
+import { expect } from 'chai';
+import sinon from 'sinon';
+
+import { core, extra } from '../';
+import { PropertiesWrapper } from '../mediarithmics/index';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
 const PLUGIN_WORKER_ID = 'Calavera';
@@ -21,10 +23,10 @@ describe('Fetch recommendation API', () => {
 
     protected async onAdContents(
       adRenderRequest: core.AdRendererRequest,
-      instanceContext: core.AdRendererRecoTemplateInstanceContext
+      instanceContext: core.AdRendererRecoTemplateInstanceContext,
     ): Promise<core.AdRendererPluginResponse> {
       return {
-        html: `This is Spart.... Oups, HTML I mean`
+        html: `This is Spart.... Oups, HTML I mean`,
       };
     }
   }
@@ -41,8 +43,7 @@ describe('Fetch recommendation API', () => {
           $catalog_id: '16',
           $name: 'Résidence Les Terrasses de Veret***',
           $brand: 'Madame Vacance',
-          $url:
-            'https://www.madamevacances.com/locations/france/alpes-du-nord/flaine/residence-les-terrasses-de-veret/',
+          $url: 'https://www.madamevacances.com/locations/france/alpes-du-nord/flaine/residence-les-terrasses-de-veret/',
           $image_url:
             'http://hbs.madamevacances.com/photos/etab/87/235x130/residence_les_terrasses_de_veret_piscine.jpg',
           $price: 160.3,
@@ -50,7 +51,7 @@ describe('Fetch recommendation API', () => {
           city: 'Flaine',
           country: 'France',
           region: 'Alpes du Nord',
-          zip_code: '74300'
+          zip_code: '74300',
         },
         {
           $type: 'ITEM_PROPOSAL',
@@ -59,16 +60,14 @@ describe('Fetch recommendation API', () => {
           $catalog_id: '16',
           $name: 'Le Chalet Altitude*****',
           $brand: 'Madame Vacance',
-          $url:
-            'https://www.madamevacances.com/locations/france/alpes-du-nord/val-thorens/le-chalet-altitude/',
-          $image_url:
-            'http://hbs.madamevacances.com/photos/etab/335/235x130/chalet_altitude_exterieure_2.jpg',
+          $url: 'https://www.madamevacances.com/locations/france/alpes-du-nord/val-thorens/le-chalet-altitude/',
+          $image_url: 'http://hbs.madamevacances.com/photos/etab/335/235x130/chalet_altitude_exterieure_2.jpg',
           $price: undefined,
           $sale_price: undefined,
           city: 'Val Thorens',
           country: 'France',
           region: 'Alpes du Nord',
-          zip_code: '73440'
+          zip_code: '73440',
         },
         {
           $type: 'ITEM_PROPOSAL',
@@ -77,19 +76,17 @@ describe('Fetch recommendation API', () => {
           $catalog_id: '16',
           $name: 'Les Chalets du Thabor***',
           $brand: 'Madame Vacance',
-          $url:
-            'https://www.madamevacances.com/locations/france/alpes-du-nord/valfrejus/les-chalets-du-thabor/',
-          $image_url:
-            'http://hbs.madamevacances.com/photos/etab/65/235x130/valfrejus_chalet_thabor_exterieure_2.jpg',
+          $url: 'https://www.madamevacances.com/locations/france/alpes-du-nord/valfrejus/les-chalets-du-thabor/',
+          $image_url: 'http://hbs.madamevacances.com/photos/etab/65/235x130/valfrejus_chalet_thabor_exterieure_2.jpg',
           $price: 143.2,
           $sale_price: undefined,
           city: 'Valfréjus',
           country: 'France',
           region: 'Alpes du Nord',
-          zip_code: '73500'
-        }
-      ]
-    }
+          zip_code: '73500',
+        },
+      ],
+    },
   };
 
   const fakeCreative: core.DisplayAd = {
@@ -111,29 +108,26 @@ describe('Fetch recommendation API', () => {
     renderer_plugin_id: '1041',
     creation_date: 1492785056278,
     subtype: 'BANNER',
-    format: '300x250'
+    format: '300x250',
   };
 
-  const fakeCreativeProperty: core.StringProperty =
-    {
-      technical_name: 'hello_world',
-      value: {
-        value: 'Yay'
-      },
-      property_type: 'STRING',
-      origin: 'PLUGIN',
-      writable: true,
-      deletable: false
-    }
-  ;
-
+  const fakeCreativeProperty: core.StringProperty = {
+    technical_name: 'hello_world',
+    value: {
+      value: 'Yay',
+    },
+    property_type: 'STRING',
+    origin: 'PLUGIN',
+    writable: true,
+    deletable: false,
+  };
   const fakeInstanceContext: core.AdRendererRecoTemplateInstanceContext = {
     recommender_id: '74',
     width: '300',
     height: '250',
     creative_click_url: 'http://yolo.com',
     displayAd: fakeCreative,
-    properties: new PropertiesWrapper([fakeCreativeProperty])
+    properties: new PropertiesWrapper([fakeCreativeProperty]),
   };
 
   const fakeUserAgentId = 'vec:888888';
@@ -141,17 +135,10 @@ describe('Fetch recommendation API', () => {
   const rpMockup: sinon.SinonStub = sinon.stub();
 
   rpMockup
-    .withArgs(
-      sinon.match.has(
-        'uri',
-        sinon.match(/\/v1\/recommenders\/(.){1,10}\/recommendations/)
-      )
-    )
+    .withArgs(sinon.match.has('uri', sinon.match(/\/v1\/recommenders\/(.){1,10}\/recommendations/)))
     .returns(fakeRecommenderResponse);
 
-  it('Check that recommenderId and userAgentId are passed correctly in fetchRecommendations', function (
-    done
-  ) {
+  it('Check that recommenderId and userAgentId are passed correctly in fetchRecommendations', function (done) {
     const plugin = new MyDummyHandlebarsAdRenderer(false);
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
@@ -160,18 +147,14 @@ describe('Fetch recommendation API', () => {
       .fetchRecommendations(fakeInstanceContext, fakeUserAgentId)
       .then(() => {
         expect(rpMockup.args[0][0].uri).to.be.eq(
-          `${plugin.outboundPlatformUrl}/v1/recommenders/${fakeInstanceContext.recommender_id}/recommendations`
+          `${plugin.outboundPlatformUrl}/v1/recommenders/${fakeInstanceContext.recommender_id}/recommendations`,
         );
-        expect(rpMockup.args[0][0].body.input_data.user_agent_id).to.be.eq(
-          fakeUserAgentId
-        );
+        expect(rpMockup.args[0][0].body.input_data.user_agent_id).to.be.eq(fakeUserAgentId);
         done();
       });
   });
 
-  it('Check that fetched itemProposal are the same as sent by the recommender', function (
-    done
-  ) {
+  it('Check that fetched itemProposal are the same as sent by the recommender', function (done) {
     const plugin = new MyDummyHandlebarsAdRenderer(false);
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
@@ -179,15 +162,9 @@ describe('Fetch recommendation API', () => {
     (runner.plugin as MyDummyHandlebarsAdRenderer)
       .fetchRecommendations(fakeInstanceContext, fakeUserAgentId)
       .then((proposals: Array<core.ItemProposal>) => {
-        expect(proposals[0]).to.deep.eq(
-          fakeRecommenderResponse.data.proposals[0]
-        );
-        expect(proposals[1]).to.deep.eq(
-          fakeRecommenderResponse.data.proposals[1]
-        );
-        expect(proposals[2]).to.deep.eq(
-          fakeRecommenderResponse.data.proposals[2]
-        );
+        expect(proposals[0]).to.deep.eq(fakeRecommenderResponse.data.proposals[0]);
+        expect(proposals[1]).to.deep.eq(fakeRecommenderResponse.data.proposals[1]);
+        expect(proposals[2]).to.deep.eq(fakeRecommenderResponse.data.proposals[2]);
         done();
       });
   });

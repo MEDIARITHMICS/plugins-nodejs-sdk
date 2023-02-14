@@ -1,12 +1,12 @@
-import * as express from 'express';
-import * as _ from 'lodash';
-import * as jsesc from 'jsesc';
+import express from 'express';
+import jsesc from 'jsesc';
+import _ from 'lodash';
 
-import {BasePlugin, PropertiesWrapper} from '../../common/BasePlugin';
-import {DisplayAd} from '../../../api/core/creative/index';
-import {PluginProperty} from '../../../api/core/plugin/PluginPropertyInterface';
-import {AdRendererPluginResponse, AdRendererRequest, ClickUrlInfo} from './AdRendererInterface';
-import {generateEncodedClickUrl} from '../utils/index';
+import { DisplayAd } from '../../../api/core/creative/index';
+import { PluginProperty } from '../../../api/core/plugin/PluginPropertyInterface';
+import { BasePlugin, PropertiesWrapper } from '../../common/BasePlugin';
+import { generateEncodedClickUrl } from '../utils/index';
+import { AdRendererPluginResponse, AdRendererRequest, ClickUrlInfo } from './AdRendererInterface';
 
 export class AdRendererBaseInstanceContext {
   properties: PropertiesWrapper;
@@ -14,7 +14,6 @@ export class AdRendererBaseInstanceContext {
 }
 
 export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceContext> extends BasePlugin<T> {
-
   displayContextHeader = 'x-mics-display-context';
 
   constructor(enableThrottling = false) {
@@ -30,43 +29,28 @@ export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceConte
       'GET',
       `${this.outboundPlatformUrl}/v1/creatives/${displayAdId}`,
       undefined,
-      {'force-reload': forceReload}
+      { 'force-reload': forceReload },
     );
 
-    this.logger.debug(
-      `Fetched Creative: ${displayAdId} - ${JSON.stringify(response.data)}`
-    );
+    this.logger.debug(`Fetched Creative: ${displayAdId} - ${JSON.stringify(response.data)}`);
 
     if ((response.data as DisplayAd).type !== 'DISPLAY_AD') {
-      throw new Error(
-        `crid: ${
-          displayAdId
-        } - When fetching DisplayAd, another creative type was returned!`
-      );
+      throw new Error(`crid: ${displayAdId} - When fetching DisplayAd, another creative type was returned!`);
     }
 
     return response.data;
   }
 
   // Helper to fetch the Display Ad properties resource with caching
-  async fetchDisplayAdProperties(
-    displayAdId: string,
-    forceReload = false
-  ): Promise<PluginProperty[]> {
+  async fetchDisplayAdProperties(displayAdId: string, forceReload = false): Promise<PluginProperty[]> {
     const creativePropertyResponse = await super.requestGatewayHelper(
       'GET',
-      `${this.outboundPlatformUrl}/v1/creatives/${
-        displayAdId
-      }/renderer_properties`,
+      `${this.outboundPlatformUrl}/v1/creatives/${displayAdId}/renderer_properties`,
       undefined,
-      {'force-reload': forceReload}
+      { 'force-reload': forceReload },
     );
 
-    this.logger.debug(
-      `Fetched Creative Properties: ${displayAdId} - ${JSON.stringify(
-        creativePropertyResponse.data
-      )}`
-    );
+    this.logger.debug(`Fetched Creative Properties: ${displayAdId} - ${JSON.stringify(creativePropertyResponse.data)}`);
 
     return creativePropertyResponse.data;
   }
@@ -79,7 +63,6 @@ export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceConte
 
   // To be overriden to get a custom behavior
   protected async instanceContextBuilder(creativeId: string, forceReload = false): Promise<T> {
-
     const displayAdP = this.fetchDisplayAd(creativeId, forceReload);
     const displayAdPropsP = this.fetchDisplayAdProperties(creativeId, forceReload);
 
@@ -90,92 +73,71 @@ export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceConte
 
     const context = {
       displayAd: displayAd,
-      properties: new PropertiesWrapper(displayAdProps)
+      properties: new PropertiesWrapper(displayAdProps),
     } as T;
 
     return Promise.resolve(context);
   }
 
-  protected abstract onAdContents(
-    request: AdRendererRequest,
-    instanceContext: T
-  ): Promise<AdRendererPluginResponse>;
+  protected abstract onAdContents(request: AdRendererRequest, instanceContext: T): Promise<AdRendererPluginResponse>;
 
   protected async getInstanceContext(creativeId: string, forceReload: boolean): Promise<T> {
-    if (!this.pluginCache.get(creativeId) || forceReload){
+    if (!this.pluginCache.get(creativeId) || forceReload) {
       this.pluginCache.put(
         creativeId,
         this.instanceContextBuilder(creativeId, forceReload).catch((err) => {
-          this.logger.error(`Error while caching instance context: ${err.message}`)
-          this.pluginCache.del(creativeId)
+          this.logger.error(`Error while caching instance context: ${err.message}`);
+          this.pluginCache.del(creativeId);
           throw err;
         }),
-        this.getInstanceContextCacheExpiration()
-      )
+        this.getInstanceContextCacheExpiration(),
+      );
     }
-    return this.pluginCache.get(creativeId)
+    return this.pluginCache.get(creativeId) as Promise<T>;
   }
 
   private initAdContentsRoute(): void {
     this.app.post(
       '/v1/ad_contents',
-      this.asyncMiddleware(
-        async (req: express.Request, res: express.Response) => {
-          if (!this.httpIsReady()) {
+      this.asyncMiddleware(async (req: express.Request, res: express.Response) => {
+        if (!this.httpIsReady()) {
+          const msg = {
+            error: 'Plugin not initialized',
+          };
+          this.logger.error('POST /v1/ad_contents : %s', JSON.stringify(msg));
+          return res.status(500).json(msg);
+        } else if (!req.body || _.isEmpty(req.body)) {
+          const msg = {
+            error: 'Missing request body',
+          };
+          this.logger.error('POST /v1/ad_contents : %s', JSON.stringify(msg));
+          return res.status(500).json(msg);
+        } else {
+          this.logger.debug(`POST /v1/ad_contents ${JSON.stringify(req.body)}`);
+
+          const adRendererRequest = req.body as AdRendererRequest;
+
+          if (!this.onAdContents) {
+            this.logger.error('POST /v1/ad_contents: No AdContents listener registered!');
             const msg = {
-              error: 'Plugin not initialized'
+              error: 'No AdContents listener registered!',
             };
-            this.logger.error(
-              'POST /v1/ad_contents : %s',
-              JSON.stringify(msg)
-            );
             return res.status(500).json(msg);
-          } else if (!req.body || _.isEmpty(req.body)) {
-            const msg = {
-              error: 'Missing request body'
-            };
-            this.logger.error('POST /v1/ad_contents : %s', JSON.stringify(msg));
-            return res.status(500).json(msg);
-          } else {
-            this.logger.debug(
-              `POST /v1/ad_contents ${JSON.stringify(req.body)}`
-            );
-
-            const adRendererRequest = req.body as AdRendererRequest;
-
-            if (!this.onAdContents) {
-              this.logger.error(
-                'POST /v1/ad_contents: No AdContents listener registered!'
-              );
-              const msg = {
-                error: 'No AdContents listener registered!'
-              };
-              return res.status(500).json(msg);
-            }
-
-            // We flush the Plugin Gateway cache during previews
-            const forceReload = (adRendererRequest.context === 'PREVIEW' || adRendererRequest.context === 'STAGE');
-
-            const instanceContext: T = await this.getInstanceContext(
-              adRendererRequest.creative_id,
-              forceReload
-            );
-
-            const adRendererResponse = await this.onAdContents(
-              adRendererRequest,
-              instanceContext as T
-            );
-
-            return res
-              .header(
-                this.displayContextHeader,
-                jsesc(adRendererResponse.displayContext, {json: true})
-              )
-              .status(200)
-              .send(adRendererResponse.html);
           }
+
+          // We flush the Plugin Gateway cache during previews
+          const forceReload = adRendererRequest.context === 'PREVIEW' || adRendererRequest.context === 'STAGE';
+
+          const instanceContext: T = await this.getInstanceContext(adRendererRequest.creative_id, forceReload);
+
+          const adRendererResponse = await this.onAdContents(adRendererRequest, instanceContext as T);
+
+          return res
+            .header(this.displayContextHeader, jsesc(adRendererResponse.displayContext, { json: true }))
+            .status(200)
+            .send(adRendererResponse.html);
         }
-      )
+      }),
     );
   }
 }

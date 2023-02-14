@@ -1,5 +1,10 @@
-import {UserAccountIdentifierInfo, UserAgentIdentifierInfo, UserEmailIdentifierInfo, UserPointIdentifierInfo} from '../../reference/UserIdentifierInterface';
-import {EmailRenderingContext, PluginEmailContent, PluginEmailMeta} from '../emailtemplaterenderer';
+import {
+  UserAccountIdentifierInfo,
+  UserAgentIdentifierInfo,
+  UserEmailIdentifierInfo,
+  UserPointIdentifierInfo,
+} from '../../reference/UserIdentifierInterface';
+import { EmailRenderingContext, PluginEmailContent, PluginEmailMeta } from '../emailtemplaterenderer';
 
 export interface EmailRoutingRequest {
   email_router_id: string;
@@ -9,7 +14,12 @@ export interface EmailRoutingRequest {
   campaign_id: string;
   blast_id: string;
   datamart_id: string;
-  user_identifiers: (UserPointIdentifierInfo | UserEmailIdentifierInfo | UserAccountIdentifierInfo | UserAgentIdentifierInfo)[];
+  user_identifiers: (
+    | UserPointIdentifierInfo
+    | UserEmailIdentifierInfo
+    | UserAccountIdentifierInfo
+    | UserAgentIdentifierInfo
+  )[];
   meta: PluginEmailMeta;
   content: PluginEmailContent;
   data: any;
@@ -17,5 +27,10 @@ export interface EmailRoutingRequest {
 
 export interface CheckEmailsRequest {
   email_router_id: string;
-  user_identifiers: (UserPointIdentifierInfo | UserEmailIdentifierInfo | UserAccountIdentifierInfo | UserAgentIdentifierInfo)[];
+  user_identifiers: (
+    | UserPointIdentifierInfo
+    | UserEmailIdentifierInfo
+    | UserAccountIdentifierInfo
+    | UserAgentIdentifierInfo
+  )[];
 }

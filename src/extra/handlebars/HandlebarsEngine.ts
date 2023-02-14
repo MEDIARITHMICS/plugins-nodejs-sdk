@@ -1,11 +1,15 @@
-import * as Handlebars from 'handlebars';
+import Handlebars from 'handlebars';
 
-import {AdRendererRequest, AdRendererTemplateInstanceContext} from '../../mediarithmics/plugins/ad-renderer';
+import { ItemProposal } from '../../mediarithmics/api/datamart';
+import { AdRendererRequest, AdRendererTemplateInstanceContext } from '../../mediarithmics/plugins/ad-renderer';
+import { ClickUrlInfo } from '../../mediarithmics/plugins/ad-renderer/base/AdRendererInterface';
+import { generateEncodedClickUrl } from '../../mediarithmics/plugins/ad-renderer/utils/index';
+import {
+  ExploreableInternalsTemplatingEngine,
+  ProfileDataTemplater,
+  TemplateMacro,
+} from '../../mediarithmics/plugins/common/TemplatingInterface';
 
-import {ItemProposal} from '../../mediarithmics/api/datamart';
-import {ExploreableInternalsTemplatingEngine, ProfileDataTemplater, TemplateMacro} from '../../mediarithmics/plugins/common/TemplatingInterface';
-import {ClickUrlInfo} from '../../mediarithmics/plugins/ad-renderer/base/AdRendererInterface';
-import {generateEncodedClickUrl} from '../../mediarithmics/plugins/ad-renderer/utils/index';
 import numeral = require('numeral');
 import _ = require('lodash');
 
@@ -34,8 +38,7 @@ export interface HandlebarsRootContext extends URLHandlebarsRootContext {
 }
 
 // Handlebar Context for the Template - with recommendations
-export interface RecommendationsHandlebarsRootContext
-  extends HandlebarsRootContext {
+export interface RecommendationsHandlebarsRootContext extends HandlebarsRootContext {
   private: {
     redirectUrls: ClickUrlInfo[];
     clickableContents: ClickableContent[];
@@ -64,7 +67,7 @@ const encodeClickUrl = () => (redirectUrls: ClickUrlInfo[], clickUrl: string) =>
   let urls = redirectUrls.slice(0);
   urls.push({
     url: clickUrl,
-    redirect_count: 0
+    redirect_count: 0,
   });
 
   return generateEncodedClickUrl(urls);
@@ -76,44 +79,38 @@ const doubleEncodedUriPlaceHolder = encodeURI(encodeURI(placeHolder));
 
 // Encode recommendation click url => contains the contentId of the recommendation that will be
 // insrted into the campaign log
-const encodeRecoClickUrlHelper = () => (
-  idx: number,
-  rootContext: RecommendationsHandlebarsRootContext,
-  recommendation: ItemProposal
-) => {
-  rootContext.private.clickableContents.push({
-    item_id: recommendation.$id,
-    catalog_token: recommendation.$catalog_token,
-    $content_id: idx
-  });
+const encodeRecoClickUrlHelper =
+  () => (idx: number, rootContext: RecommendationsHandlebarsRootContext, recommendation: ItemProposal) => {
+    rootContext.private.clickableContents.push({
+      item_id: recommendation.$id,
+      catalog_token: recommendation.$catalog_token,
+      $content_id: idx,
+    });
 
-  // recommendation.url replace placeHolder by idx
-  const filledRedirectUrls: ClickUrlInfo[] = rootContext.private.redirectUrls.map(
-    (clickUrlInfo: ClickUrlInfo) => {
+    // recommendation.url replace placeHolder by idx
+    const filledRedirectUrls: ClickUrlInfo[] = rootContext.private.redirectUrls.map((clickUrlInfo: ClickUrlInfo) => {
       const cloned = _.clone(clickUrlInfo);
       const url1 = _.replace(cloned.url, placeHolder, idx.toString());
       const url2 = _.replace(url1, uriEncodePlaceHolder, idx.toString());
       cloned.url = _.replace(url2, doubleEncodedUriPlaceHolder, idx.toString());
       return cloned;
-    }
-  );
+    });
 
-  const recommendationUrl = recommendation.$url ? recommendation.$url : '';
+    const recommendationUrl = recommendation.$url ? recommendation.$url : '';
 
-  return encodeClickUrl()(filledRedirectUrls, recommendationUrl);
-};
+    return encodeClickUrl()(filledRedirectUrls, recommendationUrl);
+  };
 
 export function buildURLHandlebarsRootContext(
   adRenderRequest: AdRendererRequest,
-  instanceContext: AdRendererTemplateInstanceContext
+  instanceContext: AdRendererTemplateInstanceContext,
 ): URLHandlebarsRootContext {
-
   return {
     REQUEST: adRenderRequest,
     CREATIVE: {
       CLICK_URL: instanceContext.creative_click_url,
       WIDTH: instanceContext.width,
-      HEIGHT: instanceContext.height
+      HEIGHT: instanceContext.height,
     },
     ORGANISATION_ID: instanceContext.displayAd.organisation_id, // Hack, it should come from the AdRendererRequest
     AD_GROUP_ID: adRenderRequest.ad_group_id,
@@ -123,15 +120,14 @@ export function buildURLHandlebarsRootContext(
     CREATIVE_ID: adRenderRequest.creative_id,
     CACHE_BUSTER: Date.now().toString(),
     IAS_CLIENT_ID: instanceContext.ias_client_id,
-    CB: Date.now().toString()
+    CB: Date.now().toString(),
   };
-
 }
 
 export interface ProfileEmailHandlebarsRootContext {
   private: {
-    profileData: ProfileDataLayer
-  }
+    profileData: ProfileDataLayer;
+  };
 }
 
 export interface ProfileDataLayer {
@@ -146,16 +142,17 @@ export interface ProfileDataArgs {
 export interface ProfileDataHelperOptions {
   name: string;
   hash: ProfileDataArgs;
-  data: {root: ProfileEmailHandlebarsRootContext}
+  data: { root: ProfileEmailHandlebarsRootContext };
 }
 
 export class HandlebarsEngine
-  implements ExploreableInternalsTemplatingEngine<void, string, HandlebarsTemplateDelegate<any>, hbs.AST.Program>, ProfileDataTemplater {
-
+  implements
+    ExploreableInternalsTemplatingEngine<void, string, HandlebarsTemplateDelegate<any>, hbs.AST.Program>,
+    ProfileDataTemplater
+{
   engine: typeof Handlebars;
 
-  constructor() {
-  }
+  constructor() {}
 
   // Initialisation of the engine. Done once at every InstanceContext rebuild.
   init(): void {
@@ -163,15 +160,11 @@ export class HandlebarsEngine
 
     /* Generic Helpers */
     this.engine.registerHelper('formatPrice', formatPrice);
-    this.engine.registerHelper('toJson', (object: any) =>
-      JSON.stringify(object)
-    );
+    this.engine.registerHelper('toJson', (object: any) => JSON.stringify(object));
   }
 
   enableProfileDataLayer(): void {
-
     this.engine.registerHelper('profileData', function (opts: ProfileDataHelperOptions) {
-
       // See https://blog.osteele.com/2007/12/cheap-monads/
       const $N = {};
       // Check if we have the value in the DataLayer
@@ -180,27 +173,24 @@ export class HandlebarsEngine
       } else {
         return opts.hash.defaultValue;
       }
-
     });
-  };
+  }
 
   parse(template: string): hbs.AST.Program {
     return Handlebars.parse(template);
-  };
+  }
 
   // TODO: Test this thing
   getMacros(internals: hbs.AST.Program): TemplateMacro[] {
-
     class MacroScanner extends Handlebars.Visitor {
       macros: TemplateMacro[] = [];
     }
 
     // The Handlebars Compiler library is documented there: https://github.com/wycats/handlebars.js/blob/master/docs/compiler-api.md
     MacroScanner.prototype.MustacheStatement = function (macro: hbs.AST.MustacheStatement) {
-
       if (macro.type === 'MustacheStatement') {
         const pathExpression = macro.path as hbs.AST.PathExpression;
-        this.macros.push({parts: pathExpression.parts});
+        this.macros.push({ parts: pathExpression.parts });
       }
 
       // We're just here to visit, we don't want to break anything, so let's call the "default function" to process MustacheStatement
@@ -211,8 +201,7 @@ export class HandlebarsEngine
     scanner.accept(internals);
 
     return scanner.macros;
-
-  };
+  }
 
   compile(template: string | hbs.AST.Program) {
     // Handlebars.compile() can take a string or an AST
@@ -240,8 +229,7 @@ export class RecommendationsHandlebarsEngine extends HandlebarsEngine {
     //
     // This is how the encodeClickUrl partial should be used in templates:
     // {{> encodeClickUrl url="http://www.mediarithmics.com/en/"}}
-    const encodeClickUrlPartial =
-      '{{encodeClickUrlInternal @root.private.redirectUrls url}}';
+    const encodeClickUrlPartial = '{{encodeClickUrlInternal @root.private.redirectUrls url}}';
     this.engine.registerPartial('encodeClickUrl', encodeClickUrlPartial);
     this.engine.registerHelper('encodeClickUrlInternal', encodeClickUrl());
 
@@ -254,15 +242,8 @@ export class RecommendationsHandlebarsEngine extends HandlebarsEngine {
     //
     // This is how the partial should be used in templates:
     // {{> encodeRecoClickUrl}}
-    const encodeRecoClickUrlPartial =
-      '{{encodeRecoClickUrlInternal @index @root this}}';
-    this.engine.registerPartial(
-      'encodeRecoClickUrl',
-      encodeRecoClickUrlPartial
-    );
-    this.engine.registerHelper(
-      'encodeRecoClickUrlInternal',
-      encodeRecoClickUrlHelper()
-    );
+    const encodeRecoClickUrlPartial = '{{encodeRecoClickUrlInternal @index @root this}}';
+    this.engine.registerPartial('encodeRecoClickUrl', encodeRecoClickUrlPartial);
+    this.engine.registerHelper('encodeRecoClickUrlInternal', encodeRecoClickUrlHelper());
   }
 }

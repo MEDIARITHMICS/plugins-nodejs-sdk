@@ -7,7 +7,7 @@ export interface CustomActionRequest {
 }
 
 export interface CustomActionPluginResponse {
-  status: "ok" | "ko";
+  status: 'ok' | 'ko';
 }
 
 export interface CustomAction {

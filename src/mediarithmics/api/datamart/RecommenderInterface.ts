@@ -1,5 +1,5 @@
-import {DataResponse} from '../../api/core/common/Response';
-import {Customizable} from '../../api/core/common/Customizable';
+import { Customizable } from '../../api/core/common/Customizable';
+import { DataResponse } from '../../api/core/common/Response';
 
 export type RecommenderResponse = DataResponse<RecommendationsWrapper>;
 
@@ -9,14 +9,9 @@ export interface RecommendationsWrapper {
   recommendation_log?: string;
 }
 
-export type ProposalType =
-  | 'ITEM_PROPOSAL'
-  | 'PRODUCT_PROPOSAL'
-  | 'CATEGORY_PROPOSAL'
-  | 'CONTENT_PROPOSAL';
+export type ProposalType = 'ITEM_PROPOSAL' | 'PRODUCT_PROPOSAL' | 'CATEGORY_PROPOSAL' | 'CONTENT_PROPOSAL';
 
-export interface Proposal
-  extends Customizable {
+export interface Proposal extends Customizable {
   $type: ProposalType;
   $id?: string;
   $gid?: string;

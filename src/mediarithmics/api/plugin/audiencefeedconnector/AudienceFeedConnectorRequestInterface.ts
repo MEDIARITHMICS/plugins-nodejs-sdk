@@ -1,4 +1,4 @@
-import {UserIdentifierInfo} from '../../reference/UserIdentifierInterface';
+import { UserIdentifierInfo } from '../../reference/UserIdentifierInterface';
 
 export type UpdateType = 'UPSERT' | 'DELETE';
 

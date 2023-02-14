@@ -7,7 +7,6 @@ export interface AudienceSegmentExternalFeedResource {
   version_id: string;
 }
 
-
 export interface AudienceSegmentResource {
   id: string;
   organisation_id: string;

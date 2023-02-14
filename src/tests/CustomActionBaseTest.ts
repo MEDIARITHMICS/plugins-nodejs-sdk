@@ -1,10 +1,12 @@
-import { expect } from "chai";
-import { core } from "../";
-import "mocha";
-import * as request from "supertest";
-import * as sinon from "sinon";
-import { CustomActionBaseInstanceContext } from "../mediarithmics/plugins/custom-action/CustomActionBasePlugin";
-import { PropertiesWrapper } from "../mediarithmics";
+import 'mocha';
+
+import { expect } from 'chai';
+import sinon from 'sinon';
+import request from 'supertest';
+
+import { core } from '../';
+import { PropertiesWrapper } from '../mediarithmics';
+import { CustomActionBaseInstanceContext } from '../mediarithmics/plugins/custom-action/CustomActionBasePlugin';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
 const PLUGIN_WORKER_ID = 'Calavera';
@@ -14,12 +16,8 @@ process.env.PLUGIN_AUTHENTICATION_TOKEN = PLUGIN_AUTHENTICATION_TOKEN;
 process.env.PLUGIN_WORKER_ID = PLUGIN_WORKER_ID;
 
 class MyFakeCustomActionBasePlugin extends core.CustomActionBasePlugin {
-  protected async instanceContextBuilder(
-    customActionId: string
-  ): Promise<CustomActionBaseInstanceContext> {
-    const customActionProps = await this.fetchCustomActionProperties(
-      customActionId
-    );
+  protected async instanceContextBuilder(customActionId: string): Promise<CustomActionBaseInstanceContext> {
+    const customActionProps = await this.fetchCustomActionProperties(customActionId);
 
     const customAction = await this.fetchCustomAction(customActionId);
 
@@ -30,13 +28,13 @@ class MyFakeCustomActionBasePlugin extends core.CustomActionBasePlugin {
 
     return context;
   }
-  
+
   protected onCustomActionCall(
     request: core.CustomActionRequest,
-    instanceContext: core.CustomActionBaseInstanceContext
+    instanceContext: core.CustomActionBaseInstanceContext,
   ): Promise<core.CustomActionPluginResponse> {
     const response: core.CustomActionPluginResponse = {
-      status: "ok",
+      status: 'ok',
     };
     return Promise.resolve(response);
   }
@@ -44,43 +42,37 @@ class MyFakeCustomActionBasePlugin extends core.CustomActionBasePlugin {
 
 const rpMockup: sinon.SinonStub = sinon.stub().returns(
   new Promise((resolve, reject) => {
-    resolve("Yolo");
-  })
+    resolve('Yolo');
+  }),
 );
 
-describe("Fetch Scenario Custom Action Gateway API", () => {
+describe('Fetch Scenario Custom Action Gateway API', () => {
   // All the magic is here
   const plugin = new MyFakeCustomActionBasePlugin(false);
   const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-  it("Check that custom_action_id is passed correctly in fetchCustomActionProperties", function (done) {
-    const fakeToken = "xxxx";
-    const fakeId = "62";
+  it('Check that custom_action_id is passed correctly in fetchCustomActionProperties', function (done) {
+    const fakeToken = 'xxxx';
+    const fakeId = '62';
 
     // We try to call the Gateway
-    (runner.plugin as MyFakeCustomActionBasePlugin)
-      .fetchCustomActionProperties(fakeId)
-      .then(() => {
-        expect(rpMockup.args[0][0].uri).to.be.eq(
-          `${this.outboundPlatformUrl}/v1/scenario_custom_actions/${fakeId}/properties`
-        );
-        done();
-      });
+    (runner.plugin as MyFakeCustomActionBasePlugin).fetchCustomActionProperties(fakeId).then(() => {
+      expect(rpMockup.args[0][0].uri).to.be.eq(
+        `${this.outboundPlatformUrl}/v1/scenario_custom_actions/${fakeId}/properties`,
+      );
+      done();
+    });
   });
 
-  it("Check that custom_action_id is passed correctly in fetchCustomAction", function (done) {
-    const fakeToken = "xxxx";
-    const fakeId = "62";
+  it('Check that custom_action_id is passed correctly in fetchCustomAction', function (done) {
+    const fakeToken = 'xxxx';
+    const fakeId = '62';
 
     // We try to call the Gateway
-    (runner.plugin as MyFakeCustomActionBasePlugin)
-      .fetchCustomAction(fakeId)
-      .then(() => {
-        expect(rpMockup.args[0][0].uri).to.be.eq(
-          `${this.outboundPlatformUrl}/v1/scenario_custom_actions/${fakeId}`
-        );
-        done();
-      });
+    (runner.plugin as MyFakeCustomActionBasePlugin).fetchCustomAction(fakeId).then(() => {
+      expect(rpMockup.args[0][0].uri).to.be.eq(`${this.outboundPlatformUrl}/v1/scenario_custom_actions/${fakeId}`);
+      done();
+    });
   });
 
   afterEach(() => {
@@ -89,54 +81,50 @@ describe("Fetch Scenario Custom Action Gateway API", () => {
   });
 });
 
-describe.only("Custom Action API test", function () {
+describe.only('Custom Action API test', function () {
   // All the magic is here
   const plugin = new MyFakeCustomActionBasePlugin(false);
   let runner: core.TestingPluginRunner;
 
-  it("Check that the plugin is giving good results with a simple handler", function (done) {
+  it('Check that the plugin is giving good results with a simple handler', function (done) {
     const rpMockup: sinon.SinonStub = sinon.stub();
 
     const customAction: core.DataResponse<core.CustomAction> = {
       status: 'ok',
       data: {
-        id: "1",
-        name: "custom action",
-        organisation_id: "1234",
-        group_id: "com.test.custom-action",
-        artifact_id: "test",
+        id: '1',
+        name: 'custom action',
+        organisation_id: '1234',
+        group_id: 'com.test.custom-action',
+        artifact_id: 'test',
         creation_ts: 1234,
-        created_by: "2",
-        version_id: "3",
-        version_value: "1.0.0"
-      }
+        created_by: '2',
+        version_id: '3',
+        version_value: '1.0.0',
+      },
     };
     rpMockup
       .withArgs(
         sinon.match.has(
-          "uri",
+          'uri',
           sinon.match(function (value: string) {
-            return (
-              value.match(
-                /\/v1\/scenario_custom_actions\/(.){1,10}$/
-              ) !== null
-            );
-          })
-        )
+            return value.match(/\/v1\/scenario_custom_actions\/(.){1,10}$/) !== null;
+          }),
+        ),
       )
       .returns(customAction);
 
     const properties: core.DataListResponse<core.PluginProperty> = {
-      status: "ok",
+      status: 'ok',
       count: 1,
       data: [
         {
-          technical_name: "hello_world",
+          technical_name: 'hello_world',
           value: {
-            value: "Sacre Hubert",
+            value: 'Sacre Hubert',
           },
-          property_type: "STRING",
-          origin: "PLUGIN",
+          property_type: 'STRING',
+          origin: 'PLUGIN',
           writable: true,
           deletable: false,
         },
@@ -146,39 +134,34 @@ describe.only("Custom Action API test", function () {
     rpMockup
       .withArgs(
         sinon.match.has(
-          "uri",
+          'uri',
           sinon.match(function (value: string) {
-            return (
-              value.match(
-                /\/v1\/scenario_custom_actions\/(.){1,10}\/properties/
-              ) !== null
-            );
-          })
-        )
+            return value.match(/\/v1\/scenario_custom_actions\/(.){1,10}\/properties/) !== null;
+          }),
+        ),
       )
       .returns(properties);
 
     runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     const customActionRequest: core.CustomActionRequest = {
-      user_point_id: "26340584-f777-404c-82c5-56220667464b",
-      custom_action_id: "62",
+      user_point_id: '26340584-f777-404c-82c5-56220667464b',
+      custom_action_id: '62',
       datamart_id: '1234',
       node_id: '25',
-      scenario_id: '888'
-    }
+      scenario_id: '888',
+    };
 
     request(runner.plugin.app)
-      .post("/v1/scenario_custom_actions")
+      .post('/v1/scenario_custom_actions')
       .send(customActionRequest)
       .end(function (err, res) {
         expect(res.status).to.equal(200);
-        expect(JSON.parse(res.text).status).to.be.eq("ok");
+        expect(JSON.parse(res.text).status).to.be.eq('ok');
 
         done();
       });
   });
-
 
   afterEach(() => {
     // We clear the cache so that we don't have any processing still running in the background

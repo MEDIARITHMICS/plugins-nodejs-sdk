@@ -1,4 +1,4 @@
-export type Index<T> = {[key: string]: T}
+export type Index<T> = { [key: string]: T };
 export type Option<T> = T | undefined;
 
 export function map<A, B>(a: Option<A>, f: (a: A) => B): Option<B> {

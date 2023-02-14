@@ -1,10 +1,11 @@
-import * as express from 'express';
-import * as _ from 'lodash';
-import {BasePlugin, PropertiesWrapper} from '../common';
-import {BidOptimizer} from '../../api/core/bidoptimizer/BidOptimizerInterface';
-import {PluginProperty} from '../../api/core/plugin/PluginPropertyInterface';
-import {BidOptimizerRequest, SaleCondition} from '../../api/plugin/bidoptimizer/BidOptimizerRequestInterface';
-import {BidDecision} from '../../api/plugin/bidoptimizer/BidDecision';
+import express from 'express';
+import _ from 'lodash';
+
+import { BidOptimizer } from '../../api/core/bidoptimizer/BidOptimizerInterface';
+import { PluginProperty } from '../../api/core/plugin/PluginPropertyInterface';
+import { BidDecision } from '../../api/plugin/bidoptimizer/BidDecision';
+import { BidOptimizerRequest, SaleCondition } from '../../api/plugin/bidoptimizer/BidOptimizerRequestInterface';
+import { BasePlugin, PropertiesWrapper } from '../common';
 
 export type BidOptimizerPluginResponse = BidDecision;
 
@@ -30,13 +31,9 @@ export abstract class BidOptimizerPlugin extends BasePlugin<BidOptimizerBaseInst
   async fetchBidOptimizer(bidOptimizerId: string): Promise<BidOptimizer> {
     const bidOptimizerResponse = await super.requestGatewayHelper(
       'GET',
-      `${this.outboundPlatformUrl}/v1/bid_optimizers/${bidOptimizerId}`
+      `${this.outboundPlatformUrl}/v1/bid_optimizers/${bidOptimizerId}`,
     );
-    this.logger.debug(
-      `Fetched Bid Optimizer: ${bidOptimizerId} - ${JSON.stringify(
-        bidOptimizerResponse.data
-      )}`
-    );
+    this.logger.debug(`Fetched Bid Optimizer: ${bidOptimizerId} - ${JSON.stringify(bidOptimizerResponse.data)}`);
     return bidOptimizerResponse.data;
   }
 
@@ -45,57 +42,44 @@ export abstract class BidOptimizerPlugin extends BasePlugin<BidOptimizerBaseInst
    * @param bidOptimizerId
    */
 
-  async fetchBidOptimizerProperties(
-    bidOptimizerId: string
-  ): Promise<PluginProperty[]> {
+  async fetchBidOptimizerProperties(bidOptimizerId: string): Promise<PluginProperty[]> {
     const bidOptimizerPropertyResponse = await super.requestGatewayHelper(
       'GET',
-      `${this.outboundPlatformUrl}/v1/bid_optimizers/${
-        bidOptimizerId
-      }/properties`
+      `${this.outboundPlatformUrl}/v1/bid_optimizers/${bidOptimizerId}/properties`,
     );
     this.logger.debug(
-      `Fetched BidOptimizer Properties: ${bidOptimizerId} - ${JSON.stringify(
-        bidOptimizerPropertyResponse.data
-      )}`
+      `Fetched BidOptimizer Properties: ${bidOptimizerId} - ${JSON.stringify(bidOptimizerPropertyResponse.data)}`,
     );
     return bidOptimizerPropertyResponse.data;
   }
 
-  findBestSalesConditions(
-    bidPrice: number,
-    salesConditions: SaleCondition[]
-  ): SaleCondition {
+  findBestSalesConditions(bidPrice: number, salesConditions: SaleCondition[]): SaleCondition {
     // Optimization, we only do the stringify  if we are really on debug / silly mode
     if (this.logger.level === 'debug' || this.logger.level === 'silly') {
       this.logger.debug(
-        `Looking to find the best sale condition for CPM: ${
-          bidPrice
-        } in: ${JSON.stringify(salesConditions, null, 4)}`
+        `Looking to find the best sale condition for CPM: ${bidPrice} in: ${JSON.stringify(salesConditions, null, 4)}`,
       );
     }
-    const eligibleSalesConditions = salesConditions.filter(sc => {
+    const eligibleSalesConditions = salesConditions.filter((sc) => {
       return sc.floor_price <= bidPrice;
     });
     // Optimization, we only do the stringify  if we are really on debug / silly mode
     if (this.logger.level === 'debug' || this.logger.level === 'silly') {
       this.logger.debug(
-        `Found eligible sales condition for CPM: ${
-          bidPrice
-        } in: ${JSON.stringify(eligibleSalesConditions, null, 4)}`
+        `Found eligible sales condition for CPM: ${bidPrice} in: ${JSON.stringify(eligibleSalesConditions, null, 4)}`,
       );
     }
-    const sortedEligibleSalesConditions = eligibleSalesConditions.sort(
-      (a, b) => {
-        return a.floor_price - b.floor_price;
-      }
-    );
+    const sortedEligibleSalesConditions = eligibleSalesConditions.sort((a, b) => {
+      return a.floor_price - b.floor_price;
+    });
     // Optimization, we only do the stringify  if we are really on debug / silly mode
     if (this.logger.level === 'debug' || this.logger.level === 'silly') {
       this.logger.debug(
-        `Sorted eligible sales condition for CPM: ${
-          bidPrice
-        } in: ${JSON.stringify(sortedEligibleSalesConditions, null, 4)}`
+        `Sorted eligible sales condition for CPM: ${bidPrice} in: ${JSON.stringify(
+          sortedEligibleSalesConditions,
+          null,
+          4,
+        )}`,
       );
     }
 
@@ -108,9 +92,7 @@ export abstract class BidOptimizerPlugin extends BasePlugin<BidOptimizerBaseInst
    * This is a default provided implementation
    * @param bidOptimizerId
    */
-  protected async instanceContextBuilder(
-    bidOptimizerId: string
-  ): Promise<BidOptimizerBaseInstanceContext> {
+  protected async instanceContextBuilder(bidOptimizerId: string): Promise<BidOptimizerBaseInstanceContext> {
     const bidOptimizerP = this.fetchBidOptimizer(bidOptimizerId);
     const bidOptimizerPropsP = this.fetchBidOptimizerProperties(bidOptimizerId);
 
@@ -121,7 +103,7 @@ export abstract class BidOptimizerPlugin extends BasePlugin<BidOptimizerBaseInst
 
     const context = {
       bidOptimizer: bidOptimizer,
-      properties: new PropertiesWrapper(bidOptimizerProps)
+      properties: new PropertiesWrapper(bidOptimizerProps),
     };
 
     return context;
@@ -134,89 +116,64 @@ export abstract class BidOptimizerPlugin extends BasePlugin<BidOptimizerBaseInst
    */
   protected abstract onBidDecisions(
     request: BidOptimizerRequest,
-    instanceContext: BidOptimizerBaseInstanceContext
+    instanceContext: BidOptimizerBaseInstanceContext,
   ): Promise<BidOptimizerPluginResponse>;
 
-  protected async getInstanceContext(
-    bidOptimizerId: string
-  ): Promise<BidOptimizerBaseInstanceContext> {
+  protected async getInstanceContext(bidOptimizerId: string): Promise<BidOptimizerBaseInstanceContext> {
     if (!this.pluginCache.get(bidOptimizerId)) {
-        this.pluginCache.put(
-          bidOptimizerId,
-          this.instanceContextBuilder(bidOptimizerId).catch((err) => {
-            this.logger.error(`Error while caching instance context: ${err.message}`)
-            this.pluginCache.del(bidOptimizerId);
-            throw err;
-          }),
-          this.getInstanceContextCacheExpiration(),
-        );
+      this.pluginCache.put(
+        bidOptimizerId,
+        this.instanceContextBuilder(bidOptimizerId).catch((err) => {
+          this.logger.error(`Error while caching instance context: ${err.message}`);
+          this.pluginCache.del(bidOptimizerId);
+          throw err;
+        }),
+        this.getInstanceContextCacheExpiration(),
+      );
     }
-    return this.pluginCache.get(bidOptimizerId);
+    return this.pluginCache.get(bidOptimizerId) as Promise<BidOptimizerBaseInstanceContext>;
   }
 
   private initBidDecisions(): void {
     this.app.post(
       '/v1/bid_decisions',
-      this.asyncMiddleware(
-        async (req: express.Request, res: express.Response) => {
-          if (!this.httpIsReady()) {
-            const msg = {
-              error: 'Plugin not initialized'
-            };
-            this.logger.error(
-              'POST /v1/bid_decisions : %s',
-              JSON.stringify(msg)
-            );
-            return res.status(500).json(msg);
-          } else if (!req.body || _.isEmpty(req.body)) {
-            const msg = {
-              error: 'Missing request body'
-            };
-            this.logger.error(
-              'POST /v1/bid_decisions : %s',
-              JSON.stringify(msg)
-            );
-            return res.status(500).json(msg);
-          } else {
-            if (
-              this.logger.level === 'debug' ||
-              this.logger.level === 'silly'
-            ) {
-              this.logger.debug(
-                `POST /v1/bid_decisions ${JSON.stringify(req.body)}`
-              );
-            }
-
-            const bidOptimizerRequest = req.body as BidOptimizerRequest;
-
-            if (!this.onBidDecisions) {
-              const errMsg = 'No BidOptimizer listener registered!';
-              this.logger.error(errMsg);
-              return res.status(500).json({error: errMsg});
-            }
-
-            const instanceContext = await this.getInstanceContext(
-              bidOptimizerRequest.campaign_info.bid_optimizer_id
-            );
-
-            const bidOptimizerResponse = await this.onBidDecisions(
-              bidOptimizerRequest,
-              instanceContext
-            );
-
-            if (
-              this.logger.level === 'debug' ||
-              this.logger.level === 'silly'
-            ) {
-              this.logger.debug(
-                `Returning: ${JSON.stringify(bidOptimizerResponse)}`
-              );
-            }
-
-            return res.status(200).send(JSON.stringify(bidOptimizerResponse));
+      this.asyncMiddleware(async (req: express.Request, res: express.Response) => {
+        if (!this.httpIsReady()) {
+          const msg = {
+            error: 'Plugin not initialized',
+          };
+          this.logger.error('POST /v1/bid_decisions : %s', JSON.stringify(msg));
+          return res.status(500).json(msg);
+        } else if (!req.body || _.isEmpty(req.body)) {
+          const msg = {
+            error: 'Missing request body',
+          };
+          this.logger.error('POST /v1/bid_decisions : %s', JSON.stringify(msg));
+          return res.status(500).json(msg);
+        } else {
+          if (this.logger.level === 'debug' || this.logger.level === 'silly') {
+            this.logger.debug(`POST /v1/bid_decisions ${JSON.stringify(req.body)}`);
           }
+
+          const bidOptimizerRequest = req.body as BidOptimizerRequest;
+
+          if (!this.onBidDecisions) {
+            const errMsg = 'No BidOptimizer listener registered!';
+            this.logger.error(errMsg);
+            return res.status(500).json({ error: errMsg });
+          }
+
+          const instanceContext = await this.getInstanceContext(bidOptimizerRequest.campaign_info.bid_optimizer_id);
+
+          const bidOptimizerResponse = await this.onBidDecisions(bidOptimizerRequest, instanceContext);
+
+          if (this.logger.level === 'debug' || this.logger.level === 'silly') {
+            this.logger.debug(`Returning: ${JSON.stringify(bidOptimizerResponse)}`);
+          }
+
+          return res.status(200).send(JSON.stringify(bidOptimizerResponse));
         }
-      )
+      }),
     );
   }
 }
