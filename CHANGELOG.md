@@ -1,6 +1,6 @@
 # Changelog
 
-# 0.11.0 - 2023-02-08
+# 0.11.0 - 2023-02-23
 
 Breaking changes in UserSegmentUpdatePluginResponse (UPDATE). 
 - update the Audience feed onUserSegmentUpdate method return type. 
