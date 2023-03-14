@@ -1,9 +1,14 @@
 import express from 'express';
 import _ from 'lodash';
 
-import { PluginProperty } from '../../api/core/plugin/PluginPropertyInterface';
+import { PluginProperty, PluginPropertyResponse } from '../../api/core/plugin/PluginPropertyInterface';
 import { BasePlugin, PropertiesWrapper } from '../common/BasePlugin';
-import { ActivityAnalyzer, ActivityAnalyzerPluginResponse, ActivityAnalyzerRequest } from './ActivityAnalyzerInterface';
+import {
+  ActivityAnalyzer,
+  ActivityAnalyzerPluginResponse,
+  ActivityAnalyzerRequest,
+  ActivityAnalyzerResponse,
+} from './ActivityAnalyzerInterface';
 
 export interface ActivityAnalyzerBaseInstanceContext {
   properties: PropertiesWrapper;
@@ -21,10 +26,11 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin<ActivityAnalyzer
 
   // Helper to fetch the activity analyzer resource with caching
   async fetchActivityAnalyzer(activityAnalyzerId: string): Promise<ActivityAnalyzer> {
-    const activityAnalyzerResponse = await super.requestGatewayHelper(
+    const activityAnalyzerResponse = await super.requestGatewayHelper<ActivityAnalyzerResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/activity_analyzers/${activityAnalyzerId}`,
     );
+
     this.logger.debug(
       `Fetched Activity Analyzer: ${activityAnalyzerId} - ${JSON.stringify(activityAnalyzerResponse.data)}`,
     );
@@ -36,7 +42,7 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin<ActivityAnalyzer
 
   // Helper to fetch the activity analyzer resource with caching
   async fetchActivityAnalyzerProperties(activityAnalyzerId: string): Promise<PluginProperty[]> {
-    const activityAnalyzerPropertyResponse = await super.requestGatewayHelper(
+    const activityAnalyzerPropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/activity_analyzers/${activityAnalyzerId}/properties`,
     );
@@ -68,10 +74,10 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin<ActivityAnalyzer
 
   protected async getInstanceContext(activityAnalyzerId: string): Promise<ActivityAnalyzerBaseInstanceContext> {
     if (!this.pluginCache.get(activityAnalyzerId)) {
-      this.pluginCache.put(
+      void this.pluginCache.put(
         activityAnalyzerId,
         this.instanceContextBuilder(activityAnalyzerId).catch((err) => {
-          this.logger.error(`Error while caching instance context: ${err.message}`);
+          this.logger.error(`Error while caching instance context: ${(err as Error).message}`);
           this.pluginCache.del(activityAnalyzerId);
           throw err;
         }),

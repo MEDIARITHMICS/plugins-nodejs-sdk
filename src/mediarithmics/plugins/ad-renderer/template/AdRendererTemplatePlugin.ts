@@ -6,9 +6,9 @@ export interface AdRendererTemplateInstanceContext extends AdRendererBaseInstanc
   width: string;
   height: string;
   creative_click_url?: string;
-  render_click_url?: (...args: any[]) => string;
+  render_click_url?: (...args: unknown[]) => string;
   ias_client_id?: string;
-  render_additional_html?: (...args: any[]) => string;
+  render_additional_html?: (...args: unknown[]) => string;
 }
 
 export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<AdRendererBaseInstanceContext> {
@@ -18,7 +18,7 @@ export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<AdRe
    *
    * Have to be overriden (see examples)
    */
-  protected abstract engineBuilder: TemplatingEngine<any, any, any>;
+  protected abstract engineBuilder: TemplatingEngine<unknown, string | undefined, (...args: unknown[]) => string>;
 
   constructor(enableThrottling = false) {
     super(enableThrottling);

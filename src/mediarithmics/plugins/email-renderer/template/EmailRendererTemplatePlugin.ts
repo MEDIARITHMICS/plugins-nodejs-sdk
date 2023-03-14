@@ -3,9 +3,9 @@ import { EmailRendererBaseInstanceContext, EmailRendererPlugin } from '../base/E
 
 export interface EmailRendererTemplateInstanceContext extends EmailRendererBaseInstanceContext {
   // Raw template to be compiled
-  template: any;
+  template: unknown;
   // Compiled template
-  render_template?: (...args: any[]) => string;
+  render_template?: (...args: unknown[]) => string;
 }
 
 export abstract class EmailRendererTemplatePlugin extends EmailRendererPlugin<EmailRendererTemplateInstanceContext> {
@@ -15,7 +15,8 @@ export abstract class EmailRendererTemplatePlugin extends EmailRendererPlugin<Em
    *
    * Have to be overriden (see examples)
    */
-  protected abstract engineBuilder: ExploreableInternalsTemplatingEngine<any, any, any, any> & ProfileDataTemplater;
+  protected abstract engineBuilder: ExploreableInternalsTemplatingEngine<unknown, unknown, unknown, unknown> &
+    ProfileDataTemplater;
 
   constructor(enableThrottling = false) {
     super(enableThrottling);

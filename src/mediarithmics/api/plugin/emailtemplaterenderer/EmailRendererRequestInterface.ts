@@ -19,7 +19,7 @@ export interface EmailRenderRequest {
     | UserAccountIdentifierInfo
     | UserAgentIdentifierInfo
   )[];
-  user_data_bag: any;
+  user_data_bag: unknown;
   click_urls: string[];
   email_tracking_url: string;
 }

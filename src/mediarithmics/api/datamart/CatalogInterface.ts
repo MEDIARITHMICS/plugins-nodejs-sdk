@@ -1,3 +1,7 @@
+import { DataListResponse } from '../core/common/Response';
+
+export type CatalogResponse = DataListResponse<Catalog>;
+
 export interface Catalog {
   id: string;
   editor_id: string;

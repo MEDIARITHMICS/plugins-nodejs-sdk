@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import 'mocha';
 
 import { expect } from 'chai';
@@ -49,7 +52,7 @@ describe('Fetch Email Router API', () => {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeEmailRouterPlugin).fetchEmailRouterProperties(fakeId).then(() => {
+    void (runner.plugin as MyFakeEmailRouterPlugin).fetchEmailRouterProperties(fakeId).then(() => {
       expect(rpMockup.args[0][0].uri).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/email_routers/${fakeId}/properties`,
       );
@@ -90,7 +93,7 @@ describe('Email Router API test', function () {
 
     runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-    const requestBody = JSON.parse(`{
+    const requestBody = `{
       "email_router_id": "2",
       "call_id": "ba568918-2f06-4f16-bd0e-f50e04b92d34",
       "context": "LIVE",
@@ -148,9 +151,9 @@ describe('Email Router API test', function () {
         "text": "Hello World!"
       },
       "data": {}
-    }`);
+    }`;
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .post('/v1/email_router_check')
       .send(requestBody)
       .end(function (err, res) {
@@ -158,7 +161,7 @@ describe('Email Router API test', function () {
 
         expect(JSON.parse(res.text).result).to.be.true;
 
-        request(runner.plugin.app)
+        void request(runner.plugin.app)
           .post('/v1/email_routing')
           .send(requestBody)
           .end(function (err, res) {

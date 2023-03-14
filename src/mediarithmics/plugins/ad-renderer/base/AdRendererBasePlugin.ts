@@ -2,8 +2,8 @@ import express from 'express';
 import jsesc from 'jsesc';
 import _ from 'lodash';
 
-import { DisplayAd } from '../../../api/core/creative/index';
-import { PluginProperty } from '../../../api/core/plugin/PluginPropertyInterface';
+import { DisplayAd, DisplayAdResponse } from '../../../api/core/creative/index';
+import { PluginProperty, PluginPropertyResponse } from '../../../api/core/plugin/PluginPropertyInterface';
 import { BasePlugin, PropertiesWrapper } from '../../common/BasePlugin';
 import { generateEncodedClickUrl } from '../utils/index';
 import { AdRendererPluginResponse, AdRendererRequest, ClickUrlInfo } from './AdRendererInterface';
@@ -25,7 +25,7 @@ export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceConte
 
   // Helper to fetch the Display Ad resource with caching
   async fetchDisplayAd(displayAdId: string, forceReload = false): Promise<DisplayAd> {
-    const response = await super.requestGatewayHelper(
+    const response = await super.requestGatewayHelper<DisplayAdResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/creatives/${displayAdId}`,
       undefined,
@@ -34,7 +34,7 @@ export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceConte
 
     this.logger.debug(`Fetched Creative: ${displayAdId} - ${JSON.stringify(response.data)}`);
 
-    if ((response.data as DisplayAd).type !== 'DISPLAY_AD') {
+    if (response.data.type !== 'DISPLAY_AD') {
       throw new Error(`crid: ${displayAdId} - When fetching DisplayAd, another creative type was returned!`);
     }
 
@@ -43,7 +43,7 @@ export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceConte
 
   // Helper to fetch the Display Ad properties resource with caching
   async fetchDisplayAdProperties(displayAdId: string, forceReload = false): Promise<PluginProperty[]> {
-    const creativePropertyResponse = await super.requestGatewayHelper(
+    const creativePropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/creatives/${displayAdId}/renderer_properties`,
       undefined,
@@ -83,10 +83,10 @@ export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceConte
 
   protected async getInstanceContext(creativeId: string, forceReload: boolean): Promise<T> {
     if (!this.pluginCache.get(creativeId) || forceReload) {
-      this.pluginCache.put(
+      void this.pluginCache.put(
         creativeId,
         this.instanceContextBuilder(creativeId, forceReload).catch((err) => {
-          this.logger.error(`Error while caching instance context: ${err.message}`);
+          this.logger.error(`Error while caching instance context: ${(err as Error).message}`);
           this.pluginCache.del(creativeId);
           throw err;
         }),
@@ -130,10 +130,10 @@ export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceConte
 
           const instanceContext: T = await this.getInstanceContext(adRendererRequest.creative_id, forceReload);
 
-          const adRendererResponse = await this.onAdContents(adRendererRequest, instanceContext as T);
+          const adRendererResponse = await this.onAdContents(adRendererRequest, instanceContext);
 
           return res
-            .header(this.displayContextHeader, jsesc(adRendererResponse.displayContext, { json: true }))
+            .header(this.displayContextHeader, jsesc(adRendererResponse.displayContext as string, { json: true }))
             .status(200)
             .send(adRendererResponse.html);
         }

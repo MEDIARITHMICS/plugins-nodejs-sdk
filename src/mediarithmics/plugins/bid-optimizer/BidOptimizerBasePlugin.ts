@@ -1,8 +1,8 @@
 import express from 'express';
 import _ from 'lodash';
 
-import { BidOptimizer } from '../../api/core/bidoptimizer/BidOptimizerInterface';
-import { PluginProperty } from '../../api/core/plugin/PluginPropertyInterface';
+import { BidOptimizer, BidOptimizerResponse } from '../../api/core/bidoptimizer/BidOptimizerInterface';
+import { PluginProperty, PluginPropertyResponse } from '../../api/core/plugin/PluginPropertyInterface';
 import { BidDecision } from '../../api/plugin/bidoptimizer/BidDecision';
 import { BidOptimizerRequest, SaleCondition } from '../../api/plugin/bidoptimizer/BidOptimizerRequestInterface';
 import { BasePlugin, PropertiesWrapper } from '../common';
@@ -29,7 +29,7 @@ export abstract class BidOptimizerPlugin extends BasePlugin<BidOptimizerBaseInst
    * @param bidOptimizerId
    */
   async fetchBidOptimizer(bidOptimizerId: string): Promise<BidOptimizer> {
-    const bidOptimizerResponse = await super.requestGatewayHelper(
+    const bidOptimizerResponse = await super.requestGatewayHelper<BidOptimizerResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/bid_optimizers/${bidOptimizerId}`,
     );
@@ -43,7 +43,7 @@ export abstract class BidOptimizerPlugin extends BasePlugin<BidOptimizerBaseInst
    */
 
   async fetchBidOptimizerProperties(bidOptimizerId: string): Promise<PluginProperty[]> {
-    const bidOptimizerPropertyResponse = await super.requestGatewayHelper(
+    const bidOptimizerPropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/bid_optimizers/${bidOptimizerId}/properties`,
     );
@@ -121,10 +121,10 @@ export abstract class BidOptimizerPlugin extends BasePlugin<BidOptimizerBaseInst
 
   protected async getInstanceContext(bidOptimizerId: string): Promise<BidOptimizerBaseInstanceContext> {
     if (!this.pluginCache.get(bidOptimizerId)) {
-      this.pluginCache.put(
+      void this.pluginCache.put(
         bidOptimizerId,
         this.instanceContextBuilder(bidOptimizerId).catch((err) => {
-          this.logger.error(`Error while caching instance context: ${err.message}`);
+          this.logger.error(`Error while caching instance context: ${(err as Error).message}`);
           this.pluginCache.del(bidOptimizerId);
           throw err;
         }),

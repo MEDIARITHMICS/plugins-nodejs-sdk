@@ -81,7 +81,11 @@ export class StatsClient {
    * ```
    */
   static init({ timerInMs = 10 * 60 * 1000, environment = process.env.NODE_ENV, logger }: InitOptions): StatsClient {
-    logger?.info(`StatsClient - environment is ${environment} mode - Timer is ${timerInMs} - Initialization.`);
+    logger?.info(
+      `StatsClient - environment is ${
+        environment ? environment : 'undefined'
+      } mode - Timer is ${timerInMs} - Initialization.`,
+    );
     return this.instance || (this.instance = new StatsClient(timerInMs, environment));
   }
 

@@ -14,5 +14,5 @@ export interface RecommenderRequest {
     | UserAccountIdentifierInfo
     | UserAgentIdentifierInfo
   )[];
-  input_data: any;
+  input_data: unknown;
 }

@@ -1,7 +1,7 @@
 import express from 'express';
 import _ from 'lodash';
 
-import { PluginProperty } from '../../api/core/plugin/PluginPropertyInterface';
+import { PluginProperty, PluginPropertyResponse } from '../../api/core/plugin/PluginPropertyInterface';
 import {
   CheckEmailsRequest,
   EmailRoutingRequest,
@@ -36,7 +36,7 @@ export abstract class EmailRouterPlugin extends BasePlugin<EmailRouterBaseInstan
   // To be overriden to get a cutom behavior
 
   async fetchEmailRouterProperties(id: string): Promise<PluginProperty[]> {
-    const response = await super.requestGatewayHelper(
+    const response = await super.requestGatewayHelper<PluginPropertyResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/email_routers/${id}/properties`,
     );
@@ -63,10 +63,10 @@ export abstract class EmailRouterPlugin extends BasePlugin<EmailRouterBaseInstan
 
   protected async getInstanceContext(emailRouterId: string): Promise<EmailRouterBaseInstanceContext> {
     if (!this.pluginCache.get(emailRouterId)) {
-      this.pluginCache.put(
+      void this.pluginCache.put(
         emailRouterId,
         this.instanceContextBuilder(emailRouterId).catch((err) => {
-          this.logger.error(`Error while caching instance context: ${err.message}`);
+          this.logger.error(`Error while caching instance context: ${(err as Error).message}`);
           this.pluginCache.del(emailRouterId);
           throw err;
         }),
@@ -150,8 +150,10 @@ export abstract class EmailRouterPlugin extends BasePlugin<EmailRouterBaseInstan
             });
           })
           .catch((error: Error) => {
-            this.logger.error(`Something bad happened : ${error.message} - ${error.stack}`);
-            return res.status(500).send(error.message + '\n' + error.stack);
+            this.logger.error(
+              `Something bad happened : ${error.message} - ${error.stack ? error.stack : 'stack undefined'}`,
+            );
+            return res.status(500).send(`${error.message} \n ${error.stack ? error.stack : 'stack undefined'}`);
           });
       }
     });

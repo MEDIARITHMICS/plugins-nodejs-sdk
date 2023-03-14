@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+
 import { expect } from 'chai';
 import sinon from 'sinon';
 import winston from 'winston';

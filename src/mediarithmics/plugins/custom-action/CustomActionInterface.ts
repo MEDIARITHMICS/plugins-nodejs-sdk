@@ -1,3 +1,7 @@
+import { DataResponse } from '../../api/core/common/Response';
+
+export type CustomActionResponse = DataResponse<CustomAction>;
+
 export interface CustomActionRequest {
   user_point_id: string;
   custom_action_id: string;

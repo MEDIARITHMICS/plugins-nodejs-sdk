@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import 'mocha';
 
 import { expect } from 'chai';
@@ -47,7 +50,7 @@ describe('Fetch analyzer API', () => {
     const fakeActivityAnalyzerId = '42000000';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeActivityAnalyzerPlugin).fetchActivityAnalyzer(fakeActivityAnalyzerId).then(() => {
+    void (runner.plugin as MyFakeActivityAnalyzerPlugin).fetchActivityAnalyzer(fakeActivityAnalyzerId).then(() => {
       expect(rpMockup.args[0][0].uri).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/activity_analyzers/${fakeActivityAnalyzerId}`,
       );
@@ -59,12 +62,14 @@ describe('Fetch analyzer API', () => {
     const fakeActivityAnalyzerId = '4255';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeActivityAnalyzerPlugin).fetchActivityAnalyzerProperties(fakeActivityAnalyzerId).then(() => {
-      expect(rpMockup.args[1][0].uri).to.be.eq(
-        `${plugin.outboundPlatformUrl}/v1/activity_analyzers/${fakeActivityAnalyzerId}/properties`,
-      );
-      done();
-    });
+    void (runner.plugin as MyFakeActivityAnalyzerPlugin)
+      .fetchActivityAnalyzerProperties(fakeActivityAnalyzerId)
+      .then(() => {
+        expect(rpMockup.args[1][0].uri).to.be.eq(
+          `${plugin.outboundPlatformUrl}/v1/activity_analyzers/${fakeActivityAnalyzerId}/properties`,
+        );
+        done();
+      });
   });
 
   afterEach(() => {
@@ -111,6 +116,7 @@ describe('Activity Analysis API test', function () {
         resolve(pluginInfo);
       }),
     );
+
     rpMockup.onCall(1).returns(
       new Promise((resolve, reject) => {
         const pluginInfo: core.PluginPropertyResponse = {
@@ -135,38 +141,38 @@ describe('Activity Analysis API test', function () {
 
     runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-    const requestBody = JSON.parse(`{
-          "activity_analyzer_id": 1923,
-          "datamart_id": 1034,
-          "channel_id": "1268",
-          "activity": {
-            "$email_hash": null,
-            "$events": [
-              {
-                "$event_name": "page HP",
-                "$properties": {
-                  "$referrer": "https://www.google.fr/",
-                  "$url": "https://estcequecestbientotlapero.fr/",
-                  "produit": "SANTE",
-                  "session id": "tQ6GQojf"
-                },
-                "$ts": 1479820606900
-              }
-            ],
-            "$location": null,
-            "$session_duration": 302,
-            "$session_status": "CLOSED_SESSION",
-            "$site_id": "1268",
-            "$topics": {},
-            "$ts": 1479820606901,
-            "$ttl": 0,
-            "$type": "SITE_VISIT",
-            "$user_account_id": null,
-            "$user_agent_id": "vec:289388396"
-          }
-        }`);
+    const requestBody = {
+      activity_analyzer_id: 1923,
+      datamart_id: 1034,
+      channel_id: '1268',
+      activity: {
+        $email_hash: null,
+        $events: [
+          {
+            $event_name: 'page HP',
+            $properties: {
+              $referrer: 'https://www.google.fr/',
+              $url: 'https://estcequecestbientotlapero.fr/',
+              produit: 'SANTE',
+              'session id': 'tQ6GQojf',
+            },
+            $ts: 1479820606900,
+          },
+        ],
+        $location: null,
+        $session_duration: 302,
+        $session_status: 'CLOSED_SESSION',
+        $site_id: '1268',
+        $topics: {},
+        $ts: 1479820606901,
+        $ttl: 0,
+        $type: 'SITE_VISIT',
+        $user_account_id: null,
+        $user_agent_id: 'vec:289388396',
+      },
+    };
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .post('/v1/activity_analysis')
       .send(requestBody)
       .end(function (err, res) {
@@ -185,20 +191,20 @@ describe('Activity Analysis API test', function () {
 
     // We init the plugin
     request(runner.plugin.app);
-    const requestBody = JSON.parse(`{
-        "activity_analyzer_id": 123456789,
-        "datamart_id": 1034,
-        "channel_id": "1268",
-        "activity": {
-          "$email_hash": null,
-          "$events": [],
-          "$site_id": "1268",
-          "$ts": 1479820606901,
-          "$type": "SITE_VISIT"
-        }
-      }`);
+    const requestBody = {
+      activity_analyzer_id: 123456789,
+      datamart_id: 1034,
+      channel_id: '1268',
+      activity: {
+        $email_hash: null,
+        $events: [],
+        $site_id: '1268',
+        $ts: 1479820606901,
+        $type: 'SITE_VISIT',
+      },
+    };
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .post('/v1/activity_analysis')
       .send(requestBody)
       .end(function (err, res) {

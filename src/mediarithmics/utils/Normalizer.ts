@@ -15,8 +15,10 @@
  */
 import { Index } from './index';
 
-export function normalizeArray<T, K extends keyof T>(arr: Array<T>, key: K): Index<T> {
-  if (!Array.isArray(arr)) throw new Error(`${arr} is not an array`);
+export const normalizeArray = <T, K extends keyof T>(arr: Array<T>, key: K): Index<T> => {
+  if (!Array.isArray(arr)) {
+    throw new Error(`${JSON.stringify(arr)} is not an array`);
+  }
   return arr.reduce((acc, object) => {
     const keyValue = String(object[key]);
     return {
@@ -24,8 +26,8 @@ export function normalizeArray<T, K extends keyof T>(arr: Array<T>, key: K): Ind
       [keyValue]: object,
     };
   }, {});
-}
+};
 
-export function denormalize<T>(index: Index<T>): Array<[string, T]> {
+export const denormalize = <T>(index: Index<T>): Array<[string, T]> => {
   return Object.keys(index).map((k) => [k, index[k]] as [string, T]);
-}
+};

@@ -1,3 +1,7 @@
+import { DataResponse } from '../common/Response';
+
+export type AudienceSegmentexternalResourceResponse = DataResponse<AudienceSegmentExternalFeedResource>;
+
 export interface AudienceSegmentExternalFeedResource {
   id: string;
   plugin_id: string;
@@ -6,6 +10,8 @@ export interface AudienceSegmentExternalFeedResource {
   artifact_id: string;
   version_id: string;
 }
+
+export type AudienceSegmentResourceResponse = DataResponse<AudienceSegmentResource>;
 
 export interface AudienceSegmentResource {
   id: string;

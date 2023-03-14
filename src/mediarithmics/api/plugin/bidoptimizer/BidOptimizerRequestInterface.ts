@@ -13,7 +13,7 @@ export interface BidOptimizerRequest {
   campaign_info: CampaignInfo;
   user_info: UserInfo;
   user_campaign_data_bag: string;
-  data_feeds: any[];
+  data_feeds: unknown[];
 }
 
 export interface BidInfo {
@@ -59,8 +59,8 @@ export interface CampaignInfo {
 }
 
 export interface UserInfo {
-  global_first_view?: Boolean;
-  media_first_view?: Boolean;
+  global_first_view?: boolean;
+  media_first_view?: boolean;
   user_agent_info?: UserAgentInfo;
 }
 

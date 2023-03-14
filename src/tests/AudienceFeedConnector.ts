@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import 'mocha';
 
 import { expect } from 'chai';
@@ -74,7 +77,7 @@ describe('Fetch Audience Feed Gateway API', () => {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeAudienceFeedConnector).fetchAudienceFeedProperties(fakeId).then(() => {
+    void (runner.plugin as MyFakeAudienceFeedConnector).fetchAudienceFeedProperties(fakeId).then(() => {
       expect(rpMockup.args[0][0].uri).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/audience_segment_external_feeds/${fakeId}/properties`,
       );
@@ -86,7 +89,7 @@ describe('Fetch Audience Feed Gateway API', () => {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeAudienceFeedConnector).fetchAudienceSegment(fakeId).then(() => {
+    void (runner.plugin as MyFakeAudienceFeedConnector).fetchAudienceSegment(fakeId).then(() => {
       expect(rpMockup.args[1][0].uri).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/audience_segment_external_feeds/${fakeId}/audience_segment`,
       );
@@ -226,7 +229,7 @@ describe.only('External Audience Feed API test', function () {
       },
     };
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .post('/v1/external_segment_creation')
       .send(externalSegmentCreation)
       .end(function (err, res) {
@@ -234,7 +237,7 @@ describe.only('External Audience Feed API test', function () {
 
         expect(JSON.parse(res.text).status).to.be.eq('ok');
 
-        request(runner.plugin.app)
+        void request(runner.plugin.app)
           .post('/v1/external_segment_connection')
           .send(externalSegmentConnection)
           .end(function (err, res) {
@@ -242,7 +245,7 @@ describe.only('External Audience Feed API test', function () {
 
             expect(JSON.parse(res.text).status).to.be.eq('ok');
 
-            request(runner.plugin.app)
+            void request(runner.plugin.app)
               .post('/v1/user_segment_update')
               .send(userSegmentUpdateRequest)
               .end(function (err, res) {
@@ -251,7 +254,7 @@ describe.only('External Audience Feed API test', function () {
                 expect(JSON.parse(res.text).status).to.be.eq('ok');
               });
 
-            request(runner.plugin.app)
+            void request(runner.plugin.app)
               .post('/v1/batch_update')
               .send(batchUpdateRequest)
               .end(function (err, res) {

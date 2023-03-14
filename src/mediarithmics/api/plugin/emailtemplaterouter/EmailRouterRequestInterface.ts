@@ -22,7 +22,7 @@ export interface EmailRoutingRequest {
   )[];
   meta: PluginEmailMeta;
   content: PluginEmailContent;
-  data: any;
+  data: unknown;
 }
 
 export interface CheckEmailsRequest {

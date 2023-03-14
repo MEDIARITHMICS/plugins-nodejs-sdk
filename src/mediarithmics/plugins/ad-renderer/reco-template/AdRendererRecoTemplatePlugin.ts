@@ -25,9 +25,11 @@ export abstract class AdRendererRecoTemplatePlugin extends AdRendererTemplatePlu
         `${this.outboundPlatformUrl}/v1/display_campaigns/${campaignId}/user_campaigns/${userCampaignId}`,
       );
     } catch (e) {
-      this.logger.error(`User campaign could not be fetched for: ${campaignId} - ${userCampaignId}
-Returning empty user campaign
-Error: ${e.message} - ${e.stack}`);
+      this.logger.error(
+        `User campaign could not be fetched for: ${campaignId} - ${userCampaignId} Returning empty user campaign Error: ${
+          (e as Error).stack ? ((e as Error).stack as string) : 'stack undefined'
+        }`,
+      );
 
       userCampaignResponse = {
         status: 'ok',

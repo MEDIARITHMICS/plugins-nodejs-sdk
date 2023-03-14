@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import 'mocha';
 
 import { expect } from 'chai';
@@ -15,6 +19,8 @@ process.env.PLUGIN_WORKER_ID = PLUGIN_WORKER_ID;
 
 describe('Fetch recommendation API', () => {
   class MyDummyHandlebarsAdRenderer extends core.AdRendererRecoTemplatePlugin {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     engineBuilder = new extra.HandlebarsEngine();
 
     constructor(enableThrottling = false) {
@@ -25,9 +31,9 @@ describe('Fetch recommendation API', () => {
       adRenderRequest: core.AdRendererRequest,
       instanceContext: core.AdRendererRecoTemplateInstanceContext,
     ): Promise<core.AdRendererPluginResponse> {
-      return {
+      return Promise.resolve({
         html: `This is Spart.... Oups, HTML I mean`,
-      };
+      });
     }
   }
 
@@ -143,7 +149,7 @@ describe('Fetch recommendation API', () => {
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     // We try a call to the Gateway
-    (runner.plugin as MyDummyHandlebarsAdRenderer)
+    void (runner.plugin as MyDummyHandlebarsAdRenderer)
       .fetchRecommendations(fakeInstanceContext, fakeUserAgentId)
       .then(() => {
         expect(rpMockup.args[0][0].uri).to.be.eq(
@@ -159,7 +165,7 @@ describe('Fetch recommendation API', () => {
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     // We try a call to the Gateway
-    (runner.plugin as MyDummyHandlebarsAdRenderer)
+    void (runner.plugin as MyDummyHandlebarsAdRenderer)
       .fetchRecommendations(fakeInstanceContext, fakeUserAgentId)
       .then((proposals: Array<core.ItemProposal>) => {
         expect(proposals[0]).to.deep.eq(fakeRecommenderResponse.data.proposals[0]);

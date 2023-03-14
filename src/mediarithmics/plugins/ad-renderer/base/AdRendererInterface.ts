@@ -9,7 +9,7 @@ export interface SspExtension {
 export interface AdRendererRequest {
   call_id: string;
   context: ContextEnum;
-  user_agent_info: any;
+  user_agent_info: unknown;
   creative_id: string;
   campaign_id?: string;
   ad_group_id?: string;
@@ -25,12 +25,12 @@ export interface AdRendererRequest {
   longitude?: number;
   creative_variant?: string;
   ssp_extension?: SspExtension;
-  restrictions: any;
+  restrictions: unknown;
 }
 
 export interface AdRendererPluginResponse {
   html: string;
-  displayContext?: any;
+  displayContext?: unknown;
 }
 
 export interface ClickUrlInfo {

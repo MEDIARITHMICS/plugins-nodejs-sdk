@@ -31,3 +31,24 @@ export interface ItemProposal extends ProductProposal {
   $description?: string;
   $imageUrl?: string;
 }
+
+export interface ProfileEmailHandlebarsRootContext {
+  private: {
+    profileData: ProfileDataLayer;
+  };
+}
+
+export interface ProfileDataLayer {
+  [propsName: string]: string;
+}
+
+export interface ProfileDataArgs {
+  defaultValue: string;
+  fieldName: string;
+}
+
+export interface ProfileDataHelperOptions {
+  name: string;
+  hash: ProfileDataArgs;
+  data: { root: ProfileEmailHandlebarsRootContext };
+}

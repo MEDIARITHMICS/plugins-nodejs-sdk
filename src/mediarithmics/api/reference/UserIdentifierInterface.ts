@@ -4,8 +4,8 @@ export type UUID = string;
 
 export type VectorId = string;
 export type TimeStamp = number; //long
-export type UserEmailIdentifierProviderResource = any; //TODO
-export type UserAgentInfo = any; //TODO
+export type UserEmailIdentifierProviderResource = unknown; //TODO
+export type UserAgentInfo = unknown; //TODO
 
 export interface UserIdentifierInfo {
   type: UserIdentifierInfoType;

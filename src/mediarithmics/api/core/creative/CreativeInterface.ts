@@ -3,6 +3,11 @@ export interface CreativeResponse {
   data: Creative;
 }
 
+export interface DisplayAdResponse {
+  status: string;
+  data: DisplayAd;
+}
+
 export type CreativeType = 'DISPLAY_AD' | 'VIDEO_AD' | 'EMAIL_TEMPLATE';
 
 export interface Creative {

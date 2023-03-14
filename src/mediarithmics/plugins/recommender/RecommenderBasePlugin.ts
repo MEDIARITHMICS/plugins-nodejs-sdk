@@ -1,16 +1,14 @@
 import express from 'express';
 import _ from 'lodash';
 
-import { PluginProperty } from '../../api/core/plugin/PluginPropertyInterface';
-import { Catalog, RecommendationsWrapper } from '../../api/datamart';
+import { PluginProperty, PluginPropertyResponse } from '../../api/core/plugin/PluginPropertyInterface';
+import { Catalog, CatalogResponse, RecommendationsWrapper } from '../../api/datamart';
 import { RecommenderRequest } from '../../api/plugin/recommender/RecommenderRequestInterface';
 import { BasePlugin, PropertiesWrapper } from '../common/BasePlugin';
 
 export interface RecommenderBaseInstanceContext {
   properties: PropertiesWrapper;
 }
-
-export interface RecommenderPluginResponse extends RecommendationsWrapper {}
 
 export abstract class RecommenderPlugin extends BasePlugin<RecommenderBaseInstanceContext> {
   instanceContext: Promise<RecommenderBaseInstanceContext>;
@@ -25,7 +23,7 @@ export abstract class RecommenderPlugin extends BasePlugin<RecommenderBaseInstan
 
   // Helper to fetch the activity analyzer resource with caching
   async fetchRecommenderCatalogs(recommenderId: string): Promise<Catalog[]> {
-    const recommenderCatalogsResponse = await super.requestGatewayHelper(
+    const recommenderCatalogsResponse = await super.requestGatewayHelper<CatalogResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/recommenders/${recommenderId}/catalogs`,
     );
@@ -40,7 +38,7 @@ export abstract class RecommenderPlugin extends BasePlugin<RecommenderBaseInstan
 
   // Helper to fetch the activity analyzer resource with caching
   async fetchRecommenderProperties(recommenderId: string): Promise<PluginProperty[]> {
-    const recommenderPropertyResponse = await super.requestGatewayHelper(
+    const recommenderPropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/recommenders/${recommenderId}/properties`,
     );
@@ -63,26 +61,26 @@ export abstract class RecommenderPlugin extends BasePlugin<RecommenderBaseInstan
     return context;
   }
 
-  protected async getInstanceContext(recommenderId: string): Promise<RecommenderBaseInstanceContext> {
+  protected async getInstanceContext(recommenderId: string): Promise<RecommenderBaseInstanceContext | null> {
     if (!this.pluginCache.get(recommenderId)) {
-      this.pluginCache.put(
+      void this.pluginCache.put(
         recommenderId,
         this.instanceContextBuilder(recommenderId).catch((err) => {
-          this.logger.error(`Error while caching instance context: ${err.message}`);
+          this.logger.error(`Error while caching instance context: ${(err as Error).message}`);
           this.pluginCache.del(recommenderId);
           throw err;
         }),
         this.getInstanceContextCacheExpiration(),
       );
     }
-    return this.pluginCache.get(recommenderId) as Promise<RecommenderBaseInstanceContext>;
+    return this.pluginCache.get(recommenderId);
   }
 
   // To be overriden by the Plugin to get a custom behavior
   protected abstract onRecommendationRequest(
     request: RecommenderRequest,
-    instanceContext: RecommenderBaseInstanceContext,
-  ): Promise<RecommenderPluginResponse>;
+    instanceContext: RecommenderBaseInstanceContext | null,
+  ): Promise<RecommendationsWrapper>;
 
   private initRecommendationRequest(): void {
     this.app.post(
@@ -111,7 +109,7 @@ export abstract class RecommenderPlugin extends BasePlugin<RecommenderBaseInstan
             return res.status(500).json({ error: errMsg });
           }
 
-          const instanceContext: RecommenderBaseInstanceContext = await this.getInstanceContext(
+          const instanceContext: RecommenderBaseInstanceContext | null = await this.getInstanceContext(
             recommenderRequest.recommender_id,
           );
 

@@ -1,8 +1,8 @@
 import express from 'express';
 import _ from 'lodash';
 
-import { Creative } from '../../../api/core/creative';
-import { PluginProperty } from '../../../api/core/plugin/PluginPropertyInterface';
+import { Creative, CreativeResponse } from '../../../api/core/creative';
+import { PluginProperty, PluginPropertyResponse } from '../../../api/core/plugin/PluginPropertyInterface';
 import { EmailRendererPluginResponse } from '../../../api/plugin/emailtemplaterenderer/EmailRendererPluginResponse';
 import { EmailRenderRequest } from '../../../api/plugin/emailtemplaterenderer/EmailRendererRequestInterface';
 import { BasePlugin, PropertiesWrapper } from '../../common';
@@ -27,7 +27,7 @@ export abstract class EmailRendererPlugin<
 
   // Helper to fetch the creative resource with caching
   async fetchCreative(id: string, forceReload = false): Promise<Creative> {
-    const response = await super.requestGatewayHelper(
+    const response = await super.requestGatewayHelper<CreativeResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/creatives/${id}`,
       undefined,
@@ -41,7 +41,7 @@ export abstract class EmailRendererPlugin<
   // To be overriden to get a cutom behavior
 
   async fetchCreativeProperties(id: string, forceReload = false): Promise<PluginProperty[]> {
-    const response = await super.requestGatewayHelper(
+    const response = await super.requestGatewayHelper<PluginPropertyResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/creatives/${id}/renderer_properties`,
       undefined,
@@ -73,10 +73,10 @@ export abstract class EmailRendererPlugin<
 
   protected async getInstanceContext(creativeId: string, forceReload = false): Promise<T> {
     if (!this.pluginCache.get(creativeId) || forceReload) {
-      this.pluginCache.put(
+      void this.pluginCache.put(
         creativeId,
         this.instanceContextBuilder(creativeId, forceReload).catch((err) => {
-          this.logger.error(`Error while caching instance context: ${err.message}`);
+          this.logger.error(`Error while caching instance context: ${(err as Error).message}`);
           this.pluginCache.del(creativeId);
           throw err;
         }),
@@ -124,7 +124,7 @@ export abstract class EmailRendererPlugin<
 
           const instanceContext = await this.getInstanceContext(emailRenderRequest.creative_id, forceReload);
 
-          const response = await this.onEmailContents(emailRenderRequest, instanceContext as T);
+          const response = await this.onEmailContents(emailRenderRequest, instanceContext);
 
           this.logger.debug(`Returning: ${JSON.stringify(response)}`);
           return res.status(200).send(JSON.stringify(response));

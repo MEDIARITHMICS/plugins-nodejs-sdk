@@ -1,5 +1,6 @@
 import cluster, { Worker } from 'cluster';
 import { Server } from 'http';
+import { cpus } from 'os';
 
 import { BasePlugin } from './BasePlugin';
 
@@ -15,7 +16,7 @@ export interface SocketMsg {
 }
 
 export class ProductionPluginRunner {
-  numCPUs = require('os').cpus().length;
+  numCPUs = cpus().length;
 
   pluginPort: number;
 
@@ -54,7 +55,9 @@ export class ProductionPluginRunner {
    */
   masterListener = (worker: Worker, recMsg: SocketMsg) => {
     this.plugin.logger.debug(
-      `Master ${process.pid} is being called with cmd: ${MsgCmd[recMsg.cmd]}, value: ${recMsg.value}`,
+      `Master ${process.pid} is being called with cmd: ${MsgCmd[recMsg.cmd]}, value: ${
+        recMsg.value ? recMsg.value : 'undefined'
+      }`,
     );
 
     if (recMsg.cmd === MsgCmd.LOG_LEVEL_UPDATE_FROM_WORKER) {
@@ -77,7 +80,9 @@ export class ProductionPluginRunner {
    */
   workerListener = (recMsg: SocketMsg) => {
     this.plugin.logger.debug(
-      `Worker ${process.pid} is being called with cmd: ${MsgCmd[recMsg.cmd]}, value: ${recMsg.value}`,
+      `Worker ${process.pid} is being called with cmd: ${MsgCmd[recMsg.cmd]}, value: ${
+        recMsg.value ? recMsg.value : 'undefined'
+      }`,
     );
 
     if (recMsg.cmd === MsgCmd.LOG_LEVEL_UPDATE_FROM_MASTER) {
@@ -88,7 +93,7 @@ export class ProductionPluginRunner {
       }
       const level = recMsg.value.toLocaleLowerCase();
 
-      const logLevelUpdateResult = this.plugin.onLogLevelUpdate(level);
+      this.plugin.onLogLevelUpdate(level);
 
       this.plugin.logger.debug(`${process.pid}: Updated log level with: ${JSON.stringify(this.plugin.logger.level)}`);
     }
@@ -118,10 +123,10 @@ export class ProductionPluginRunner {
 
         // Sometimes, workers dies
         cluster.on('exit', (worker, code, signal) => {
-          this.plugin.logger.info(`worker ${worker.process.pid} died`);
+          this.plugin.logger.info(`worker ${worker.process.pid as number} died`);
 
           // We add a new worker, with the proper socket listener
-          const newWorker = cluster.fork();
+          cluster.fork();
         });
       } else {
         // We pass the Plugin into MT mode

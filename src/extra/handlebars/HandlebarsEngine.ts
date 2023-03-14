@@ -1,6 +1,8 @@
 import Handlebars from 'handlebars';
+import _ from 'lodash';
+import numeral from 'numeral';
 
-import { ItemProposal } from '../../mediarithmics/api/datamart';
+import { ItemProposal, ProfileDataHelperOptions } from '../../mediarithmics/api/datamart';
 import { AdRendererRequest, AdRendererTemplateInstanceContext } from '../../mediarithmics/plugins/ad-renderer';
 import { ClickUrlInfo } from '../../mediarithmics/plugins/ad-renderer/base/AdRendererInterface';
 import { generateEncodedClickUrl } from '../../mediarithmics/plugins/ad-renderer/utils/index';
@@ -9,62 +11,15 @@ import {
   ProfileDataTemplater,
   TemplateMacro,
 } from '../../mediarithmics/plugins/common/TemplatingInterface';
+import { RecommendationsHandlebarsRootContext, URLHandlebarsRootContext } from './interfaces';
 
-import numeral = require('numeral');
-import _ = require('lodash');
-
-// Handlebar Context for URLs (not all macros are available)
-export interface URLHandlebarsRootContext {
-  REQUEST: AdRendererRequest;
-  CREATIVE: HandlebarsRootContextCreative;
-  // Viewability TAGs specific
-  IAS_CLIENT_ID?: string;
-  // Main mediarithmics macros
-  ORGANISATION_ID: string;
-  AD_GROUP_ID?: string;
-  MEDIA_ID?: string;
-  ENCODED_MEDIA_ID?: string;
-  CAMPAIGN_ID?: string;
-  CREATIVE_ID: string;
-  CACHE_BUSTER: string;
-  CB: string;
-}
-
-// Handlebar Context for the Template - without recommandations
-export interface HandlebarsRootContext extends URLHandlebarsRootContext {
-  ENCODED_CLICK_URL: string;
-  CLICK_URL: string;
-  ADDITIONAL_HTML?: string;
-}
-
-// Handlebar Context for the Template - with recommendations
-export interface RecommendationsHandlebarsRootContext extends HandlebarsRootContext {
-  private: {
-    redirectUrls: ClickUrlInfo[];
-    clickableContents: ClickableContent[];
-  };
-  RECOMMENDATIONS: ItemProposal[];
-}
-
-export interface ClickableContent {
-  item_id?: string;
-  catalog_token: any;
-  $content_id: number;
-}
-
-export interface HandlebarsRootContextCreative {
-  CLICK_URL?: string;
-  WIDTH: string;
-  HEIGHT: string;
-}
-
-function formatPrice(price: string, pattern: string) {
+const formatPrice = (price: string, pattern: string) => {
   const number = numeral(price);
   return number.format(pattern);
-}
+};
 
 const encodeClickUrl = () => (redirectUrls: ClickUrlInfo[], clickUrl: string) => {
-  let urls = redirectUrls.slice(0);
+  const urls = redirectUrls.slice(0);
   urls.push({
     url: clickUrl,
     redirect_count: 0,
@@ -83,7 +38,7 @@ const encodeRecoClickUrlHelper =
   () => (idx: number, rootContext: RecommendationsHandlebarsRootContext, recommendation: ItemProposal) => {
     rootContext.private.clickableContents.push({
       item_id: recommendation.$id,
-      catalog_token: recommendation.$catalog_token,
+      catalog_token: recommendation.$catalog_token as string,
       $content_id: idx,
     });
 
@@ -101,10 +56,10 @@ const encodeRecoClickUrlHelper =
     return encodeClickUrl()(filledRedirectUrls, recommendationUrl);
   };
 
-export function buildURLHandlebarsRootContext(
+export const buildURLHandlebarsRootContext = (
   adRenderRequest: AdRendererRequest,
   instanceContext: AdRendererTemplateInstanceContext,
-): URLHandlebarsRootContext {
+): URLHandlebarsRootContext => {
   return {
     REQUEST: adRenderRequest,
     CREATIVE: {
@@ -122,37 +77,14 @@ export function buildURLHandlebarsRootContext(
     IAS_CLIENT_ID: instanceContext.ias_client_id,
     CB: Date.now().toString(),
   };
-}
-
-export interface ProfileEmailHandlebarsRootContext {
-  private: {
-    profileData: ProfileDataLayer;
-  };
-}
-
-export interface ProfileDataLayer {
-  [propsName: string]: string;
-}
-
-export interface ProfileDataArgs {
-  defaultValue: string;
-  fieldName: string;
-}
-
-export interface ProfileDataHelperOptions {
-  name: string;
-  hash: ProfileDataArgs;
-  data: { root: ProfileEmailHandlebarsRootContext };
-}
+};
 
 export class HandlebarsEngine
   implements
-    ExploreableInternalsTemplatingEngine<void, string, HandlebarsTemplateDelegate<any>, hbs.AST.Program>,
+    ExploreableInternalsTemplatingEngine<void, string, HandlebarsTemplateDelegate<unknown>, hbs.AST.Program>,
     ProfileDataTemplater
 {
   engine: typeof Handlebars;
-
-  constructor() {}
 
   // Initialisation of the engine. Done once at every InstanceContext rebuild.
   init(): void {
@@ -160,11 +92,11 @@ export class HandlebarsEngine
 
     /* Generic Helpers */
     this.engine.registerHelper('formatPrice', formatPrice);
-    this.engine.registerHelper('toJson', (object: any) => JSON.stringify(object));
+    this.engine.registerHelper('toJson', (object: Record<string, unknown>) => JSON.stringify(object));
   }
 
   enableProfileDataLayer(): void {
-    this.engine.registerHelper('profileData', function (opts: ProfileDataHelperOptions) {
+    this.engine.registerHelper('profileData', (opts: ProfileDataHelperOptions) => {
       // See https://blog.osteele.com/2007/12/cheap-monads/
       const $N = {};
       // Check if we have the value in the DataLayer
@@ -190,6 +122,7 @@ export class HandlebarsEngine
     MacroScanner.prototype.MustacheStatement = function (macro: hbs.AST.MustacheStatement) {
       if (macro.type === 'MustacheStatement') {
         const pathExpression = macro.path as hbs.AST.PathExpression;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         this.macros.push({ parts: pathExpression.parts });
       }
 
@@ -197,7 +130,7 @@ export class HandlebarsEngine
       Handlebars.Visitor.prototype.MustacheStatement.call(this, macro);
     };
 
-    var scanner = new MacroScanner();
+    const scanner = new MacroScanner();
     scanner.accept(internals);
 
     return scanner.macros;
@@ -210,6 +143,7 @@ export class HandlebarsEngine
 }
 
 export class RecommendationsHandlebarsEngine extends HandlebarsEngine {
+  private: any;
   constructor() {
     super();
   }

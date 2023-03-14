@@ -1,9 +1,17 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
+/* eslint-disable @typescript-eslint/unbound-method */
+
 import express from 'express';
 import _ from 'lodash';
 
-import { PluginProperty } from '../../api/core/plugin/PluginPropertyInterface';
+import { PluginProperty, PluginPropertyResponse } from '../../api/core/plugin/PluginPropertyInterface';
 import { BasePlugin, PropertiesWrapper } from '../common';
-import { CustomAction, CustomActionPluginResponse, CustomActionRequest } from './CustomActionInterface';
+import {
+  CustomAction,
+  CustomActionPluginResponse,
+  CustomActionRequest,
+  CustomActionResponse,
+} from './CustomActionInterface';
 
 export interface CustomActionBaseInstanceContext {
   customAction: CustomAction;
@@ -23,7 +31,7 @@ export abstract class CustomActionBasePlugin extends BasePlugin<CustomActionBase
    * @param customActionId
    */
   async fetchCustomAction(customActionId: string): Promise<CustomAction> {
-    const customActionResponse = await super.requestGatewayHelper(
+    const customActionResponse = await super.requestGatewayHelper<CustomActionResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/scenario_custom_actions/${customActionId}`,
     );
@@ -36,7 +44,7 @@ export abstract class CustomActionBasePlugin extends BasePlugin<CustomActionBase
    * @param customActionId
    */
   async fetchCustomActionProperties(customActionId: string): Promise<PluginProperty[]> {
-    const customActionPropertiesResponse = await super.requestGatewayHelper(
+    const customActionPropertiesResponse = await super.requestGatewayHelper<PluginPropertyResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/scenario_custom_actions/${customActionId}/properties`,
     );
@@ -70,10 +78,10 @@ export abstract class CustomActionBasePlugin extends BasePlugin<CustomActionBase
 
   protected async getInstanceContext(customActionId: string): Promise<CustomActionBaseInstanceContext> {
     if (!this.pluginCache.get(customActionId)) {
-      this.pluginCache.put(
+      void this.pluginCache.put(
         customActionId,
         this.instanceContextBuilder(customActionId).catch((err) => {
-          this.logger.error(`Error while caching instance context: ${err.message}`);
+          this.logger.error(`Error while caching instance context: ${(err as Error).message}`);
           this.pluginCache.del(customActionId);
           throw err;
         }),
@@ -136,9 +144,13 @@ export abstract class CustomActionBasePlugin extends BasePlugin<CustomActionBase
           this.logger.debug(`CustomActionId: ${request.custom_action_id} - Returning : ${statusCode} - %j`, response);
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
-        } catch (error) {
-          this.logger.error(`Something bad happened : ${error.message} - ${error.stack}`);
-          return res.status(500).send({ status: 'error', message: `${error.message}` });
+        } catch (err) {
+          this.logger.error(
+            `Something bad happened : ${(err as Error).message} - ${
+              (err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
+            }`,
+          );
+          return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
         }
       },
     );

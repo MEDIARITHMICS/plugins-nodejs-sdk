@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import 'mocha';
 
 import { expect } from 'chai';
@@ -51,11 +54,11 @@ describe('Fetch Email Renderer API', () => {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeEmailRendererPlugin).fetchCreative(fakeId).then(() => {
+    void (runner.plugin as MyFakeEmailRendererPlugin).fetchCreative(fakeId).then(() => {
       expect(rpMockup.args[0][0].uri).to.be.eq(`${runner.plugin.outboundPlatformUrl}/v1/creatives/${fakeId}`);
 
       // We try a call to the Gateway
-      (runner.plugin as MyFakeEmailRendererPlugin).fetchCreativeProperties(fakeId).then(() => {
+      void (runner.plugin as MyFakeEmailRendererPlugin).fetchCreativeProperties(fakeId).then(() => {
         expect(rpMockup.args[1][0].uri).to.be.eq(
           `${runner.plugin.outboundPlatformUrl}/v1/creatives/${fakeId}/renderer_properties`,
         );
@@ -125,37 +128,34 @@ describe('Email Renderer API test', function () {
 
     runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-    const requestBody = JSON.parse(`{
-          "email_renderer_id": "1034",
-          "call_id": "8e20e0fc-acb5-4bf3-8e36-f85a9ff25150",
-          "context": "LIVE",
-          "creative_id": "6475",
-          "campaign_id": "1810",
-          "campaign_technical_name": null,
-          "user_identifiers": [
-            {
-              "type": "USER_POINT",
-              "user_point_id": "62ce5f30-191d-40fb-bd6b-8ea6f39c80eb"
-            },
-            {
-              "type": "USER_EMAIL",
-              "hash": "8865501e69c464f42a5ae7bada6d342a",
-              "email": "email_mics_152@yopmail.com",
-              "operator": null,
-              "creation_ts": 1489688728108,
-              "last_activity_ts": 1489688728108,
-              "providers": [
-              ]
-            }
-          ],
-          "user_data_bag": {
-          },
-          "click_urls": [
-          ],
-          "email_tracking_url": null
-        }`);
+    const requestBody = {
+      email_renderer_id: '1034',
+      call_id: '8e20e0fc-acb5-4bf3-8e36-f85a9ff25150',
+      context: 'LIVE',
+      creative_id: '6475',
+      campaign_id: '1810',
+      campaign_technical_name: null,
+      user_identifiers: [
+        {
+          type: 'USER_POINT',
+          user_point_id: '62ce5f30-191d-40fb-bd6b-8ea6f39c80eb',
+        },
+        {
+          type: 'USER_EMAIL',
+          hash: '8865501e69c464f42a5ae7bada6d342a',
+          email: 'email_mics_152@yopmail.com',
+          operator: null,
+          creation_ts: 1489688728108,
+          last_activity_ts: 1489688728108,
+          providers: [],
+        },
+      ],
+      user_data_bag: {},
+      click_urls: [],
+      email_tracking_url: null,
+    };
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .post('/v1/email_contents')
       .send(requestBody)
       .end(function (err, res) {

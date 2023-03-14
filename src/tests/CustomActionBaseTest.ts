@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import 'mocha';
 
 import { expect } from 'chai';
@@ -56,7 +60,7 @@ describe('Fetch Scenario Custom Action Gateway API', () => {
     const fakeId = '62';
 
     // We try to call the Gateway
-    (runner.plugin as MyFakeCustomActionBasePlugin).fetchCustomActionProperties(fakeId).then(() => {
+    void (runner.plugin as MyFakeCustomActionBasePlugin).fetchCustomActionProperties(fakeId).then(() => {
       expect(rpMockup.args[0][0].uri).to.be.eq(
         `${this.outboundPlatformUrl}/v1/scenario_custom_actions/${fakeId}/properties`,
       );
@@ -69,7 +73,7 @@ describe('Fetch Scenario Custom Action Gateway API', () => {
     const fakeId = '62';
 
     // We try to call the Gateway
-    (runner.plugin as MyFakeCustomActionBasePlugin).fetchCustomAction(fakeId).then(() => {
+    void (runner.plugin as MyFakeCustomActionBasePlugin).fetchCustomAction(fakeId).then(() => {
       expect(rpMockup.args[0][0].uri).to.be.eq(`${this.outboundPlatformUrl}/v1/scenario_custom_actions/${fakeId}`);
       done();
     });
@@ -152,7 +156,7 @@ describe.only('Custom Action API test', function () {
       scenario_id: '888',
     };
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .post('/v1/scenario_custom_actions')
       .send(customActionRequest)
       .end(function (err, res) {

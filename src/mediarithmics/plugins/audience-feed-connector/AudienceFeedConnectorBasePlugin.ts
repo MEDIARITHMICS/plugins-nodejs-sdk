@@ -1,10 +1,15 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
+/* eslint-disable @typescript-eslint/unbound-method */
+
 import express from 'express';
 import _ from 'lodash';
 
-import { PluginProperty } from '../../';
+import { PluginProperty, PluginPropertyResponse } from '../../';
 import {
   AudienceSegmentExternalFeedResource,
+  AudienceSegmentexternalResourceResponse,
   AudienceSegmentResource,
+  AudienceSegmentResourceResponse,
 } from '../../api/core/audiencesegment/AudienceSegmentInterface';
 import {
   BatchUpdatePluginResponse,
@@ -36,7 +41,7 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
   }
 
   async fetchAudienceSegment(feedId: string): Promise<AudienceSegmentResource> {
-    const response = await super.requestGatewayHelper(
+    const response = await super.requestGatewayHelper<AudienceSegmentResourceResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/audience_segment`,
     );
@@ -45,7 +50,7 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
   }
 
   async fetchAudienceFeed(feedId: string): Promise<AudienceSegmentExternalFeedResource> {
-    const response = await super.requestGatewayHelper(
+    const response = await super.requestGatewayHelper<AudienceSegmentexternalResourceResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}`,
     );
@@ -57,7 +62,7 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
   // To be overriden to get a cutom behavior
 
   async fetchAudienceFeedProperties(feedId: string): Promise<PluginProperty[]> {
-    const response = await super.requestGatewayHelper(
+    const response = await super.requestGatewayHelper<PluginPropertyResponse>(
       'GET',
       `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/properties`,
     );
@@ -105,10 +110,10 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
 
   protected async getInstanceContext(feedId: string): Promise<AudienceFeedConnectorBaseInstanceContext> {
     if (!this.pluginCache.get(feedId)) {
-      this.pluginCache.put(
+      void this.pluginCache.put(
         feedId,
         this.instanceContextBuilder(feedId).catch((err) => {
-          this.logger.error(`Error while caching instance context: ${err.message}`);
+          this.logger.error(`Error while caching instance context: ${(err as Error).message}`);
           this.pluginCache.del(feedId);
           throw err;
         }),
@@ -166,11 +171,15 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
           const statusCode = response.status === 'ok' ? 200 : 500;
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
-        } catch (error) {
-          this.logger.error(`Something bad happened : ${error.message} - ${error.stack}`);
+        } catch (err) {
+          this.logger.error(
+            `Something bad happened : ${(err as Error).message} - ${
+              (err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
+            }`,
+          );
           const pluginResponse: ExternalSegmentCreationPluginResponse = {
             status: 'error',
-            message: `${error.message}`,
+            message: `${(err as Error).message}`,
             visibility: 'PRIVATE',
           };
           return res.status(500).send(pluginResponse);
@@ -230,9 +239,13 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
           this.logger.debug(`FeedId: ${request.feed_id} - Returning: ${statusCode} - ${JSON.stringify(response)}`);
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
-        } catch (error) {
-          this.logger.error(`Something bad happened : ${error.message} - ${error.stack}`);
-          return res.status(500).send({ status: 'error', message: `${error.message}` });
+        } catch (err) {
+          this.logger.error(
+            `Something bad happened : ${(err as Error).message} - ${
+              (err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
+            }`,
+          );
+          return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
         }
       },
     );
@@ -297,9 +310,13 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
           }
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
-        } catch (error) {
-          this.logger.error(`Something bad happened : ${error.message} - ${error.stack}`);
-          return res.status(500).send({ status: 'error', message: `${error.message}` });
+        } catch (err) {
+          this.logger.error(
+            `Something bad happened : ${(err as Error).message} - ${
+              (err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
+            }`,
+          );
+          return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
         }
       },
     );
@@ -353,9 +370,13 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
         }
 
         return res.status(statusCode).send(JSON.stringify(pluginResponse));
-      } catch (error) {
-        this.logger.error(`Something bad happened : ${error.message} - ${error.stack}`);
-        return res.status(500).send({ status: 'error', message: `${error.message}` });
+      } catch (err) {
+        this.logger.error(
+          `Something bad happened : ${(err as Error).message} - ${
+            (err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
+          }`,
+        );
+        return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
       }
     });
   }

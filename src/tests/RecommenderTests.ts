@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import 'mocha';
 
 import { expect } from 'chai';
@@ -24,7 +27,7 @@ describe('Fetch recommender API', () => {
         $id: '42',
       };
 
-      const response: core.RecommenderPluginResponse = {
+      const response: core.RecommendationsWrapper = {
         ts: Date.now(),
         proposals: [proposal],
         recommendation_log: 'yolo',
@@ -48,7 +51,7 @@ describe('Fetch recommender API', () => {
     const fakeRecommenderId = '42000000';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeRecommenderPlugin).fetchRecommenderProperties(fakeRecommenderId).then(() => {
+    void (runner.plugin as MyFakeRecommenderPlugin).fetchRecommenderProperties(fakeRecommenderId).then(() => {
       expect(rpMockup.args[0][0].uri).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/recommenders/${fakeRecommenderId}/properties`,
       );
@@ -60,7 +63,7 @@ describe('Fetch recommender API', () => {
     const fakeRecommenderId = '4255';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeRecommenderPlugin).fetchRecommenderCatalogs(fakeRecommenderId).then(() => {
+    void (runner.plugin as MyFakeRecommenderPlugin).fetchRecommenderCatalogs(fakeRecommenderId).then(() => {
       expect(rpMockup.args[1][0].uri).to.be.eq(
         `${plugin.outboundPlatformUrl}/v1/recommenders/${fakeRecommenderId}/catalogs`,
       );
@@ -75,7 +78,7 @@ describe('Recommender API test', function () {
       request: core.RecommenderRequest,
       instanceContext: core.RecommenderBaseInstanceContext,
     ) {
-      const response: core.RecommenderPluginResponse = {
+      const response: core.RecommendationsWrapper = {
         ts: Date.now(),
         recommendation_log: '',
         proposals: [],
@@ -130,7 +133,7 @@ describe('Recommender API test', function () {
       },
     };
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .post('/v1/recommendations')
       .send(requestBody)
       .end(function (err, res) {

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import 'mocha';
 
 import { expect } from 'chai';
@@ -20,7 +22,7 @@ describe('Plugin Status API Tests', function () {
     const plugin = new MyFakePlugin(false);
     const runner = new core.TestingPluginRunner(plugin);
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .get('/v1/status')
       .end(function (err, res) {
         expect(res.status).to.equal(200);
@@ -40,7 +42,7 @@ describe('Plugin log level API tests', function () {
       level: 'debug',
     };
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .put('/v1/log_level')
       .send(requestBody)
       .end(function (err, res) {
@@ -58,7 +60,7 @@ describe('Plugin log level API tests', function () {
       hector: 'debug',
     };
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .put('/v1/log_level')
       .send(requestBody)
       .end(function (err, res) {
@@ -75,14 +77,14 @@ describe('Plugin log level API tests', function () {
       level: 'WARN',
     };
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .put('/v1/log_level')
       .send(requestBody)
       .end(function (err, res) {
         expect(res.status).to.equal(200);
       });
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .get('/v1/log_level')
       .end(function (err, res) {
         expect(res.status).to.equal(200);
@@ -93,7 +95,7 @@ describe('Plugin log level API tests', function () {
 });
 
 describe('Request Gateway helper API tests', function () {
-  let rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve('YOLO'));
+  const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve('YOLO'));
 
   class MyFakePlugin extends core.BasePlugin {}
 
@@ -105,7 +107,7 @@ describe('Request Gateway helper API tests', function () {
     const fakeMethod = 'GET';
 
     // We try a call to the Gateway
-    runner.plugin.requestGatewayHelper('GET', fakeUri).then(() => {
+    void runner.plugin.requestGatewayHelper('GET', fakeUri).then(() => {
       expect(rpMockup.args[0][0].method).to.be.eq(fakeMethod);
       expect(rpMockup.args[0][0].uri).to.be.eq(fakeUri);
       done();
@@ -117,7 +119,7 @@ describe('Request Gateway helper API tests', function () {
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     // We try a call to the Gateway
-    runner.plugin.requestGatewayHelper('GET', '/v1/easter_eggs/').then(() => {
+    void runner.plugin.requestGatewayHelper('GET', '/v1/easter_eggs/').then(() => {
       expect(rpMockup.args[1][0].auth.pass).to.be.eq(PLUGIN_AUTHENTICATION_TOKEN);
       expect(rpMockup.args[1][0].auth.user).to.be.eq(PLUGIN_WORKER_ID);
       done();
@@ -133,7 +135,7 @@ describe('Request Gateway helper API tests', function () {
     const fakeBody = { sucess: true };
 
     // We try a call to the Gateway
-    runner.plugin.requestGatewayHelper('GET', fakeUri, fakeBody).then(() => {
+    void runner.plugin.requestGatewayHelper('GET', fakeUri, fakeBody).then(() => {
       expect(rpMockup.args[2][0].method).to.be.eq(fakeMethod);
       expect(rpMockup.args[2][0].uri).to.be.eq(fakeUri);
       expect(rpMockup.args[2][0].body).to.be.eq(fakeBody);
@@ -158,7 +160,7 @@ describe('Data File helper Tests', function () {
     const fakeDataFileURI = 'mics://fake_dir/fake_file';
 
     // We try a call to the Gateway
-    runner.plugin.fetchDataFile(fakeDataFileURI).then((file) => {
+    void runner.plugin.fetchDataFile(fakeDataFileURI).then((file) => {
       expect(rpMockup.args[0][0].method).to.be.eq(method);
       expect(rpMockup.args[0][0].uri).to.be.eq(
         `http://${runner.plugin.gatewayHost}:${runner.plugin.gatewayPort}${dataFileGatewayURI}`,
@@ -175,7 +177,7 @@ describe('Data File helper Tests', function () {
     const confFileGatewayURI = `/v1/configuration/technical_name=${confFileName}`;
 
     // We try a call to the Gateway
-    runner.plugin.fetchConfigurationFile(confFileName).then((file) => {
+    void runner.plugin.fetchConfigurationFile(confFileName).then((file) => {
       expect(rpMockup.args[1][0].method).to.be.eq(method);
       expect(rpMockup.args[1][0].uri).to.be.eq(
         `http://${runner.plugin.gatewayHost}:${runner.plugin.gatewayPort}${confFileGatewayURI}`,

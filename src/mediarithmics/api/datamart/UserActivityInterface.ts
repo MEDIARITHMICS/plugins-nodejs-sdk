@@ -62,8 +62,6 @@ export interface UserActivityLocation extends Customizable {
   $latlon: number[];
 }
 
-export interface UserActivityEventProperty extends Customizable {}
-
 export interface CampaignTrackingProperties extends Customizable {
   $campaign_technical_name?: string;
   $sub_campaign_technical_name?: string;
@@ -137,5 +135,5 @@ export interface ConversionEvent {
 export interface GenericUserActivityEvent {
   $ts: number;
   $event_name: EventName;
-  $properties: Index<any>;
+  $properties: Index<unknown>;
 }
