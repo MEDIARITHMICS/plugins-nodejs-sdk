@@ -1,3 +1,4 @@
+import { Option } from '../../../utils';
 import {
   AdLayoutPropertyResource,
   AssetFilePropertyResource,
@@ -13,10 +14,8 @@ import {
   RecommenderPropertyResource,
   StringPropertyResource,
   StyleSheetPropertyResource,
-  UrlPropertyResource
+  UrlPropertyResource,
 } from './ValueInterface';
-
-import {Option} from '../../../utils';
 
 export interface PluginPropertyResponse {
   status: string;
@@ -143,62 +142,46 @@ export interface NativeImageProperty extends AbstractProperty {
   value: NativeImagePropertyResource;
 }
 
-export function asBooleanProperty(p: PluginProperty): Option<BooleanProperty> {
+export const asBooleanProperty = (p: PluginProperty): Option<BooleanProperty> => {
   return p.property_type === 'BOOLEAN' ? p : undefined;
-}
+};
 
-export function asAssetFileProperty(
-  p: PluginProperty
-): Option<AssetFileProperty> {
-  return ((p.property_type === 'ASSET_FILE') || (p.property_type === 'ASSET')) ? p : undefined;
-}
+export const asAssetFileProperty = (p: PluginProperty): Option<AssetFileProperty> => {
+  return p.property_type === 'ASSET_FILE' || p.property_type === 'ASSET' ? p : undefined;
+};
 
-export function asAssetFolderProperty(
-  p: PluginProperty
-): Option<AssetFolderProperty> {
+export const asAssetFolderProperty = (p: PluginProperty): Option<AssetFolderProperty> => {
   return p.property_type === 'ASSET_FOLDER' ? p : undefined;
-}
+};
 
-export function asDataFileProperty(
-  p: PluginProperty
-): Option<DataFileProperty> {
+export const asDataFileProperty = (p: PluginProperty): Option<DataFileProperty> => {
   return p.property_type === 'DATA_FILE' ? p : undefined;
-}
+};
 
-export function asAdLayoutProperty(
-  p: PluginProperty
-): Option<AdLayoutProperty> {
+export const asAdLayoutProperty = (p: PluginProperty): Option<AdLayoutProperty> => {
   return p.property_type === 'AD_LAYOUT' ? p : undefined;
-}
+};
 
-export function asUrlProperty(p: PluginProperty): Option<UrlProperty> {
+export const asUrlProperty = (p: PluginProperty): Option<UrlProperty> => {
   return p.property_type === 'URL' ? p : undefined;
-}
+};
 
-export function asRecommenderProperty(
-  p: PluginProperty
-): Option<RecommenderProperty> {
+export const asRecommenderProperty = (p: PluginProperty): Option<RecommenderProperty> => {
   return p.property_type === 'RECOMMENDER' ? p : undefined;
-}
+};
 
-export function asStringProperty(p: PluginProperty): Option<StringProperty> {
+export const asStringProperty = (p: PluginProperty): Option<StringProperty> => {
   return p.property_type === 'STRING' ? p : undefined;
-}
+};
 
-export function asNativeDataProperty(
-  p: PluginProperty
-): Option<NativeDataProperty> {
+export const asNativeDataProperty = (p: PluginProperty): Option<NativeDataProperty> => {
   return p.property_type === 'NATIVE_DATA' ? p : undefined;
-}
+};
 
-export function asNativeTitleProperty(
-  p: PluginProperty
-): Option<NativeTitleProperty> {
+export const asNativeTitleProperty = (p: PluginProperty): Option<NativeTitleProperty> => {
   return p.property_type === 'NATIVE_TITLE' ? p : undefined;
-}
+};
 
-export function asNativeImageProperty(
-  p: PluginProperty
-): Option<NativeImageProperty> {
+export const asNativeImageProperty = (p: PluginProperty): Option<NativeImageProperty> => {
   return p.property_type === 'NATIVE_IMAGE' ? p : undefined;
-}
+};

@@ -1,10 +1,12 @@
-import {expect} from 'chai';
 import 'mocha';
-import {core} from '@mediarithmics/plugins-nodejs-sdk';
-import * as request from 'supertest';
-import * as sinon from 'sinon';
-import {MyBidOptimizerPlugin} from '../MyPluginImpl';
 
+import { expect } from 'chai';
+import sinon from 'sinon';
+import request from 'supertest';
+
+import { core } from '@mediarithmics/plugins-nodejs-sdk';
+
+import { MyBidOptimizerPlugin } from '../MyPluginImpl';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
 const PLUGIN_WORKER_ID = 'Calavera';
@@ -26,8 +28,8 @@ describe('Test Example BidOptimizer', function () {
       organisation_id: '1000',
       engine_version_id: '123456',
       engine_group_id: 'com.mediarithmics.visit-analyzer',
-      engine_artifact_id: 'default'
-    }
+      engine_artifact_id: 'default',
+    },
   };
 
   rpMockup
@@ -36,8 +38,8 @@ describe('Test Example BidOptimizer', function () {
         'uri',
         sinon.match(function (value: string) {
           return value.match(/\/v1\/bid_optimizers\/(.){1,10}/) !== null;
-        })
-      )
+        }),
+      ),
     )
     .returns(bidOptimizer);
 
@@ -48,16 +50,15 @@ describe('Test Example BidOptimizer', function () {
       {
         technical_name: 'name',
         value: {
-          value:
-            'my bid optimizer',
+          value: 'my bid optimizer',
         },
         property_type: 'STRING',
         origin: 'PLUGIN',
         writable: true,
-        deletable: true
-      }
+        deletable: true,
+      },
     ],
-    status: 'ok'
+    status: 'ok',
   };
 
   rpMockup
@@ -65,12 +66,9 @@ describe('Test Example BidOptimizer', function () {
       sinon.match.has(
         'uri',
         sinon.match(function (value: string) {
-          return (
-            value.match(/\/v1\/bid_optimizers\/(.){1,10}\/properties/) !==
-            null
-          );
-        })
-      )
+          return value.match(/\/v1\/bid_optimizers\/(.){1,10}\/properties/) !== null;
+        }),
+      ),
     )
     .returns(bidOptimizerProperties);
 
@@ -158,7 +156,7 @@ describe('Test Example BidOptimizer', function () {
             },
             "user_campaign_data_bag":null,
             "data_feeds":[
-         
+
             ]
          }`);
 
@@ -170,7 +168,7 @@ describe('Test Example BidOptimizer', function () {
     // Plugin log level to debug
     request(runner.plugin.app)
       .put('/v1/log_level')
-      .send({level: 'debug'})
+      .send({ level: 'debug' })
       .end((err, res) => {
         expect(res.status).to.equal(200);
 
@@ -181,7 +179,9 @@ describe('Test Example BidOptimizer', function () {
           .end((err, res) => {
             expect(res.status).to.eq(200);
 
-            expect((JSON.parse(res.text) as core.BidOptimizerPluginResponse).bids[0].bid_price).to.be.eq(bidDecisionRequest.campaign_info.max_bid_price);
+            expect((JSON.parse(res.text) as core.BidOptimizerPluginResponse).bids[0].bid_price).to.be.eq(
+              bidDecisionRequest.campaign_info.max_bid_price,
+            );
             done();
           });
       });

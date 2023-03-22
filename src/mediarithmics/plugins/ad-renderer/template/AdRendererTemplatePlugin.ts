@@ -1,27 +1,24 @@
-import {map} from '../../../utils';
+import { map } from '../../../utils';
+import { TemplatingEngine } from '../../common/TemplatingInterface';
+import { AdRendererBaseInstanceContext, AdRendererBasePlugin } from '../base/AdRendererBasePlugin';
 
-import {AdRendererBaseInstanceContext, AdRendererBasePlugin} from '../base/AdRendererBasePlugin';
-import {TemplatingEngine} from '../../common/TemplatingInterface';
-
-export interface AdRendererTemplateInstanceContext
-  extends AdRendererBaseInstanceContext {
+export interface AdRendererTemplateInstanceContext extends AdRendererBaseInstanceContext {
   width: string;
   height: string;
   creative_click_url?: string;
-  render_click_url?: (...args: any[]) => string;
+  render_click_url?: (...args: unknown[]) => string;
   ias_client_id?: string;
-  render_additional_html?: (...args: any[]) => string;
+  render_additional_html?: (...args: unknown[]) => string;
 }
 
 export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<AdRendererBaseInstanceContext> {
-
   /**
    * The engineBuilder that can be used to compile the template
    * during the InstanceContext building
    *
    * Have to be overriden (see examples)
    */
-  protected abstract engineBuilder: TemplatingEngine<any, any, any>;
+  protected abstract engineBuilder: TemplatingEngine<unknown, string | undefined, (...args: unknown[]) => string>;
 
   constructor(enableThrottling = false) {
     super(enableThrottling);
@@ -46,7 +43,7 @@ export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<AdRe
    */
   protected async instanceContextBuilder(
     creativeId: string,
-    forceReload = false
+    forceReload = false,
   ): Promise<AdRendererTemplateInstanceContext> {
     const baseInstanceContext = await super.instanceContextBuilder(creativeId, forceReload);
 
@@ -64,27 +61,19 @@ export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<AdRe
       this.logger.warn(msg);
     }
 
-    const creativeClickUrl = map(urlProperty, p => p.value.url);
+    const creativeClickUrl = map(urlProperty, (p) => p.value.url);
 
-    const compiledClickUrl =
-      map(creativeClickUrl,
-        url => this.engineBuilder.compile(url));
+    const compiledClickUrl = map(creativeClickUrl, (url) => this.engineBuilder.compile(url));
 
     const additionalHTMLProperty = baseInstanceContext.properties.findStringProperty('additional_html');
 
-    const additionalHTML =
-      map(additionalHTMLProperty,
-        p => p.value.value);
+    const additionalHTML = map(additionalHTMLProperty, (p) => p.value.value);
 
-    const compiledAdditionalHTML =
-      map(additionalHTML,
-        html => this.engineBuilder.compile(html));
+    const compiledAdditionalHTML = map(additionalHTML, (html) => this.engineBuilder.compile(html));
 
     const IASProperty = baseInstanceContext.properties.findStringProperty('ias_client_id');
 
-    const IASClientId =
-      map(IASProperty,
-        p => p.value.value);
+    const IASClientId = map(IASProperty, (p) => p.value.value);
 
     const width = baseInstanceContext.displayAd.format.split('x')[0];
     const height = baseInstanceContext.displayAd.format.split('x')[1];
@@ -97,7 +86,7 @@ export abstract class AdRendererTemplatePlugin extends AdRendererBasePlugin<AdRe
       creative_click_url: creativeClickUrl,
       render_click_url: compiledClickUrl,
       render_additional_html: compiledAdditionalHTML,
-      ias_client_id: IASClientId
+      ias_client_id: IASClientId,
     };
 
     return context;

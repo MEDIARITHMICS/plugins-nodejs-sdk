@@ -1,3 +1,7 @@
+import { DataResponse } from '../../api/core/common/Response';
+
+export type CustomActionResponse = DataResponse<CustomAction>;
+
 export interface CustomActionRequest {
   user_point_id: string;
   custom_action_id: string;
@@ -7,7 +11,7 @@ export interface CustomActionRequest {
 }
 
 export interface CustomActionPluginResponse {
-  status: "ok" | "ko";
+  status: 'ok' | 'ko';
 }
 
 export interface CustomAction {

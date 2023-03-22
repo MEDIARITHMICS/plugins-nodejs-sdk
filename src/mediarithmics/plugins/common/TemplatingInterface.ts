@@ -6,7 +6,7 @@
  * `{{HELLO.WORLD}}` should return { "parts": ["HELLO", "WORLD"] }
  */
 export interface TemplateMacro {
-  parts: string[]
+  parts: string[];
 }
 
 /**
@@ -41,5 +41,5 @@ export interface ExploreableInternalsTemplatingEngine<Opt, In, Out, Internals> e
  * Allow the Plugin Impl. to provide some Profile Data to the Templating engine through a Provider function
  */
 export interface ProfileDataTemplater {
-  enableProfileDataLayer(): void
+  enableProfileDataLayer(): void;
 }

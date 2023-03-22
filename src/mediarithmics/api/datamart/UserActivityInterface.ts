@@ -1,18 +1,8 @@
-import {Customizable} from '../core/common/Customizable';
-import {Index} from '../../utils';
+import { Index } from '../../utils';
+import { Customizable } from '../core/common/Customizable';
 
-export type UserActivityTypeEnum =
-  | 'SITE_VISIT'
-  | 'APP_VISIT'
-  | 'TOUCH'
-  | 'EMAIL'
-  | 'DISPLAY_AD'
-  | 'RECOMMENDER';
-export type UserActivitySessionStatusEnum =
-  | 'NO_SESSION'
-  | 'IN_SESSION'
-  | 'CLOSED_SESSION'
-  | 'SESSION_SNAPSHOT';
+export type UserActivityTypeEnum = 'SITE_VISIT' | 'APP_VISIT' | 'TOUCH' | 'EMAIL' | 'DISPLAY_AD' | 'RECOMMENDER';
+export type UserActivitySessionStatusEnum = 'NO_SESSION' | 'IN_SESSION' | 'CLOSED_SESSION' | 'SESSION_SNAPSHOT';
 export type LocationSourceEnum = 'GPS' | 'IP' | 'OTHER';
 
 export interface EmailHash {
@@ -20,9 +10,7 @@ export interface EmailHash {
   $email?: string;
 }
 
-export interface UserActivity
-  extends Customizable {
-
+export interface UserActivity extends Customizable {
   $ts?: number;
   $type: UserActivityTypeEnum;
   $session_status: UserActivitySessionStatusEnum;
@@ -43,9 +31,7 @@ export interface UserVisitActivity extends UserActivity {
   $app_id?: string;
 }
 
-export interface UserActivityOrigin
-  extends Customizable {
-
+export interface UserActivityOrigin extends Customizable {
   $campaign_id?: number;
   $campaign_name?: string;
   $channel?: string;
@@ -65,9 +51,7 @@ export interface UserActivityOrigin
   $ts?: number;
 }
 
-export interface UserActivityLocation
-  extends Customizable {
-
+export interface UserActivityLocation extends Customizable {
   $source?: LocationSourceEnum;
   $country?: string;
   $region?: string;
@@ -76,16 +60,9 @@ export interface UserActivityLocation
   $iso_city?: string;
   $zip_code?: string;
   $latlon: number[];
-
 }
 
-
-export interface UserActivityEventProperty extends Customizable {
-}
-
-export interface CampaignTrackingProperties
-  extends Customizable {
-
+export interface CampaignTrackingProperties extends Customizable {
   $campaign_technical_name?: string;
   $sub_campaign_technical_name?: string;
   $message_technical_name?: string;
@@ -96,9 +73,7 @@ export interface CampaignTrackingProperties
   $creative_id?: number;
 }
 
-export interface ConversionProperties
-  extends Customizable {
-
+export interface ConversionProperties extends Customizable {
   $conversion_id?: string;
   $goal_id?: number;
   //@Deprecated
@@ -112,7 +87,7 @@ export interface ConversionProperties
 }
 
 export type PlatformEventName =
-  '$ad_click'
+  | '$ad_click'
   | '$ad_view'
   | '$conversion'
   | '$category_view'
@@ -135,39 +110,30 @@ export type PlatformEventName =
   | '$set_user_profile_properties'
   | '$content_corrections';
 
-export type EventName =
-  PlatformEventName
-  | string;
+export type EventName = PlatformEventName | string;
 
-
-export type UserActivityEvent =
-  AdClickEvent
-  | AdViewEvent
-  | ConversionEvent
-  | GenericUserActivityEvent
-  ;
+export type UserActivityEvent = AdClickEvent | AdViewEvent | ConversionEvent | GenericUserActivityEvent;
 
 export interface AdClickEvent {
   $ts: number;
   $event_name: '$ad_click';
-  $properties: CampaignTrackingProperties
+  $properties: CampaignTrackingProperties;
 }
 
 export interface AdViewEvent {
   $ts: number;
   $event_name: '$ad_view';
-  $properties: CampaignTrackingProperties
+  $properties: CampaignTrackingProperties;
 }
 
 export interface ConversionEvent {
   $ts: number;
   $event_name: '$conversion';
-  $properties: ConversionProperties
+  $properties: ConversionProperties;
 }
 
 export interface GenericUserActivityEvent {
   $ts: number;
   $event_name: EventName;
-  $properties: Index<any>
+  $properties: Index<unknown>;
 }
-

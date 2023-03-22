@@ -1,12 +1,13 @@
-import {BasePlugin} from './BasePlugin';
-import {Server} from 'http';
-import * as cluster from 'cluster';
-import {Credentials} from './index';
+import cluster, { Worker } from 'cluster';
+import { Server } from 'http';
+import { cpus } from 'os';
+
+import { BasePlugin } from './BasePlugin';
 
 export enum MsgCmd {
   LOG_LEVEL_UPDATE_FROM_WORKER,
   LOG_LEVEL_UPDATE_FROM_MASTER,
-  GET_LOG_LEVEL_REQUEST
+  GET_LOG_LEVEL_REQUEST,
 }
 
 export interface SocketMsg {
@@ -15,7 +16,7 @@ export interface SocketMsg {
 }
 
 export class ProductionPluginRunner {
-  numCPUs = require('os').cpus().length;
+  numCPUs = cpus().length;
 
   pluginPort: number;
 
@@ -33,7 +34,7 @@ export class ProductionPluginRunner {
   broadcastLogLevelToWorkers = () => {
     const msg = {
       cmd: MsgCmd.LOG_LEVEL_UPDATE_FROM_MASTER,
-      value: this.plugin.logger.level
+      value: this.plugin.logger.level,
     };
 
     for (const id in cluster.workers) {
@@ -52,11 +53,11 @@ export class ProductionPluginRunner {
    * 4 - If a worker is asking for a log level update (ex: the worker was just created because one of his friends died), the master should send a message to each workers
    * @param recMsg
    */
-  masterListener = (worker: cluster.Worker, recMsg: SocketMsg) => {
+  masterListener = (worker: Worker, recMsg: SocketMsg) => {
     this.plugin.logger.debug(
-      `Master ${process.pid} is being called with cmd: ${
-        MsgCmd[recMsg.cmd]
-      }, value: ${recMsg.value}`
+      `Master ${process.pid} is being called with cmd: ${MsgCmd[recMsg.cmd]}, value: ${
+        recMsg.value ? recMsg.value : 'undefined'
+      }`,
     );
 
     if (recMsg.cmd === MsgCmd.LOG_LEVEL_UPDATE_FROM_WORKER) {
@@ -67,11 +68,10 @@ export class ProductionPluginRunner {
         this.broadcastLogLevelToWorkers();
       } else {
         throw new Error(
-          'We received a LOG_LEVEL_UPDATE_FROM_WORKER msg without logLevel in the value field of the msg.'
+          'We received a LOG_LEVEL_UPDATE_FROM_WORKER msg without logLevel in the value field of the msg.',
         );
       }
     }
-
   };
 
   /**
@@ -80,26 +80,22 @@ export class ProductionPluginRunner {
    */
   workerListener = (recMsg: SocketMsg) => {
     this.plugin.logger.debug(
-      `Worker ${process.pid} is being called with cmd: ${
-        MsgCmd[recMsg.cmd]
-      }, value: ${recMsg.value}`
+      `Worker ${process.pid} is being called with cmd: ${MsgCmd[recMsg.cmd]}, value: ${
+        recMsg.value ? recMsg.value : 'undefined'
+      }`,
     );
 
     if (recMsg.cmd === MsgCmd.LOG_LEVEL_UPDATE_FROM_MASTER) {
       if (!recMsg.value) {
         throw new Error(
-          'We received a LOG_LEVEL_UPDATE_FROM_MASTER msg without logLevel in the value field of the msg.'
+          'We received a LOG_LEVEL_UPDATE_FROM_MASTER msg without logLevel in the value field of the msg.',
         );
       }
       const level = recMsg.value.toLocaleLowerCase();
 
-      const logLevelUpdateResult = this.plugin.onLogLevelUpdate(level);
+      this.plugin.onLogLevelUpdate(level);
 
-      this.plugin.logger.debug(
-        `${process.pid}: Updated log level with: ${JSON.stringify(
-          this.plugin.logger.level
-        )}`
-      );
+      this.plugin.logger.debug(`${process.pid}: Updated log level with: ${JSON.stringify(this.plugin.logger.level)}`);
     }
   };
 
@@ -114,7 +110,6 @@ export class ProductionPluginRunner {
     const serverPort = port ? port : this.pluginPort;
 
     if (multiProcessEnabled) {
-
       if (cluster.isMaster) {
         this.plugin.logger.info(`Master ${process.pid} is running`);
 
@@ -128,10 +123,10 @@ export class ProductionPluginRunner {
 
         // Sometimes, workers dies
         cluster.on('exit', (worker, code, signal) => {
-          this.plugin.logger.info(`worker ${worker.process.pid} died`);
+          this.plugin.logger.info(`worker ${worker.process.pid as number} died`);
 
           // We add a new worker, with the proper socket listener
-          const newWorker = cluster.fork();
+          cluster.fork();
         });
       } else {
         // We pass the Plugin into MT mode
@@ -143,21 +138,15 @@ export class ProductionPluginRunner {
         const serverPort = port ? port : this.pluginPort;
 
         this.server = this.plugin.app.listen(serverPort, () =>
-          this.plugin.logger.info(
-            `${process.pid} Plugin started, listening at ${serverPort}`
-          )
+          this.plugin.logger.info(`${process.pid} Plugin started, listening at ${serverPort}`),
         );
 
         this.plugin.logger.info(`Worker ${process.pid} started`);
       }
-
     } else {
       this.server = this.plugin.app.listen(serverPort, () =>
-        this.plugin.logger.info(
-          `${process.pid} Plugin started, listening at ${serverPort}`
-        )
+        this.plugin.logger.info(`${process.pid} Plugin started, listening at ${serverPort}`),
       );
     }
-
   }
 }

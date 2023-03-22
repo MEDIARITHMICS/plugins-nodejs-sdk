@@ -1,8 +1,13 @@
-import {expect} from 'chai';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import 'mocha';
-import {core} from '../';
-import * as request from 'supertest';
-import * as sinon from 'sinon';
+
+import { expect } from 'chai';
+import sinon from 'sinon';
+import request from 'supertest';
+
+import { core } from '../';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
 const PLUGIN_WORKER_ID = 'Calavera';
@@ -14,11 +19,11 @@ process.env.PLUGIN_WORKER_ID = PLUGIN_WORKER_ID;
 class MyFakeEmailRendererPlugin extends core.EmailRendererPlugin {
   protected onEmailContents(
     request: core.EmailRenderRequest,
-    instanceContext: core.EmailRendererBaseInstanceContext
+    instanceContext: core.EmailRendererBaseInstanceContext,
   ): Promise<core.EmailRendererPluginResponse> {
     const response: core.EmailRendererPluginResponse = {
       content: {
-        html: request.call_id
+        html: request.call_id,
       },
       meta: {
         from_email: 'hello@hello.com',
@@ -26,8 +31,8 @@ class MyFakeEmailRendererPlugin extends core.EmailRendererPlugin {
         to_email: 'hello@destination.com',
         to_name: 'Destination',
         reply_to: 'hello@hello.com',
-        subject_line: 'Hello You!'
-      }
+        subject_line: 'Hello You!',
+      },
     };
 
     return Promise.resolve(response);
@@ -37,7 +42,7 @@ class MyFakeEmailRendererPlugin extends core.EmailRendererPlugin {
 const rpMockup: sinon.SinonStub = sinon.stub().returns(
   new Promise((resolve, reject) => {
     resolve('Yolo');
-  })
+  }),
 );
 
 describe('Fetch Email Renderer API', () => {
@@ -45,30 +50,21 @@ describe('Fetch Email Renderer API', () => {
   const plugin = new MyFakeEmailRendererPlugin(false);
   const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-  it('Check that email_renderer_id is passed correctly in fetchCreative & fetchCreativeProperties', function (
-    done
-  ) {
+  it('Check that email_renderer_id is passed correctly in fetchCreative & fetchCreativeProperties', function (done) {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeEmailRendererPlugin)
-      .fetchCreative(fakeId)
-      .then(() => {
-        expect(rpMockup.args[0][0].uri).to.be.eq(
-          `${runner.plugin.outboundPlatformUrl}/v1/creatives/${fakeId}`
-        );
+    void (runner.plugin as MyFakeEmailRendererPlugin).fetchCreative(fakeId).then(() => {
+      expect(rpMockup.args[0][0].uri).to.be.eq(`${runner.plugin.outboundPlatformUrl}/v1/creatives/${fakeId}`);
 
-        // We try a call to the Gateway
-        (runner.plugin as MyFakeEmailRendererPlugin)
-          .fetchCreativeProperties(fakeId)
-          .then(() => {
-            expect(rpMockup.args[1][0].uri).to.be.eq(
-              `${runner.plugin
-                .outboundPlatformUrl}/v1/creatives/${fakeId}/renderer_properties`
-            );
-            done();
-          });
+      // We try a call to the Gateway
+      void (runner.plugin as MyFakeEmailRendererPlugin).fetchCreativeProperties(fakeId).then(() => {
+        expect(rpMockup.args[1][0].uri).to.be.eq(
+          `${runner.plugin.outboundPlatformUrl}/v1/creatives/${fakeId}/renderer_properties`,
+        );
+        done();
       });
+    });
   });
 });
 
@@ -77,9 +73,7 @@ describe('Email Renderer API test', function () {
   const plugin = new MyFakeEmailRendererPlugin(false);
   let runner: core.TestingPluginRunner;
 
-  it('Check that the plugin is giving good results with a simple onEmailContents handler', function (
-    done
-  ) {
+  it('Check that the plugin is giving good results with a simple onEmailContents handler', function (done) {
     const rpMockup = sinon.stub();
 
     rpMockup.onCall(0).returns(
@@ -104,11 +98,11 @@ describe('Email Renderer API test', function () {
             renderer_artifact_id: 'email-handlebars-template',
             renderer_plugin_id: '1034',
             creation_date: 1504533940679,
-            subtype: 'EMAIL_TEMPLATE'
-          }
+            subtype: 'EMAIL_TEMPLATE',
+          },
         };
         resolve(creative);
-      })
+      }),
     );
     rpMockup.onCall(1).returns(
       new Promise((resolve, reject) => {
@@ -119,52 +113,49 @@ describe('Email Renderer API test', function () {
             {
               technical_name: 'hello_world',
               value: {
-                value: 'Yay'
+                value: 'Yay',
               },
               property_type: 'STRING',
               origin: 'PLUGIN',
               writable: true,
-              deletable: false
-            }
-          ]
+              deletable: false,
+            },
+          ],
         };
         resolve(pluginInfo);
-      })
+      }),
     );
 
     runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-    const requestBody = JSON.parse(`{
-          "email_renderer_id": "1034",
-          "call_id": "8e20e0fc-acb5-4bf3-8e36-f85a9ff25150",
-          "context": "LIVE",
-          "creative_id": "6475",
-          "campaign_id": "1810",
-          "campaign_technical_name": null,
-          "user_identifiers": [
-            {
-              "type": "USER_POINT",
-              "user_point_id": "62ce5f30-191d-40fb-bd6b-8ea6f39c80eb"
-            },
-            {
-              "type": "USER_EMAIL",
-              "hash": "8865501e69c464f42a5ae7bada6d342a",
-              "email": "email_mics_152@yopmail.com",
-              "operator": null,
-              "creation_ts": 1489688728108,
-              "last_activity_ts": 1489688728108,
-              "providers": [
-              ]
-            }
-          ],
-          "user_data_bag": {
-          },
-          "click_urls": [
-          ],
-          "email_tracking_url": null
-        }`);
+    const requestBody = {
+      email_renderer_id: '1034',
+      call_id: '8e20e0fc-acb5-4bf3-8e36-f85a9ff25150',
+      context: 'LIVE',
+      creative_id: '6475',
+      campaign_id: '1810',
+      campaign_technical_name: null,
+      user_identifiers: [
+        {
+          type: 'USER_POINT',
+          user_point_id: '62ce5f30-191d-40fb-bd6b-8ea6f39c80eb',
+        },
+        {
+          type: 'USER_EMAIL',
+          hash: '8865501e69c464f42a5ae7bada6d342a',
+          email: 'email_mics_152@yopmail.com',
+          operator: null,
+          creation_ts: 1489688728108,
+          last_activity_ts: 1489688728108,
+          providers: [],
+        },
+      ],
+      user_data_bag: {},
+      click_urls: [],
+      email_tracking_url: null,
+    };
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .post('/v1/email_contents')
       .send(requestBody)
       .end(function (err, res) {
@@ -174,12 +165,10 @@ describe('Email Renderer API test', function () {
 
         done();
       });
-
   });
 
   afterEach(() => {
     // We clear the cache so that we don't have any processing still running in the background
     runner.plugin.pluginCache.clear();
   });
-
 });

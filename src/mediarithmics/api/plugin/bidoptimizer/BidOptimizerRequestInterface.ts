@@ -1,26 +1,19 @@
-import {UserAgentInfo} from '../../reference/UserIdentifierInterface';
+import { UserAgentInfo } from '../../reference/UserIdentifierInterface';
 
-export type AdSlotVisibility =
-  | 'ABOVE_THE_FOLD'
-  | 'MIDDLE_OF_THE_PAGE'
-  | 'BELOW_THE_FOLD'
-  | 'UNKNOWN';
+export type AdSlotVisibility = 'ABOVE_THE_FOLD' | 'MIDDLE_OF_THE_PAGE' | 'BELOW_THE_FOLD' | 'UNKNOWN';
 
 export type BidMediaType = 'WEB' | 'MOBILE_APP' | 'VIDEO';
 
 export type BidObjectiveType = 'CPC' | 'CPA' | 'CTR' | 'CPV';
 
-export type BidOptimizerModelType =
-  | 'CATEGORICAL_MODEL'
-  | 'REGRESSION_MODEL'
-  | 'DYNAMIC_ALLOCATION';
+export type BidOptimizerModelType = 'CATEGORICAL_MODEL' | 'REGRESSION_MODEL' | 'DYNAMIC_ALLOCATION';
 
 export interface BidOptimizerRequest {
   bid_info: BidInfo;
   campaign_info: CampaignInfo;
   user_info: UserInfo;
   user_campaign_data_bag: string;
-  data_feeds: any[];
+  data_feeds: unknown[];
 }
 
 export interface BidInfo {
@@ -66,8 +59,8 @@ export interface CampaignInfo {
 }
 
 export interface UserInfo {
-  global_first_view?: Boolean;
-  media_first_view?: Boolean;
+  global_first_view?: boolean;
+  media_first_view?: boolean;
   user_agent_info?: UserAgentInfo;
 }
 

@@ -1,19 +1,13 @@
-import * as express from 'express';
-import * as _ from 'lodash';
+import express from 'express';
+import _ from 'lodash';
 
-import {BasePlugin, PropertiesWrapper} from '../common/BasePlugin';
-
-import {PluginProperty} from '../../api/core/plugin/PluginPropertyInterface';
-
-import {Catalog, RecommendationsWrapper} from '../../api/datamart';
-
-import {RecommenderRequest} from '../../api/plugin/recommender/RecommenderRequestInterface';
+import { PluginProperty, PluginPropertyResponse } from '../../api/core/plugin/PluginPropertyInterface';
+import { Catalog, CatalogResponse, RecommendationsWrapper } from '../../api/datamart';
+import { RecommenderRequest } from '../../api/plugin/recommender/RecommenderRequestInterface';
+import { BasePlugin, PropertiesWrapper } from '../common/BasePlugin';
 
 export interface RecommenderBaseInstanceContext {
   properties: PropertiesWrapper;
-}
-
-export interface RecommenderPluginResponse extends RecommendationsWrapper {
 }
 
 export abstract class RecommenderPlugin extends BasePlugin<RecommenderBaseInstanceContext> {
@@ -28,19 +22,13 @@ export abstract class RecommenderPlugin extends BasePlugin<RecommenderBaseInstan
   }
 
   // Helper to fetch the activity analyzer resource with caching
-  async fetchRecommenderCatalogs(
-    recommenderId: string
-  ): Promise<Catalog[]> {
-    const recommenderCatalogsResponse = await super.requestGatewayHelper(
+  async fetchRecommenderCatalogs(recommenderId: string): Promise<Catalog[]> {
+    const recommenderCatalogsResponse = await super.requestGatewayHelper<CatalogResponse>(
       'GET',
-      `${this.outboundPlatformUrl}/v1/recommenders/${
-        recommenderId
-      }/catalogs`
+      `${this.outboundPlatformUrl}/v1/recommenders/${recommenderId}/catalogs`,
     );
     this.logger.debug(
-      `Fetched recommender catalogs: ${recommenderId} - ${JSON.stringify(
-        recommenderCatalogsResponse.data
-      )}`
+      `Fetched recommender catalogs: ${recommenderId} - ${JSON.stringify(recommenderCatalogsResponse.data)}`,
     );
     return recommenderCatalogsResponse.data;
   }
@@ -49,19 +37,13 @@ export abstract class RecommenderPlugin extends BasePlugin<RecommenderBaseInstan
   // To be overriden to get a cutom behavior
 
   // Helper to fetch the activity analyzer resource with caching
-  async fetchRecommenderProperties(
-    recommenderId: string
-  ): Promise<PluginProperty[]> {
-    const recommenderPropertyResponse = await super.requestGatewayHelper(
+  async fetchRecommenderProperties(recommenderId: string): Promise<PluginProperty[]> {
+    const recommenderPropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>(
       'GET',
-      `${this.outboundPlatformUrl}/v1/recommenders/${
-        recommenderId
-      }/properties`
+      `${this.outboundPlatformUrl}/v1/recommenders/${recommenderId}/properties`,
     );
     this.logger.debug(
-      `Fetched recommender Properties: ${recommenderId} - ${JSON.stringify(
-        recommenderPropertyResponse.data
-      )}`
+      `Fetched recommender Properties: ${recommenderId} - ${JSON.stringify(recommenderPropertyResponse.data)}`,
     );
     return recommenderPropertyResponse.data;
   }
@@ -69,34 +51,27 @@ export abstract class RecommenderPlugin extends BasePlugin<RecommenderBaseInstan
   // Method to process an Activity Analysis
 
   // This is a default provided implementation
-  protected async instanceContextBuilder(
-    recommenderId: string
-  ): Promise<RecommenderBaseInstanceContext> {
-
-    const recommenderProps = await this.fetchRecommenderProperties(
-      recommenderId
-    );
+  protected async instanceContextBuilder(recommenderId: string): Promise<RecommenderBaseInstanceContext> {
+    const recommenderProps = await this.fetchRecommenderProperties(recommenderId);
 
     const context: RecommenderBaseInstanceContext = {
-      properties: new PropertiesWrapper(recommenderProps)
+      properties: new PropertiesWrapper(recommenderProps),
     };
 
     return context;
   }
 
-  protected async getInstanceContext(
-    recommenderId: string
-  ): Promise<RecommenderBaseInstanceContext> {
+  protected async getInstanceContext(recommenderId: string): Promise<RecommenderBaseInstanceContext | null> {
     if (!this.pluginCache.get(recommenderId)) {
-        this.pluginCache.put(
-          recommenderId,
-          this.instanceContextBuilder(recommenderId).catch((err) => {
-            this.logger.error(`Error while caching instance context: ${err.message}`)
-            this.pluginCache.del(recommenderId);
-            throw err;
-          }),
-          this.getInstanceContextCacheExpiration(),
-        );
+      void this.pluginCache.put(
+        recommenderId,
+        this.instanceContextBuilder(recommenderId).catch((err) => {
+          this.logger.error(`Error while caching instance context: ${(err as Error).message}`);
+          this.pluginCache.del(recommenderId);
+          throw err;
+        }),
+        this.getInstanceContextCacheExpiration(),
+      );
     }
     return this.pluginCache.get(recommenderId);
   }
@@ -104,59 +79,46 @@ export abstract class RecommenderPlugin extends BasePlugin<RecommenderBaseInstan
   // To be overriden by the Plugin to get a custom behavior
   protected abstract onRecommendationRequest(
     request: RecommenderRequest,
-    instanceContext: RecommenderBaseInstanceContext
-  ): Promise<RecommenderPluginResponse>;
+    instanceContext: RecommenderBaseInstanceContext | null,
+  ): Promise<RecommendationsWrapper>;
 
   private initRecommendationRequest(): void {
     this.app.post(
       '/v1/recommendations',
-      this.asyncMiddleware(
-        async (req: express.Request, res: express.Response) => {
-          if (!this.httpIsReady()) {
-            const msg = {
-              error: 'Plugin not initialized'
-            };
-            this.logger.error(
-              'POST /v1/recommendations : %s',
-              JSON.stringify(msg)
-            );
-            return res.status(500).json(msg);
-          } else if (!req.body || _.isEmpty(req.body)) {
-            const msg = {
-              error: 'Missing request body'
-            };
-            this.logger.error(
-              'POST /v1/recommendations : %s',
-              JSON.stringify(msg)
-            );
-            return res.status(500).json(msg);
-          } else {
-            this.logger.debug(
-              `POST /v1/recommendations ${JSON.stringify(req.body)}`
-            );
+      this.asyncMiddleware(async (req: express.Request, res: express.Response) => {
+        if (!this.httpIsReady()) {
+          const msg = {
+            error: 'Plugin not initialized',
+          };
+          this.logger.error('POST /v1/recommendations : %s', JSON.stringify(msg));
+          return res.status(500).json(msg);
+        } else if (!req.body || _.isEmpty(req.body)) {
+          const msg = {
+            error: 'Missing request body',
+          };
+          this.logger.error('POST /v1/recommendations : %s', JSON.stringify(msg));
+          return res.status(500).json(msg);
+        } else {
+          this.logger.debug(`POST /v1/recommendations ${JSON.stringify(req.body)}`);
 
-            const recommenderRequest = req.body as RecommenderRequest;
+          const recommenderRequest = req.body as RecommenderRequest;
 
-            if (!this.onRecommendationRequest) {
-              const errMsg = 'No Recommendation request listener registered!';
-              this.logger.error(errMsg);
-              return res.status(500).json({error: errMsg});
-            }
-
-            const instanceContext: RecommenderBaseInstanceContext = await this.getInstanceContext(
-              recommenderRequest.recommender_id
-            );
-
-            const pluginResponse = await this.onRecommendationRequest(
-              recommenderRequest,
-              instanceContext
-            );
-
-            this.logger.debug(`Returning: ${JSON.stringify(pluginResponse)}`);
-            return res.status(200).send(JSON.stringify(pluginResponse));
+          if (!this.onRecommendationRequest) {
+            const errMsg = 'No Recommendation request listener registered!';
+            this.logger.error(errMsg);
+            return res.status(500).json({ error: errMsg });
           }
+
+          const instanceContext: RecommenderBaseInstanceContext | null = await this.getInstanceContext(
+            recommenderRequest.recommender_id,
+          );
+
+          const pluginResponse = await this.onRecommendationRequest(recommenderRequest, instanceContext);
+
+          this.logger.debug(`Returning: ${JSON.stringify(pluginResponse)}`);
+          return res.status(200).send(JSON.stringify(pluginResponse));
         }
-      )
+      }),
     );
   }
 }

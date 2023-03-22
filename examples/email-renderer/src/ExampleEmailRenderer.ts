@@ -1,7 +1,7 @@
-import {core} from '@mediarithmics/plugins-nodejs-sdk';
-import {EmailRenderRequest} from '@mediarithmics/plugins-nodejs-sdk/src/mediarithmics/api/plugin/emailtemplaterenderer/EmailRendererRequestInterface';
-import {EmailRendererPluginResponse} from '@mediarithmics/plugins-nodejs-sdk/src/mediarithmics/api/plugin/emailtemplaterenderer/EmailRendererPluginResponse';
-import {EmailRendererBaseInstanceContext} from '@mediarithmics/plugins-nodejs-sdk/lib/mediarithmics';
+import { core } from '@mediarithmics/plugins-nodejs-sdk';
+import { EmailRenderRequest } from '@mediarithmics/plugins-nodejs-sdk/src/mediarithmics/api/plugin/emailtemplaterenderer/EmailRendererRequestInterface';
+import { EmailRendererPluginResponse } from '@mediarithmics/plugins-nodejs-sdk/src/mediarithmics/api/plugin/emailtemplaterenderer/EmailRendererPluginResponse';
+import { EmailRendererBaseInstanceContext } from '@mediarithmics/plugins-nodejs-sdk/lib/mediarithmics';
 
 export interface ExampleEmailRendererConfigurationFileProperties {
   apiToken: string;
@@ -21,13 +21,13 @@ export class ExampleEmailRenderer extends core.EmailRendererPlugin {
       throw new Error(`api token is missing!`);
     }
     return {
-      apiToken: configuration['mics_api_token']
+      apiToken: configuration['mics_api_token'],
     };
   }
 
   async getAdditionalUserData(userPointId: string, apiToken: string): Promise<any> {
     // get data from api request to mediarithmics, for instance date of last visit to site
-    return Promise.resolve({lastVisit: 1617975347247});
+    return Promise.resolve({ lastVisit: 1617975347247 });
   }
 
   async getExternalData(userPointId: string): Promise<any> {
@@ -36,23 +36,22 @@ export class ExampleEmailRenderer extends core.EmailRendererPlugin {
   }
 
   protected async onEmailContents(
-      request: EmailRenderRequest,
-      instanceContext: EmailRendererBaseInstanceContext
+    request: EmailRenderRequest,
+    instanceContext: EmailRendererBaseInstanceContext,
   ): Promise<EmailRendererPluginResponse> {
-
     // Fetch identifiers
     const userPointId = core.map(
-        request.user_identifiers.find(ident => ident.type == "USER_POINT"),
-        ident => (ident as core.UserPointIdentifierInfo).user_point_id
+      request.user_identifiers.find((ident) => ident.type == 'USER_POINT'),
+      (ident) => (ident as core.UserPointIdentifierInfo).user_point_id,
     );
     const userEmail = core.map(
-        request.user_identifiers.find(ident => ident.type == "USER_EMAIL"),
-        ident => (ident as core.UserEmailIdentifierInfo).email
+      request.user_identifiers.find((ident) => ident.type == 'USER_EMAIL'),
+      (ident) => (ident as core.UserEmailIdentifierInfo).email,
     );
 
     if (!userPointId || !userEmail) {
       this.logger.error(`Missing identifiers in request: ${JSON.stringify(request)}`);
-      return { meta: {}, content: { text: '' }};
+      return { meta: {}, content: { text: '' } };
     }
 
     // get additional data if needed
@@ -61,17 +60,20 @@ export class ExampleEmailRenderer extends core.EmailRendererPlugin {
 
     const emailMeta: core.PluginEmailMeta = {
       to_email: userEmail || undefined,
-      to_name: userEmail || undefined
+      to_name: userEmail || undefined,
     };
 
     const emailContent: core.PluginEmailContent = {
-      html: "<table><tr><td>Hello world!</td><td>Last visit was " + new Date(userAdditionalData.lastVisit) + "</td></tr></table>"
+      html:
+        '<table><tr><td>Hello world!</td><td>Last visit was ' +
+        new Date(userAdditionalData.lastVisit) +
+        '</td></tr></table>',
     };
 
     return {
       meta: emailMeta, // use this to set email addresses, subject, ...
       content: emailContent, // use this to set content
-      data: {} // with this you can provide additional data to the email router
+      data: {}, // with this you can provide additional data to the email router
     };
   }
 }

@@ -1,15 +1,21 @@
 # Changelog
 
+# 0.12.0 - 2023-03-22
+
+Several rules where added regarding linting and formatting. <br />
+The use of tsconfig compilerOptions lib 2019 is to in consideration regarding node <12 based plugin. Check readme for more informations.
+
 # 0.11.1 - 2023-03-22
 
 - Make grouping_key available for FileDelivery and BatchDelivery
 
 # 0.11.0 - 2023-02-23
 
-Breaking changes in UserSegmentUpdatePluginResponse (UPDATE). 
-- update the Audience feed onUserSegmentUpdate method return type. 
+Breaking changes in UserSegmentUpdatePluginResponse (UPDATE).
+
+- update the Audience feed onUserSegmentUpdate method return type.
 - Interface UserSegmentUpdatePluginResponse data optional element is now of type DeliveryType.
-- DeliveryType takes a `T` type argument that is unknown by default: 
+- DeliveryType takes a `T` type argument that is unknown by default:
   - If target is **FILE_DELIVERY** type of the returned data will be `string`;
   - If target is **BATCH_DELIVERY** type of the returned data will be `T`;
 - batch_token no longer exists.
@@ -19,6 +25,7 @@ Breaking changes in UserSegmentUpdatePluginResponse (UPDATE).
 # 0.10.0 - 2022-10-28
 
 Breaking changes in UserSegmentUpdatePluginResponse.
+
 - update the Audience feed onUserSegmentUpdate method return type. Interface UserSegmentUpdatePluginResponse data optional element is now of type DeliveryType.
 - status can be 'no_eligible_identifier' now (status code 400);
 - stats field is changed (UserSegmentUpdatePluginResponseStats);

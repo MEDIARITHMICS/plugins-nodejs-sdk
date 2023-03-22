@@ -1,3 +1,3 @@
 export interface Customizable {
-  [propsName: string]: any;
+  [propsName: string]: unknown;
 }

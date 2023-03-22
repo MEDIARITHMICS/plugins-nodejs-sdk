@@ -1,8 +1,13 @@
-import {expect} from 'chai';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import 'mocha';
-import {core} from '../';
-import * as request from 'supertest';
-import * as sinon from 'sinon';
+
+import { expect } from 'chai';
+import sinon from 'sinon';
+import request from 'supertest';
+
+import { core } from '../';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
 const PLUGIN_WORKER_ID = 'Calavera';
@@ -15,17 +20,17 @@ describe('Fetch recommender API', () => {
   class MyFakeRecommenderPlugin extends core.RecommenderPlugin {
     protected onRecommendationRequest(
       request: core.RecommenderRequest,
-      instanceContext: core.RecommenderBaseInstanceContext
+      instanceContext: core.RecommenderBaseInstanceContext,
     ) {
       const proposal: core.ItemProposal = {
         $type: 'ITEM_PROPOSAL',
-        $id: '42'
+        $id: '42',
       };
 
-      const response: core.RecommenderPluginResponse = {
+      const response: core.RecommendationsWrapper = {
         ts: Date.now(),
         proposals: [proposal],
-        recommendation_log: 'yolo'
+        recommendation_log: 'yolo',
       };
 
       return Promise.resolve(response);
@@ -35,7 +40,7 @@ describe('Fetch recommender API', () => {
   const rpMockup: sinon.SinonStub = sinon.stub().returns(
     new Promise((resolve, reject) => {
       resolve('Yolo');
-    })
+    }),
   );
 
   // All the magic is here
@@ -46,32 +51,24 @@ describe('Fetch recommender API', () => {
     const fakeRecommenderId = '42000000';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeRecommenderPlugin)
-      .fetchRecommenderProperties(fakeRecommenderId)
-      .then(() => {
-        expect(rpMockup.args[0][0].uri).to.be.eq(
-          `${
-            runner.plugin.outboundPlatformUrl
-          }/v1/recommenders/${fakeRecommenderId}/properties`
-        );
-        done();
-      });
+    void (runner.plugin as MyFakeRecommenderPlugin).fetchRecommenderProperties(fakeRecommenderId).then(() => {
+      expect(rpMockup.args[0][0].uri).to.be.eq(
+        `${runner.plugin.outboundPlatformUrl}/v1/recommenders/${fakeRecommenderId}/properties`,
+      );
+      done();
+    });
   });
 
   it('Check that RecommenderId is passed correctly in fetchRecommenderCatalogs', function (done) {
     const fakeRecommenderId = '4255';
 
     // We try a call to the Gateway
-    (runner.plugin as MyFakeRecommenderPlugin)
-      .fetchRecommenderCatalogs(fakeRecommenderId)
-      .then(() => {
-        expect(rpMockup.args[1][0].uri).to.be.eq(
-          `${
-            plugin.outboundPlatformUrl
-          }/v1/recommenders/${fakeRecommenderId}/catalogs`
-        );
-        done();
-      });
+    void (runner.plugin as MyFakeRecommenderPlugin).fetchRecommenderCatalogs(fakeRecommenderId).then(() => {
+      expect(rpMockup.args[1][0].uri).to.be.eq(
+        `${plugin.outboundPlatformUrl}/v1/recommenders/${fakeRecommenderId}/catalogs`,
+      );
+      done();
+    });
   });
 });
 
@@ -79,12 +76,12 @@ describe('Recommender API test', function () {
   class MyFakeSimpleRecommenderPlugin extends core.RecommenderPlugin {
     protected onRecommendationRequest(
       request: core.RecommenderRequest,
-      instanceContext: core.RecommenderBaseInstanceContext
+      instanceContext: core.RecommenderBaseInstanceContext,
     ) {
-      const response: core.RecommenderPluginResponse = {
+      const response: core.RecommendationsWrapper = {
         ts: Date.now(),
         recommendation_log: '',
-        proposals: []
+        proposals: [],
       };
       return Promise.resolve(response);
     }
@@ -104,14 +101,14 @@ describe('Recommender API test', function () {
         {
           technical_name: 'hello_world',
           value: {
-            value: 'Yay'
+            value: 'Yay',
           },
           property_type: 'STRING',
           origin: 'PLUGIN',
           writable: true,
-          deletable: false
-        }
-      ]
+          deletable: false,
+        },
+      ],
     };
 
     rpMockup
@@ -119,12 +116,9 @@ describe('Recommender API test', function () {
         sinon.match.has(
           'uri',
           sinon.match(function (value: string) {
-            return (
-              value.match(/\/v1\/recommenders\/(.){1,10}\/properties/) !==
-              null
-            );
-          })
-        )
+            return value.match(/\/v1\/recommenders\/(.){1,10}\/properties/) !== null;
+          }),
+        ),
       )
       .returns(fakeRecommenderProperties);
 
@@ -135,11 +129,11 @@ describe('Recommender API test', function () {
       datamart_id: '1089',
       user_identifiers: [],
       input_data: {
-        user_agent_id: 'vec:971677694'
-      }
+        user_agent_id: 'vec:971677694',
+      },
     };
 
-    request(runner.plugin.app)
+    void request(runner.plugin.app)
       .post('/v1/recommendations')
       .send(requestBody)
       .end(function (err, res) {
@@ -153,5 +147,4 @@ describe('Recommender API test', function () {
     // We clear the cache so that we don't have any processing still running in the background
     runner.plugin.pluginCache.clear();
   });
-
 });

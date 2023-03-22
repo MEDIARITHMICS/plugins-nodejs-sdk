@@ -5,9 +5,9 @@ export const escape: any = {
   '<': '&lt;',
   '>': '&gt;',
   '"': '&quot;',
-  '\'': '&#x27;',
+  "'": '&#x27;',
   '`': '&#x60;',
-  '=': '&#x3D;'
+  '=': '&#x3D;',
 };
 
 export const badChars = /[&<>"'`=]/g;
