@@ -161,6 +161,12 @@ The Plugin examples provided with the SDK are all tested and you can read their 
 
 Testing Plugins is highly recommended.
 
+## Migration from 0.11.x to 0.12.x
+
+- Configuration and rule files has been added to the project.
+- Formatting and linting was applied to every files.
+- Warning: The tsconfig compilerOptions lib is now based on es2019, meaning that every plugins build with a version of node lower than 12. Check the jenkins environment type used to build your plugin image to check the node version used.
+
 ## Migration from 0.10.x to 0.11.x
 
 - new AudienceFeedConnector BatchUpdate route and methode:
@@ -203,9 +209,12 @@ export interface UserSegmentUpdatePluginResponse {
   next_msg_delay_in_ms?: number;
 }
 
-export type DeliveryType<T> = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData<T>;
+export type DeliveryType<T> =
+  | UserSegmentUpdatePluginFileDeliveryResponseData
+  | UserSegmentUpdatePluginBatchDeliveryResponseData<T>;
 
-export interface UserSegmentUpdatePluginFileDeliveryResponseData extends UserSegmentUpdatePluginDeliveryContent<string> {
+export interface UserSegmentUpdatePluginFileDeliveryResponseData
+  extends UserSegmentUpdatePluginDeliveryContent<string> {
   type: 'FILE_DELIVERY';
   destination_token?: string;
   grouping_key?: string;
@@ -238,7 +247,9 @@ export interface UserSegmentUpdatePluginResponseData {
 it has been updated, depending on the delivery type used, to:
 
 ```ts
-export type DeliveryType = UserSegmentUpdatePluginFileDeliveryResponseData | UserSegmentUpdatePluginBatchDeliveryResponseData;
+export type DeliveryType =
+  | UserSegmentUpdatePluginFileDeliveryResponseData
+  | UserSegmentUpdatePluginBatchDeliveryResponseData;
 
 export interface UserSegmentUpdatePluginResponseData {
   grouping_key?: string;
@@ -486,5 +497,9 @@ this.statsClient.addOrUpdateMetrics({
     processed_users: { type: MetricsType.GAUGE, value: 10, tags: { datamart_id: '4521' } },
   },
 });
-this.statsClient.addOrUpdateMetrics({ metrics: { apiCallsError: { metricName: 'apiCallsError', type: MetricsType.GAUGE, value: 10, tags: { statusCode: '500' } } } });
+this.statsClient.addOrUpdateMetrics({
+  metrics: {
+    apiCallsError: { metricName: 'apiCallsError', type: MetricsType.GAUGE, value: 10, tags: { statusCode: '500' } },
+  },
+});
 ```
