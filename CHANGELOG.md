@@ -5,7 +5,11 @@
 Several rules where added regarding linting and formatting. <br />
 The use of tsconfig compilerOptions lib 2019 is to in consideration regarding node <12 based plugin. Check readme for more informations.
 
-# 0.11.0 - 2023-02-08
+# 0.11.1 - 2023-03-22
+
+- Make grouping_key available for FileDelivery and BatchDelivery
+
+# 0.11.0 - 2023-02-23
 
 Breaking changes in UserSegmentUpdatePluginResponse (UPDATE).
 

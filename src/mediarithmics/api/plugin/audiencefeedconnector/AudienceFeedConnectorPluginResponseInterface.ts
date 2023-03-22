@@ -1,6 +1,12 @@
 export type AudienceFeedConnectorStatus = 'ok' | 'error';
-export declare type AudienceFeedConnectorConnectionStatus = 'ok' | 'error' | 'external_segment_not_ready_yet';
-export type AudienceFeedConnectorContentType = 'text/csv' | 'application/json' | 'text/plain';
+export declare type AudienceFeedConnectorConnectionStatus =
+  | 'ok'
+  | 'error'
+  | 'external_segment_not_ready_yet';
+export type AudienceFeedConnectorContentType =
+  | 'text/csv'
+  | 'application/json'
+  | 'text/plain';
 
 export interface UserSegmentUpdatePluginResponse {
   status: DeliveredDataPluginResponseStatus;
@@ -18,15 +24,16 @@ export interface UserSegmentUpdatePluginFileDeliveryResponseData
   extends UserSegmentUpdatePluginDeliveryContent<string> {
   type: 'FILE_DELIVERY';
   destination_token?: string;
-  grouping_key?: string;
 }
 
-export interface UserSegmentUpdatePluginBatchDeliveryResponseData<T> extends UserSegmentUpdatePluginDeliveryContent<T> {
+export interface UserSegmentUpdatePluginBatchDeliveryResponseData<T>
+  extends UserSegmentUpdatePluginDeliveryContent<T> {
   type: 'BATCH_DELIVERY';
 }
 
 export interface UserSegmentUpdatePluginDeliveryContent<T> {
   content?: T;
+  grouping_key?: string;
 }
 
 type SyncResult = 'PROCESSED' | 'SUCCESS' | 'REJECTED';
@@ -59,4 +66,7 @@ export interface BatchUpdatePluginResponse {
   next_msg_delay_in_ms?: number;
 }
 
-export type DeliveredDataPluginResponseStatus = AudienceFeedConnectorStatus | 'retry' | 'no_eligible_identifier';
+export type DeliveredDataPluginResponseStatus =
+  | AudienceFeedConnectorStatus
+  | 'retry'
+  | 'no_eligible_identifier';
