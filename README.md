@@ -165,7 +165,7 @@ Testing Plugins is highly recommended.
 
 - Configuration and rule files has been added to the project.
 - Formatting and linting was applied to every files.
-- Warning: The tsconfig compilerOptions lib is now based on es2019, meaning that every plugins build with a version of node lower than 12. Check the jenkins environment type used to build your plugin image to check the node version used.
+- Warning: The tsconfig compilerOptions lib is now based on es2019, meaning that support of nodejs <= 11 is dropped. Check the jenkins environment type used to build your plugin image to check the node version used.
 
 ## Migration from 0.10.x to 0.11.x
 
