@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.11.1 - 2023-03-22
+
+- Make grouping_key available for FileDelivery and BatchDelivery
+
 # 0.11.0 - 2023-02-23
 
 Breaking changes in UserSegmentUpdatePluginResponse (UPDATE). 
