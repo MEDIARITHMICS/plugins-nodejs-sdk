@@ -36,4 +36,5 @@ export interface AudienceFeedBatchContext {
   feed_session_id: string;
   segment_id: string;
   datamart_id: string;
+  grouping_key: string;
 }

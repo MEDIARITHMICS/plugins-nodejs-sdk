@@ -43,7 +43,7 @@ class MyFakeAudienceFeedConnector extends core.AudienceFeedConnectorBasePlugin {
     instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
   ): Promise<core.UserSegmentUpdatePluginResponse> {
     const data: UserSegmentUpdatePluginBatchDeliveryResponseData<string>[] = [
-      { type: 'BATCH_DELIVERY', content: 'my_string' },
+      { type: 'BATCH_DELIVERY', content: 'my_string', grouping_key: 'groupingKey' },
     ];
 
     const response: core.UserSegmentUpdatePluginResponse = {
@@ -226,6 +226,7 @@ describe.only('External Audience Feed API test', function () {
         feed_session_id: '43',
         segment_id: '451256',
         datamart_id: '1023',
+        grouping_key: '',
       },
     };
 
@@ -250,7 +251,9 @@ describe.only('External Audience Feed API test', function () {
               .send(userSegmentUpdateRequest)
               .end(function (err, res) {
                 expect(res.status).to.equal(200);
-                expect(JSON.parse(res.text).data).to.deep.equal([{ type: 'BATCH_DELIVERY', content: 'my_string' }]);
+                expect(JSON.parse(res.text).data).to.deep.equal([
+                  { type: 'BATCH_DELIVERY', content: 'my_string', grouping_key: 'groupingKey' },
+                ]);
                 expect(JSON.parse(res.text).status).to.be.eq('ok');
               });
 
