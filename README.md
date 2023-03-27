@@ -161,6 +161,12 @@ The Plugin examples provided with the SDK are all tested and you can read their 
 
 Testing Plugins is highly recommended.
 
+## Migration from 0.12.x to 0.13.x
+
+For audience feed connectors using `BATCH_DELIVERY` or `FILE_DELIVERY`:
+- `grouping_key` is now mandatory for file and batch delivery responses
+- `destination_token` is now mandatory for file delivery responses
+
 ## Migration from 0.11.x to 0.12.x
 
 - Configuration and rule files has been added to the project.

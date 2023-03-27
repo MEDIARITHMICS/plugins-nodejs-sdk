@@ -1,5 +1,11 @@
 # Changelog
 
+# 0.13.0 - 2023-03-27
+
+Breaking changes in UserSegmentUpdatePluginResponse:
+- `grouping_key` is now mandatory for file and batch delivery responses
+- `destination_token` is now mandatory for file delivery responses
+
 # 0.12.0 - 2023-03-22
 
 Several rules where added regarding linting and formatting. <br />
