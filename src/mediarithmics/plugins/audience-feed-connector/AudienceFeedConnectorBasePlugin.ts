@@ -9,19 +9,19 @@ import {
   AudienceSegmentExternalFeedResource,
   AudienceSegmentexternalResourceResponse,
   AudienceSegmentResource,
-  AudienceSegmentResourceResponse,
+  AudienceSegmentResourceResponse
 } from '../../api/core/audiencesegment/AudienceSegmentInterface';
+import { BatchUpdateHandler } from '../../api/core/batchupdate/BatchUpdateHandler';
+import { BatchUpdatePluginResponse, BatchUpdateRequest } from '../../api/core/batchupdate/BatchUpdateInterface';
 import {
-  BatchUpdatePluginResponse,
-  ExternalSegmentConnectionPluginResponse,
-  ExternalSegmentCreationPluginResponse,
-  UserSegmentUpdatePluginResponse,
+  BatchedUserSegmentUpdatePluginResponse, DeliveryType, ExternalSegmentConnectionPluginResponse,
+  ExternalSegmentCreationPluginResponse, UserSegmentUpdatePluginBatchDeliveryResponseData, UserSegmentUpdatePluginResponse
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
 import {
-  BatchUpdateRequest,
+  AudienceFeedBatchContext,
   ExternalSegmentConnectionRequest,
   ExternalSegmentCreationRequest,
-  UserSegmentUpdateRequest,
+  UserSegmentUpdateRequest
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
 import { BasePlugin, PropertiesWrapper } from '../common';
 
@@ -30,14 +30,13 @@ export interface AudienceFeedConnectorBaseInstanceContext {
   feedProperties: PropertiesWrapper;
 }
 
-export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<AudienceFeedConnectorBaseInstanceContext> {
+abstract class GenericAudienceFeedConnectorBasePlugin<T, R extends BatchedUserSegmentUpdatePluginResponse<T> | UserSegmentUpdatePluginResponse> extends BasePlugin<AudienceFeedConnectorBaseInstanceContext> {
   constructor(enableThrottling = false) {
     super(enableThrottling);
 
     this.initExternalSegmentCreation();
     this.initExternalSegmentConnection();
     this.initUserSegmentUpdate();
-    this.initBatchUpdate();
   }
 
   async fetchAudienceSegment(feedId: string): Promise<AudienceSegmentResource> {
@@ -101,12 +100,17 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
   protected abstract onUserSegmentUpdate(
     request: UserSegmentUpdateRequest,
     instanceContext: AudienceFeedConnectorBaseInstanceContext,
-  ): Promise<UserSegmentUpdatePluginResponse>;
+  ): Promise<R>;
 
-  protected abstract onBatchUpdate(
-    request: BatchUpdateRequest<unknown>,
-    instanceContext: AudienceFeedConnectorBaseInstanceContext,
-  ): Promise<BatchUpdatePluginResponse>;
+
+
+  private logErrorMessage(err: Error) {
+    this.logger.error(
+      `Something bad happened : ${(err as Error).message} - ${(err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
+      }`,
+    )
+
+  }
 
   protected async getInstanceContext(feedId: string): Promise<AudienceFeedConnectorBaseInstanceContext> {
     if (!this.pluginCache.get(feedId)) {
@@ -123,7 +127,7 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
     return this.pluginCache.get(feedId) as Promise<AudienceFeedConnectorBaseInstanceContext>;
   }
 
-  private emptyBodyFilter(req: express.Request, res: express.Response, next: express.NextFunction) {
+  protected emptyBodyFilter(req: express.Request, res: express.Response, next: express.NextFunction) {
     if (!req.body || _.isEmpty(req.body)) {
       const msg = {
         error: 'Missing request body',
@@ -172,11 +176,7 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
         } catch (err) {
-          this.logger.error(
-            `Something bad happened : ${(err as Error).message} - ${
-              (err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
-            }`,
-          );
+          this.logErrorMessage(err);
           const pluginResponse: ExternalSegmentCreationPluginResponse = {
             status: 'error',
             message: `${(err as Error).message}`,
@@ -240,16 +240,13 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
         } catch (err) {
-          this.logger.error(
-            `Something bad happened : ${(err as Error).message} - ${
-              (err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
-            }`,
-          );
+          this.logErrorMessage(err);
           return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
         }
       },
     );
   }
+
 
   private initUserSegmentUpdate(): void {
     this.app.post(
@@ -267,28 +264,13 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
 
           const instanceContext = await this.getInstanceContext(request.feed_id);
 
-          const response: UserSegmentUpdatePluginResponse = await this.onUserSegmentUpdate(request, instanceContext);
+          const response: R = await this.onUserSegmentUpdate(request, instanceContext);
 
           this.logger.debug(`Returning: ${JSON.stringify(response)}`);
 
-          const pluginResponse: UserSegmentUpdatePluginResponse = {
-            status: response.status,
-          };
 
           if (response.next_msg_delay_in_ms) {
             res.set('x-mics-next-msg-delay', response.next_msg_delay_in_ms.toString());
-          }
-
-          if (response.message) {
-            pluginResponse.message = response.message;
-          }
-
-          if (response.data) {
-            pluginResponse.data = response.data;
-          }
-
-          if (response.stats) {
-            pluginResponse.stats = response.stats;
           }
 
           let statusCode: number;
@@ -309,75 +291,55 @@ export abstract class AudienceFeedConnectorBasePlugin extends BasePlugin<Audienc
               statusCode = 500;
           }
 
-          return res.status(statusCode).send(JSON.stringify(pluginResponse));
+          return res.status(statusCode).send(JSON.stringify(response));
         } catch (err) {
-          this.logger.error(
-            `Something bad happened : ${(err as Error).message} - ${
-              (err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
-            }`,
-          );
+          this.logErrorMessage(err);
           return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
         }
       },
     );
   }
 
-  private initBatchUpdate(): void {
-    this.app.post('/v1/batch_update', this.emptyBodyFilter, async (req: express.Request, res: express.Response) => {
-      try {
-        this.logger.debug(`POST /v1/batch_update ${JSON.stringify(req.body)}`);
 
-        const request = req.body as BatchUpdateRequest<unknown>;
+}
 
-        if (!this.onBatchUpdate) {
-          throw new Error('No Batch Update listener registered!');
-        }
 
-        const instanceContext = await this.getInstanceContext(request.context.feed_id);
+export abstract class BatchedAudienceFeedConnectorBasePlugin<T> extends GenericAudienceFeedConnectorBasePlugin<T, BatchedUserSegmentUpdatePluginResponse<T>> {
+  constructor(enableThrottling = false) {
+    super(enableThrottling);
 
-        const response: BatchUpdatePluginResponse = await this.onBatchUpdate(request, instanceContext);
+    const batchUpdateHandler = new BatchUpdateHandler<AudienceFeedBatchContext, T>(this.app, this.emptyBodyFilter, this.logger);
 
-        this.logger.debug(`Returning: ${JSON.stringify(response)}`);
-
-        const pluginResponse: BatchUpdatePluginResponse = {
-          status: response.status,
-        };
-
-        if (response.next_msg_delay_in_ms) {
-          res.set('x-mics-next-msg-delay', response.next_msg_delay_in_ms.toString());
-        }
-
-        if (response.message) {
-          pluginResponse.message = response.message;
-        }
-
-        let statusCode: number;
-        switch (response.status) {
-          case 'ok':
-            statusCode = 200;
-            break;
-          case 'error':
-            statusCode = 500;
-            break;
-          case 'retry':
-            statusCode = 429;
-            break;
-          case 'no_eligible_identifier':
-            statusCode = 400;
-            break;
-          default:
-            statusCode = 500;
-        }
-
-        return res.status(statusCode).send(JSON.stringify(pluginResponse));
-      } catch (err) {
-        this.logger.error(
-          `Something bad happened : ${(err as Error).message} - ${
-            (err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
-          }`,
-        );
-        return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
-      }
+    batchUpdateHandler.registerRoute(async (request) => {
+      const instanceContext = await this.getInstanceContext(request.context.feed_id);
+      return this.onBatchUpdate(request, instanceContext);
     });
   }
+
+
+  protected abstract onBatchUpdate(
+    request: BatchUpdateRequest<AudienceFeedBatchContext, T>,
+    instanceContext: AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<BatchUpdatePluginResponse>;
+
+}
+
+export abstract class AudienceFeedConnectorBasePlugin extends GenericAudienceFeedConnectorBasePlugin<void, UserSegmentUpdatePluginResponse> {
+
+
+
+  constructor(enableThrottling = false) {
+    super(enableThrottling);
+    this.initBatchUpdate();
+  }
+
+
+  private initBatchUpdate(): void {
+    this.app.post('/v1/batch_update', this.emptyBodyFilter, async (req: express.Request, res: express.Response) => {
+      res.status(500).send({ status: 'error', message: "Plugin doesn't support batch update" })
+    })
+  }
+
+
+
 }

@@ -1,10 +1,20 @@
-export type AudienceFeedConnectorStatus = 'ok' | 'error';
+import { StatusCode } from "../../core/common/Response";
+
+export type AudienceFeedConnectorStatus = 'ok' | 'error' | 'retry' | 'no_eligible_identifier';
 export declare type AudienceFeedConnectorConnectionStatus = 'ok' | 'error' | 'external_segment_not_ready_yet';
 export type AudienceFeedConnectorContentType = 'text/csv' | 'application/json' | 'text/plain';
 
 export interface UserSegmentUpdatePluginResponse {
-  status: DeliveredDataPluginResponseStatus;
-  data?: DeliveryType<unknown>[];
+  status: AudienceFeedConnectorStatus;
+  data?: UserSegmentUpdatePluginFileDeliveryResponseData[];
+  stats?: UserSegmentUpdatePluginResponseStats[];
+  message?: string;
+  next_msg_delay_in_ms?: number;
+}
+
+export interface BatchedUserSegmentUpdatePluginResponse<T> {
+  status: AudienceFeedConnectorStatus;
+  data?: UserSegmentUpdatePluginBatchDeliveryResponseData<T>[];
   stats?: UserSegmentUpdatePluginResponseStats[];
   message?: string;
   next_msg_delay_in_ms?: number;
@@ -25,7 +35,7 @@ export interface UserSegmentUpdatePluginBatchDeliveryResponseData<T> extends Use
 }
 
 export interface UserSegmentUpdatePluginDeliveryContent<T> {
-  content?: T;
+  content: T;
   grouping_key: string;
 }
 
@@ -53,10 +63,4 @@ export interface AudienceFeedStatTag {
   value: string;
 }
 
-export interface BatchUpdatePluginResponse {
-  status: DeliveredDataPluginResponseStatus;
-  message?: string;
-  next_msg_delay_in_ms?: number;
-}
 
-export type DeliveredDataPluginResponseStatus = AudienceFeedConnectorStatus | 'retry' | 'no_eligible_identifier';
