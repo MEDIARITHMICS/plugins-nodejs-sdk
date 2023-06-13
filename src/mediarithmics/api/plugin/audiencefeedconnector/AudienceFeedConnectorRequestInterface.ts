@@ -1,3 +1,4 @@
+import { BatchUpdateContext } from '../../core/batchupdate/BatchUpdateInterface';
 import { UserIdentifierInfo } from '../../reference/UserIdentifierInterface';
 
 export type UpdateType = 'UPSERT' | 'DELETE';
@@ -24,13 +25,8 @@ export interface ExternalSegmentCreationRequest {
   segment_id: string;
 }
 
-export interface BatchUpdateRequest<T> {
-  batch_content: T[];
-  ts: number;
-  context: AudienceFeedBatchContext;
-}
 
-export interface AudienceFeedBatchContext {
+export interface AudienceFeedBatchContext extends BatchUpdateContext {
   endpoint: string;
   feed_id: string;
   feed_session_id: string;

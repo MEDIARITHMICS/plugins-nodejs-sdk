@@ -1,5 +1,18 @@
 # Changelog
 
+# 0.14.0 - XXXX-XX-XX
+
+- New subclasses for `AudienceFeedConnectorBasePlugin` and `BatchedAudienceFeedConnectorBasePlugin<T>`, related to batched content.
+- Breaking changes in `UserSegmentUpdatePluginResponse`, when used with `UserSegmentUpdatePluginBatchDeliveryResponseData`.
+  - To output `BATCH_DELIVERY`, implement `BatchedAudienceFeedConnectorBasePlugin` instead, that will force implementation of 
+  ```    
+  protected abstract onUserSegmentUpdate(request: UserSegmentUpdateRequest, instanceContext: AudienceFeedConnectorBaseInstanceContext): Promise<BatchedUserSegmentUpdatePluginResponse<T>>;
+  ```
+- Force not null content in `UserSegmentUpdatePluginDeliveryContent`
+  - Don't output `UserSegmentUpdatePluginDeliveryContent` if content is empty.
+- Update `BatchUpdatePluginResponse#status` to uppercase status, instead of lowercase.
+
+
 # 0.13.0 - 2023-03-27
 
 Breaking changes in UserSegmentUpdatePluginResponse:

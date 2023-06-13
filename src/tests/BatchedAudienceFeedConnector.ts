@@ -8,8 +8,8 @@ import sinon from 'sinon';
 import request from 'supertest';
 
 import { core } from '../';
-import { AudienceFeedBatchContext, BatchedUserSegmentUpdatePluginResponse, UserSegmentUpdatePluginBatchDeliveryResponseData, UserSegmentUpdatePluginFileDeliveryResponseData } from '../mediarithmics';
-import { BatchUpdateRequest } from '../mediarithmics/api/core/batchupdate/BatchUpdateInterface';
+import { AudienceFeedBatchContext, UserPointIdentifierInfo, UserSegmentUpdatePluginBatchDeliveryResponseData, UserSegmentUpdatePluginFileDeliveryResponseData } from '../mediarithmics';
+import { BatchUpdatePluginResponse, BatchUpdateRequest } from '../mediarithmics/api/core/batchupdate/BatchUpdateInterface';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
 const PLUGIN_WORKER_ID = 'Calavera';
@@ -18,7 +18,23 @@ const PLUGIN_WORKER_ID = 'Calavera';
 process.env.PLUGIN_AUTHENTICATION_TOKEN = PLUGIN_AUTHENTICATION_TOKEN;
 process.env.PLUGIN_WORKER_ID = PLUGIN_WORKER_ID;
 
-class MyFakeAudienceFeedConnector extends core.AudienceFeedConnectorBasePlugin {
+
+interface BatchLine {
+  uuid: string,
+  user_list: number
+}
+
+class MyFakeBatchedAudienceFeedConnector extends core.BatchedAudienceFeedConnectorBasePlugin<BatchLine> {
+
+  protected onBatchUpdate(request: BatchUpdateRequest<core.AudienceFeedBatchContext, BatchLine>, instanceContext: core.AudienceFeedConnectorBaseInstanceContext): Promise<BatchUpdatePluginResponse> {
+    const response: BatchUpdatePluginResponse = {
+      status: 'OK',
+      message: JSON.stringify(request.batch_content)
+    };
+    return Promise.resolve(
+      response
+    );
+  }
   protected onExternalSegmentCreation(
     request: core.ExternalSegmentCreationRequest,
     instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
@@ -42,12 +58,21 @@ class MyFakeAudienceFeedConnector extends core.AudienceFeedConnectorBasePlugin {
   protected onUserSegmentUpdate(
     request: core.UserSegmentUpdateRequest,
     instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
-  ): Promise<core.UserSegmentUpdatePluginResponse> {
-    const data: UserSegmentUpdatePluginFileDeliveryResponseData[] = [
-      { type: 'FILE_DELIVERY', content: 'my_string', grouping_key: 'groupingKey', destination_token: "destination_1" },
-    ];
+  ): Promise<core.BatchedUserSegmentUpdatePluginResponse<BatchLine>> {
 
-    const response: core.UserSegmentUpdatePluginResponse = {
+    const data: UserSegmentUpdatePluginBatchDeliveryResponseData<BatchLine>[] = request.user_identifiers.flatMap(id => {
+      switch (id.type) {
+        case 'USER_POINT':
+          return [
+            { type: 'BATCH_DELIVERY', content: { uuid: (id as UserPointIdentifierInfo).user_point_id, user_list: 123 }, grouping_key: request.operation },
+          ];
+        default:
+          return [];
+      }
+
+    });
+
+    const response: core.BatchedUserSegmentUpdatePluginResponse<BatchLine> = {
       status: 'ok',
       data,
     };
@@ -55,9 +80,6 @@ class MyFakeAudienceFeedConnector extends core.AudienceFeedConnectorBasePlugin {
     return Promise.resolve(response);
   }
 }
-
-
-
 
 
 const rpMockup: sinon.SinonStub = sinon.stub().returns(
@@ -68,14 +90,14 @@ const rpMockup: sinon.SinonStub = sinon.stub().returns(
 
 describe('Fetch Audience Feed Gateway API', () => {
   // All the magic is here
-  const plugin = new MyFakeAudienceFeedConnector(false);
+  const plugin = new MyFakeBatchedAudienceFeedConnector(false);
   const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
   it('Check that feed_id is passed correctly in fetchAudienceFeedProperties', function (done) {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    void (runner.plugin as MyFakeAudienceFeedConnector).fetchAudienceFeedProperties(fakeId).then(() => {
+    void (runner.plugin as MyFakeBatchedAudienceFeedConnector).fetchAudienceFeedProperties(fakeId).then(() => {
       expect(rpMockup.args[0][0].uri).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/audience_segment_external_feeds/${fakeId}/properties`,
       );
@@ -87,7 +109,7 @@ describe('Fetch Audience Feed Gateway API', () => {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    void (runner.plugin as MyFakeAudienceFeedConnector).fetchAudienceSegment(fakeId).then(() => {
+    void (runner.plugin as MyFakeBatchedAudienceFeedConnector).fetchAudienceSegment(fakeId).then(() => {
       expect(rpMockup.args[1][0].uri).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/audience_segment_external_feeds/${fakeId}/audience_segment`,
       );
@@ -98,7 +120,7 @@ describe('Fetch Audience Feed Gateway API', () => {
 
 describe.only('External Audience Feed API test', function () {
   // All the magic is here
-  const plugin = new MyFakeAudienceFeedConnector(false);
+  const plugin = new MyFakeBatchedAudienceFeedConnector(false);
   let runner: core.TestingPluginRunner;
 
   it('Check that the plugin is giving good results with a simple handler', function (done) {
@@ -169,6 +191,8 @@ describe.only('External Audience Feed API test', function () {
       segment_id: '451256',
     };
 
+    const upid = '26340584-f777-404c-82c5-56220667464b';
+
     const userSegmentUpdateRequest: core.UserSegmentUpdateRequest = {
       feed_id: '42',
       session_id: '43',
@@ -179,7 +203,7 @@ describe.only('External Audience Feed API test', function () {
       user_identifiers: [
         {
           type: 'USER_POINT',
-          user_point_id: '26340584-f777-404c-82c5-56220667464b',
+          user_point_id: upid,
         } as core.UserPointIdentifierInfo,
         {
           type: 'USER_ACCOUNT',
@@ -216,7 +240,7 @@ describe.only('External Audience Feed API test', function () {
     };
 
     const batchUpdateRequest: BatchUpdateRequest<AudienceFeedBatchContext, string> = {
-      batch_content: ['subBatch_1', 'subBatch_2', 'subBatch_3'],
+      batch_content: ["{\"uuid\":\"1234\",\"user_list\":123}", "{\"uuid\":\"1235\",\"user_list\":123}", "{\"uuid\":\"1236\",\"user_list\":123}"],
       ts: new Date().getTime(),
       context: {
         endpoint: '/v1/user-segment-update',
@@ -250,7 +274,7 @@ describe.only('External Audience Feed API test', function () {
               .end(function (err, res) {
                 expect(res.status).to.equal(200);
                 expect(JSON.parse(res.text).data).to.deep.equal([
-                  { type: 'FILE_DELIVERY', content: 'my_string', grouping_key: 'groupingKey', destination_token: "destination_1" },
+                  { type: 'BATCH_DELIVERY', content: {"uuid":upid,"user_list":123}, grouping_key: userSegmentUpdateRequest.operation },
                 ]);
                 expect(JSON.parse(res.text).status).to.be.eq('ok');
               });
@@ -259,10 +283,10 @@ describe.only('External Audience Feed API test', function () {
               .post('/v1/batch_update')
               .send(batchUpdateRequest)
               .end(function (err, res) {
-                expect(res.status).to.equal(500);
-
-                expect(JSON.parse(res.text).message).to.be.eq("Plugin doesn't support batch update");
-
+                expect(res.status).to.equal(200);
+                let result = JSON.parse(res.text) as BatchUpdatePluginResponse;
+                expect(result.status).to.be.eq('OK');
+                expect(result.message).to.be.eq(JSON.stringify(batchUpdateRequest.batch_content));
                 done();
               });
           });
