@@ -1,6 +1,6 @@
 # Changelog
 
-# 0.14.0 - XXXX-XX-XX
+# 0.14.0 - 2023-06-13
 
 - New subclasses for `AudienceFeedConnectorBasePlugin` and `BatchedAudienceFeedConnectorBasePlugin<T>`, related to batched content.
 - Breaking changes in `UserSegmentUpdatePluginResponse`, when used with `UserSegmentUpdatePluginBatchDeliveryResponseData`.
