@@ -8,7 +8,12 @@ import sinon from 'sinon';
 import request from 'supertest';
 
 import { core } from '../';
-import { AudienceFeedBatchContext, BatchedUserSegmentUpdatePluginResponse, UserSegmentUpdatePluginBatchDeliveryResponseData, UserSegmentUpdatePluginFileDeliveryResponseData } from '../mediarithmics';
+import {
+  AudienceFeedBatchContext,
+  BatchedUserSegmentUpdatePluginResponse,
+  UserSegmentUpdatePluginBatchDeliveryResponseData,
+  UserSegmentUpdatePluginFileDeliveryResponseData,
+} from '../mediarithmics';
 import { BatchUpdateRequest } from '../mediarithmics/api/core/batchupdate/BatchUpdateInterface';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
@@ -44,7 +49,7 @@ class MyFakeAudienceFeedConnector extends core.AudienceFeedConnectorBasePlugin {
     instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
   ): Promise<core.UserSegmentUpdatePluginResponse> {
     const data: UserSegmentUpdatePluginFileDeliveryResponseData[] = [
-      { type: 'FILE_DELIVERY', content: 'my_string', grouping_key: 'groupingKey', destination_token: "destination_1" },
+      { type: 'FILE_DELIVERY', content: 'my_string', grouping_key: 'groupingKey', destination_token: 'destination_1' },
     ];
 
     const response: core.UserSegmentUpdatePluginResponse = {
@@ -55,10 +60,6 @@ class MyFakeAudienceFeedConnector extends core.AudienceFeedConnectorBasePlugin {
     return Promise.resolve(response);
   }
 }
-
-
-
-
 
 const rpMockup: sinon.SinonStub = sinon.stub().returns(
   new Promise((resolve, reject) => {
@@ -250,7 +251,12 @@ describe.only('External Audience Feed API test', function () {
               .end(function (err, res) {
                 expect(res.status).to.equal(200);
                 expect(JSON.parse(res.text).data).to.deep.equal([
-                  { type: 'FILE_DELIVERY', content: 'my_string', grouping_key: 'groupingKey', destination_token: "destination_1" },
+                  {
+                    type: 'FILE_DELIVERY',
+                    content: 'my_string',
+                    grouping_key: 'groupingKey',
+                    destination_token: 'destination_1',
+                  },
                 ]);
                 expect(JSON.parse(res.text).status).to.be.eq('ok');
               });

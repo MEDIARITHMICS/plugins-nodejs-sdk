@@ -8,8 +8,16 @@ import sinon from 'sinon';
 import request from 'supertest';
 
 import { core } from '../';
-import { AudienceFeedBatchContext, UserPointIdentifierInfo, UserSegmentUpdatePluginBatchDeliveryResponseData, UserSegmentUpdatePluginFileDeliveryResponseData } from '../mediarithmics';
-import { BatchUpdatePluginResponse, BatchUpdateRequest } from '../mediarithmics/api/core/batchupdate/BatchUpdateInterface';
+import {
+  AudienceFeedBatchContext,
+  UserPointIdentifierInfo,
+  UserSegmentUpdatePluginBatchDeliveryResponseData,
+  UserSegmentUpdatePluginFileDeliveryResponseData,
+} from '../mediarithmics';
+import {
+  BatchUpdatePluginResponse,
+  BatchUpdateRequest,
+} from '../mediarithmics/api/core/batchupdate/BatchUpdateInterface';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
 const PLUGIN_WORKER_ID = 'Calavera';
@@ -18,22 +26,21 @@ const PLUGIN_WORKER_ID = 'Calavera';
 process.env.PLUGIN_AUTHENTICATION_TOKEN = PLUGIN_AUTHENTICATION_TOKEN;
 process.env.PLUGIN_WORKER_ID = PLUGIN_WORKER_ID;
 
-
 interface BatchLine {
-  uuid: string,
-  user_list: number
+  uuid: string;
+  user_list: number;
 }
 
 class MyFakeBatchedAudienceFeedConnector extends core.BatchedAudienceFeedConnectorBasePlugin<BatchLine> {
-
-  protected onBatchUpdate(request: BatchUpdateRequest<core.AudienceFeedBatchContext, BatchLine>, instanceContext: core.AudienceFeedConnectorBaseInstanceContext): Promise<BatchUpdatePluginResponse> {
+  protected onBatchUpdate(
+    request: BatchUpdateRequest<core.AudienceFeedBatchContext, BatchLine>,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<BatchUpdatePluginResponse> {
     const response: BatchUpdatePluginResponse = {
       status: 'OK',
-      message: JSON.stringify(request.batch_content)
+      message: JSON.stringify(request.batch_content),
     };
-    return Promise.resolve(
-      response
-    );
+    return Promise.resolve(response);
   }
   protected onExternalSegmentCreation(
     request: core.ExternalSegmentCreationRequest,
@@ -59,18 +66,22 @@ class MyFakeBatchedAudienceFeedConnector extends core.BatchedAudienceFeedConnect
     request: core.UserSegmentUpdateRequest,
     instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
   ): Promise<core.BatchedUserSegmentUpdatePluginResponse<BatchLine>> {
-
-    const data: UserSegmentUpdatePluginBatchDeliveryResponseData<BatchLine>[] = request.user_identifiers.flatMap(id => {
-      switch (id.type) {
-        case 'USER_POINT':
-          return [
-            { type: 'BATCH_DELIVERY', content: { uuid: (id as UserPointIdentifierInfo).user_point_id, user_list: 123 }, grouping_key: request.operation },
-          ];
-        default:
-          return [];
-      }
-
-    });
+    const data: UserSegmentUpdatePluginBatchDeliveryResponseData<BatchLine>[] = request.user_identifiers.flatMap(
+      (id) => {
+        switch (id.type) {
+          case 'USER_POINT':
+            return [
+              {
+                type: 'BATCH_DELIVERY',
+                content: { uuid: (id as UserPointIdentifierInfo).user_point_id, user_list: 123 },
+                grouping_key: request.operation,
+              },
+            ];
+          default:
+            return [];
+        }
+      },
+    );
 
     const response: core.BatchedUserSegmentUpdatePluginResponse<BatchLine> = {
       status: 'ok',
@@ -80,7 +91,6 @@ class MyFakeBatchedAudienceFeedConnector extends core.BatchedAudienceFeedConnect
     return Promise.resolve(response);
   }
 }
-
 
 const rpMockup: sinon.SinonStub = sinon.stub().returns(
   new Promise((resolve, reject) => {
@@ -240,7 +250,11 @@ describe.only('External Audience Feed API test', function () {
     };
 
     const batchUpdateRequest: BatchUpdateRequest<AudienceFeedBatchContext, string> = {
-      batch_content: ["{\"uuid\":\"1234\",\"user_list\":123}", "{\"uuid\":\"1235\",\"user_list\":123}", "{\"uuid\":\"1236\",\"user_list\":123}"],
+      batch_content: [
+        '{"uuid":"1234","user_list":123}',
+        '{"uuid":"1235","user_list":123}',
+        '{"uuid":"1236","user_list":123}',
+      ],
       ts: new Date().getTime(),
       context: {
         endpoint: '/v1/user-segment-update',
@@ -274,7 +288,11 @@ describe.only('External Audience Feed API test', function () {
               .end(function (err, res) {
                 expect(res.status).to.equal(200);
                 expect(JSON.parse(res.text).data).to.deep.equal([
-                  { type: 'BATCH_DELIVERY', content: {"uuid":upid,"user_list":123}, grouping_key: userSegmentUpdateRequest.operation },
+                  {
+                    type: 'BATCH_DELIVERY',
+                    content: { uuid: upid, user_list: 123 },
+                    grouping_key: userSegmentUpdateRequest.operation,
+                  },
                 ]);
                 expect(JSON.parse(res.text).status).to.be.eq('ok');
               });

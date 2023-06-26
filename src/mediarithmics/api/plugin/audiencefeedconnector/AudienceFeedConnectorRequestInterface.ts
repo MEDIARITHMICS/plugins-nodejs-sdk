@@ -25,7 +25,6 @@ export interface ExternalSegmentCreationRequest {
   segment_id: string;
 }
 
-
 export interface AudienceFeedBatchContext extends BatchUpdateContext {
   endpoint: string;
   feed_id: string;
