@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.14.1 - 2023-06-26
+
+- Add types for UserActivity `$user_identifiers` field
+
 # 0.14.0 - 2023-06-13
 
 - New subclasses for `AudienceFeedConnectorBasePlugin` and `BatchedAudienceFeedConnectorBasePlugin<T>`, related to batched content.

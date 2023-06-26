@@ -22,7 +22,24 @@ export interface UserActivity extends Customizable {
   $origin?: UserActivityOrigin;
   $location?: UserActivityLocation;
   $events: UserActivityEvent[];
+  $user_identifiers?: UserIdentifierResource[];
 }
+
+export interface UserAccountIdentifierResource {
+  $type: 'USER_ACCOUNT';
+  $user_account_id: string;
+  $compartment_id: string;
+}
+export interface UserEmailIdentifierResource {
+  $type: 'USER_EMAIL';
+  $hash: string;
+  $email?: string;
+}
+export interface UserAgentIdentifierResource {
+  $type: 'USER_AGENT';
+  $user_agent_id: string;
+}
+export type UserIdentifierResource = UserAccountIdentifierResource | UserEmailIdentifierResource | UserAgentIdentifierResource
 
 export interface UserVisitActivity extends UserActivity {
   $session_duration?: number;
