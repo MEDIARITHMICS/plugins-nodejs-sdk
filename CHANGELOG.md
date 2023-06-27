@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.15.0 - 2023-06-27
+
+- Automatically fetch selected identifying resources in `AudienceFeedConnectorBaseInstanceContext`
+
 # 0.14.1 - 2023-06-26
 
 - Add types for UserActivity `$user_identifiers` field
