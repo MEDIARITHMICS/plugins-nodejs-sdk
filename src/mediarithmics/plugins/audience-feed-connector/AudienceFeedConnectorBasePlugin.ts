@@ -4,33 +4,47 @@
 import express from 'express';
 import _ from 'lodash';
 
-import { PluginProperty, PluginPropertyResponse } from '../../';
+import {
+  IdentifyingResourceListProperty,
+  IdentifyingResourceListPropertyResource,
+  PluginProperty,
+  PluginPropertyResponse,
+  asIdentifyingResourceListProperty,
+} from '../../';
 import {
   AudienceSegmentExternalFeedResource,
   AudienceSegmentexternalResourceResponse,
   AudienceSegmentResource,
-  AudienceSegmentResourceResponse
+  AudienceSegmentResourceResponse,
 } from '../../api/core/audiencesegment/AudienceSegmentInterface';
 import { BatchUpdateHandler } from '../../api/core/batchupdate/BatchUpdateHandler';
 import { BatchUpdatePluginResponse, BatchUpdateRequest } from '../../api/core/batchupdate/BatchUpdateInterface';
 import {
-  BatchedUserSegmentUpdatePluginResponse, DeliveryType, ExternalSegmentConnectionPluginResponse,
-  ExternalSegmentCreationPluginResponse, UserSegmentUpdatePluginBatchDeliveryResponseData, UserSegmentUpdatePluginResponse
+  BatchedUserSegmentUpdatePluginResponse,
+  DeliveryType,
+  ExternalSegmentConnectionPluginResponse,
+  ExternalSegmentCreationPluginResponse,
+  UserSegmentUpdatePluginBatchDeliveryResponseData,
+  UserSegmentUpdatePluginResponse,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
 import {
   AudienceFeedBatchContext,
   ExternalSegmentConnectionRequest,
   ExternalSegmentCreationRequest,
-  UserSegmentUpdateRequest
+  UserSegmentUpdateRequest,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
 import { BasePlugin, PropertiesWrapper } from '../common';
 
 export interface AudienceFeedConnectorBaseInstanceContext {
   feed: AudienceSegmentExternalFeedResource;
   feedProperties: PropertiesWrapper;
+  selectedIdentifyingResources: IdentifyingResourceListProperty;
 }
 
-abstract class GenericAudienceFeedConnectorBasePlugin<T, R extends BatchedUserSegmentUpdatePluginResponse<T> | UserSegmentUpdatePluginResponse> extends BasePlugin<AudienceFeedConnectorBaseInstanceContext> {
+abstract class GenericAudienceFeedConnectorBasePlugin<
+  T,
+  R extends BatchedUserSegmentUpdatePluginResponse<T> | UserSegmentUpdatePluginResponse,
+> extends BasePlugin<AudienceFeedConnectorBaseInstanceContext> {
   constructor(enableThrottling = false) {
     super(enableThrottling);
 
@@ -79,9 +93,30 @@ abstract class GenericAudienceFeedConnectorBasePlugin<T, R extends BatchedUserSe
     const audienceFeed = results[0];
     const audienceFeedProps = results[1];
 
+    const identifyingResourcesPropIndex = audienceFeedProps.findIndex(
+      (p) => p.technical_name === 'selected_identifying_resources',
+    );
+
+    const untypedIdentifyingResourcesProp =
+      identifyingResourcesPropIndex === -1
+        ? undefined
+        : audienceFeedProps.splice(identifyingResourcesPropIndex, 1).pop();
+
+    const identifyingResourcesProp = untypedIdentifyingResourcesProp
+      ? asIdentifyingResourceListProperty(untypedIdentifyingResourcesProp)
+      : undefined;
+
+    const defaultSelectedIdentifyingResources = {
+      property_type: 'IDENTIFYING_RESOURCE_LIST',
+      value: {
+        identifying_resources: [],
+      } as IdentifyingResourceListPropertyResource,
+    } as IdentifyingResourceListProperty;
+
     const context: AudienceFeedConnectorBaseInstanceContext = {
       feed: audienceFeed,
       feedProperties: new PropertiesWrapper(audienceFeedProps),
+      selectedIdentifyingResources: identifyingResourcesProp ?? defaultSelectedIdentifyingResources,
     };
 
     return context;
@@ -102,14 +137,12 @@ abstract class GenericAudienceFeedConnectorBasePlugin<T, R extends BatchedUserSe
     instanceContext: AudienceFeedConnectorBaseInstanceContext,
   ): Promise<R>;
 
-
-
   private logErrorMessage(err: Error) {
     this.logger.error(
-      `Something bad happened : ${(err as Error).message} - ${(err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
+      `Something bad happened : ${(err as Error).message} - ${
+        (err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
       }`,
-    )
-
+    );
   }
 
   protected async getInstanceContext(feedId: string): Promise<AudienceFeedConnectorBaseInstanceContext> {
@@ -247,7 +280,6 @@ abstract class GenericAudienceFeedConnectorBasePlugin<T, R extends BatchedUserSe
     );
   }
 
-
   private initUserSegmentUpdate(): void {
     this.app.post(
       '/v1/user_segment_update',
@@ -267,7 +299,6 @@ abstract class GenericAudienceFeedConnectorBasePlugin<T, R extends BatchedUserSe
           const response: R = await this.onUserSegmentUpdate(request, instanceContext);
 
           this.logger.debug(`Returning: ${JSON.stringify(response)}`);
-
 
           if (response.next_msg_delay_in_ms) {
             res.set('x-mics-next-msg-delay', response.next_msg_delay_in_ms.toString());
@@ -299,16 +330,20 @@ abstract class GenericAudienceFeedConnectorBasePlugin<T, R extends BatchedUserSe
       },
     );
   }
-
-
 }
 
-
-export abstract class BatchedAudienceFeedConnectorBasePlugin<T> extends GenericAudienceFeedConnectorBasePlugin<T, BatchedUserSegmentUpdatePluginResponse<T>> {
+export abstract class BatchedAudienceFeedConnectorBasePlugin<T> extends GenericAudienceFeedConnectorBasePlugin<
+  T,
+  BatchedUserSegmentUpdatePluginResponse<T>
+> {
   constructor(enableThrottling = false) {
     super(enableThrottling);
 
-    const batchUpdateHandler = new BatchUpdateHandler<AudienceFeedBatchContext, T>(this.app, this.emptyBodyFilter, this.logger);
+    const batchUpdateHandler = new BatchUpdateHandler<AudienceFeedBatchContext, T>(
+      this.app,
+      this.emptyBodyFilter,
+      this.logger,
+    );
 
     batchUpdateHandler.registerRoute(async (request) => {
       const instanceContext = await this.getInstanceContext(request.context.feed_id);
@@ -316,30 +351,24 @@ export abstract class BatchedAudienceFeedConnectorBasePlugin<T> extends GenericA
     });
   }
 
-
   protected abstract onBatchUpdate(
     request: BatchUpdateRequest<AudienceFeedBatchContext, T>,
     instanceContext: AudienceFeedConnectorBaseInstanceContext,
   ): Promise<BatchUpdatePluginResponse>;
-
 }
 
-export abstract class AudienceFeedConnectorBasePlugin extends GenericAudienceFeedConnectorBasePlugin<void, UserSegmentUpdatePluginResponse> {
-
-
-
+export abstract class AudienceFeedConnectorBasePlugin extends GenericAudienceFeedConnectorBasePlugin<
+  void,
+  UserSegmentUpdatePluginResponse
+> {
   constructor(enableThrottling = false) {
     super(enableThrottling);
     this.initBatchUpdate();
   }
 
-
   private initBatchUpdate(): void {
     this.app.post('/v1/batch_update', this.emptyBodyFilter, async (req: express.Request, res: express.Response) => {
-      res.status(500).send({ status: 'error', message: "Plugin doesn't support batch update" })
-    })
+      res.status(500).send({ status: 'error', message: "Plugin doesn't support batch update" });
+    });
   }
-
-
-
 }

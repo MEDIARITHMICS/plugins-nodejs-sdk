@@ -1,4 +1,4 @@
-import { StatusCode } from "../../core/common/Response";
+import { StatusCode } from '../../core/common/Response';
 
 export type AudienceFeedConnectorStatus = 'ok' | 'error' | 'retry' | 'no_eligible_identifier';
 export declare type AudienceFeedConnectorConnectionStatus = 'ok' | 'error' | 'external_segment_not_ready_yet';
@@ -62,5 +62,3 @@ export interface AudienceFeedStatTag {
   key: string;
   value: string;
 }
-
-

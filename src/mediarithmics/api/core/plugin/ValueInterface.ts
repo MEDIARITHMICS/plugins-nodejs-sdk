@@ -75,3 +75,41 @@ export interface NativeImagePropertyResource {
   asset_id?: string;
   file_path?: string;
 }
+
+export type DeviceIdRegistryType =
+  | 'INSTALLATION_ID'
+  | 'MUM_ID'
+  | 'NETWORK_DEVICE_ID'
+  | 'CUSTOM_DEVICE_ID'
+  | 'MOBILE_ADVERTISING_ID'
+  | 'MOBILE_VENDOR_ID';
+
+export interface IdentifyingAccountProperty {
+  type: 'USER_ACCOUNT';
+  compartment_id?: string;
+}
+
+export interface IdentifyingEmailProperty {
+  type: 'USER_EMAIL';
+}
+
+export interface IdentifyingDeviceTechnicalIdProperty {
+  type: 'USER_DEVICE_TECHNICAL_ID';
+  registry_type: DeviceIdRegistryType;
+  registry_id?: string;
+}
+
+export interface IdentifyingProfileProperty {
+  type: 'USER_PROFILE';
+  compartment_id?: string;
+}
+
+export type IdentifyingResourceProperty =
+  | IdentifyingAccountProperty
+  | IdentifyingEmailProperty
+  | IdentifyingDeviceTechnicalIdProperty
+  | IdentifyingProfileProperty;
+
+export interface IdentifyingResourceListPropertyResource {
+  identifying_resources: IdentifyingResourceProperty[];
+}
