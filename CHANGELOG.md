@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.16.0 - 2023-08-09
+
+- Remove http proxy properties
+
 # 0.15.0 - 2023-06-27
 
 - Automatically fetch selected identifying resources in `AudienceFeedConnectorBaseInstanceContext`
