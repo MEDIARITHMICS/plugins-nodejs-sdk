@@ -138,10 +138,6 @@ export abstract class BasePlugin<CacheValue = unknown> {
   gatewayPort: number;
   outboundPlatformUrl: string;
 
-  proxyHost: string;
-  proxyPort: number;
-  proxyUrl: string;
-
   app: express.Application;
   logger: winston.Logger;
   credentials: Credentials;
@@ -171,22 +167,6 @@ export abstract class BasePlugin<CacheValue = unknown> {
     }
 
     this.outboundPlatformUrl = `http://${this.gatewayHost}:${this.gatewayPort}`;
-
-    const proxyHost = process.env.EXTERNAL_SERVICE_PROXY_HOST;
-    if (proxyHost) {
-      this.proxyHost = proxyHost;
-    } else {
-      this.proxyHost = 'plugin-gateway.platform';
-    }
-
-    const proxyPort = process.env.EXTERNAL_SERVICE_PROXY_PORT;
-    if (proxyPort) {
-      this.proxyPort = parseInt(proxyPort);
-    } else {
-      this.proxyPort = 8081;
-    }
-
-    this.proxyUrl = `http://${this.proxyHost}:${this.proxyPort}`;
 
     this.app = express();
 
