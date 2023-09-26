@@ -161,6 +161,20 @@ The Plugin examples provided with the SDK are all tested and you can read their 
 
 Testing Plugins is highly recommended.
 
+## Migration from 0.16.x Unreleased
+
+The `BatchUpdatePluginResponse` return now two new fields, `send_items_in_error` and `send_items_in_success`
+
+```ts
+export interface BatchUpdatePluginResponse {
+  status: BatchUpdatePluginResponseStatus;
+  message?: string;
+  next_msg_delay_in_ms?: number;
+  send_items_in_success: number;
+  send_items_in_error: number;
+}
+```
+
 ## Migration from 0.15.x to 0.16.x
 
 The HTTP proxy is not used anymore and has been removed from the base class. Remove any usage of `proxyHost`, `proxyPort` and `proxyUrl`: call services directly without proxy.
@@ -168,6 +182,7 @@ The HTTP proxy is not used anymore and has been removed from the base class. Rem
 ## Migration from 0.12.x to 0.13.x
 
 For audience feed connectors using `BATCH_DELIVERY` or `FILE_DELIVERY`:
+
 - `grouping_key` is now mandatory for file and batch delivery responses
 - `destination_token` is now mandatory for file delivery responses
 

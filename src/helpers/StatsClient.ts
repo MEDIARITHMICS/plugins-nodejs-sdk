@@ -81,13 +81,11 @@ export class StatsClient {
    * }
    * ```
    */
-  static init({ timerInMs , environment = process.env.NODE_ENV, logger, maxBufferSize }: InitOptions): StatsClient {
+  static init({ timerInMs, environment = process.env.NODE_ENV, logger, maxBufferSize }: InitOptions): StatsClient {
     const actualTimerInMs = timerInMs ? timerInMs : 15 * 1000;
     const actualMaxBufferSize = maxBufferSize ? maxBufferSize : 8192;
     logger?.info(
-      `StatsClient - environment is ${
-        environment ? environment : 'undefined'
-      } mode - Timer is ${actualTimerInMs} - 
+      `StatsClient - environment is ${environment ? environment : 'undefined'} mode - Timer is ${actualTimerInMs} - 
       maxBufferSize is ${actualMaxBufferSize} - Initialization.`,
     );
     return this.instance || (this.instance = new StatsClient(actualTimerInMs, actualMaxBufferSize, environment));

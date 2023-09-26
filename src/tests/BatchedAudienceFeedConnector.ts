@@ -39,6 +39,8 @@ class MyFakeBatchedAudienceFeedConnector extends core.BatchedAudienceFeedConnect
     const response: BatchUpdatePluginResponse = {
       status: 'OK',
       message: JSON.stringify(request.batch_content),
+      send_items_in_error: 0,
+      send_items_in_success: request.batch_content.length,
     };
     return Promise.resolve(response);
   }
