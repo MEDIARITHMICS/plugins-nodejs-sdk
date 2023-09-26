@@ -62,6 +62,5 @@ describe('statsClient', () => {
 
     expect(spyFnGauge.callCount).to.be.eq(2);
     expect(spyFnGauge.getCall(1).args).to.be.eqls(['users_with_mobile_id_count', 1, { datamart_id: '4521' }]);
-
   });
 });
