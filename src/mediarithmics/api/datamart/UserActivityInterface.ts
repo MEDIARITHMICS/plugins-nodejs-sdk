@@ -39,7 +39,10 @@ export interface UserAgentIdentifierResource {
   $type: 'USER_AGENT';
   $user_agent_id: string;
 }
-export type UserIdentifierResource = UserAccountIdentifierResource | UserEmailIdentifierResource | UserAgentIdentifierResource
+export type UserIdentifierResource =
+  | UserAccountIdentifierResource
+  | UserEmailIdentifierResource
+  | UserAgentIdentifierResource;
 
 export interface UserVisitActivity extends UserActivity {
   $session_duration?: number;
