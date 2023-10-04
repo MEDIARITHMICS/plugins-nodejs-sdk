@@ -21,10 +21,8 @@ import { BatchUpdateHandler } from '../../api/core/batchupdate/BatchUpdateHandle
 import { BatchUpdatePluginResponse, BatchUpdateRequest } from '../../api/core/batchupdate/BatchUpdateInterface';
 import {
   BatchedUserSegmentUpdatePluginResponse,
-  DeliveryType,
   ExternalSegmentConnectionPluginResponse,
   ExternalSegmentCreationPluginResponse,
-  UserSegmentUpdatePluginBatchDeliveryResponseData,
   UserSegmentUpdatePluginResponse,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
 import {
@@ -41,10 +39,14 @@ export interface AudienceFeedConnectorBaseInstanceContext {
   selectedIdentifyingResources: IdentifyingResourceListProperty;
 }
 
+const INTERVAL_BETWEEN_LOG = 10 * 60 * 1000; // 10 minutes
+
 abstract class GenericAudienceFeedConnectorBasePlugin<
   T,
   R extends BatchedUserSegmentUpdatePluginResponse<T> | UserSegmentUpdatePluginResponse,
 > extends BasePlugin<AudienceFeedConnectorBaseInstanceContext> {
+  private messageLoggedHistory: { [feedId: string]: { [message: string]: { lastLogged: number } } } = {};
+
   constructor(enableThrottling = false) {
     super(enableThrottling);
 
@@ -145,12 +147,29 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     );
   }
 
+  // Used to log error only if not seen since INTERVAL_BETWEEN_LOG based on error.message
+  private executeCallbackWhenNeeded(feedId: string, error: any, callback: () => void) {
+    if (!feedId || !error.message) {
+      callback();
+      return;
+    }
+
+    const lastMessage = this.messageLoggedHistory[feedId]?.[error.message];
+
+    if (!lastMessage || lastMessage.lastLogged + INTERVAL_BETWEEN_LOG < Date.now()) {
+      this.messageLoggedHistory[feedId][error.message] = { lastLogged: Date.now() };
+      callback();
+    }
+  }
+
   protected async getInstanceContext(feedId: string): Promise<AudienceFeedConnectorBaseInstanceContext> {
     if (!this.pluginCache.get(feedId)) {
       void this.pluginCache.put(
         feedId,
         this.instanceContextBuilder(feedId).catch((err) => {
-          this.logger.error(`Error while caching instance context: ${(err as Error).message}`);
+          this.executeCallbackWhenNeeded(feedId, err, () => {
+            this.logger.error(`Error while caching instance context: ${(err as Error).message}`);
+          });
           this.pluginCache.del(feedId);
           throw err;
         }),
@@ -177,14 +196,14 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       '/v1/external_segment_creation',
       this.emptyBodyFilter,
       async (req: express.Request, res: express.Response) => {
+        const request = req.body as ExternalSegmentCreationRequest;
+
         try {
           this.logger.debug(`POST /v1/external_segment_creation ${JSON.stringify(req.body)}`);
 
           if (!this.httpIsReady()) {
             throw new Error('Plugin not initialized');
           }
-
-          const request = req.body as ExternalSegmentCreationRequest;
 
           if (!this.onExternalSegmentCreation) {
             throw new Error('No External Segment Creation listener registered!');
@@ -209,7 +228,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
         } catch (err) {
-          this.logErrorMessage(err);
+          this.executeCallbackWhenNeeded(request.feed_id, err, () => this.logErrorMessage(err));
           const pluginResponse: ExternalSegmentCreationPluginResponse = {
             status: 'error',
             message: `${(err as Error).message}`,
@@ -226,14 +245,14 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       '/v1/external_segment_connection',
       this.emptyBodyFilter,
       async (req: express.Request, res: express.Response) => {
+        const request = req.body as ExternalSegmentConnectionRequest;
+
         try {
           this.logger.debug(`POST /v1/external_segment_connection ${JSON.stringify(req.body)}`);
 
           if (!this.httpIsReady()) {
             throw new Error('Plugin not initialized');
           }
-
-          const request = req.body as ExternalSegmentConnectionRequest;
 
           if (!this.onExternalSegmentConnection) {
             throw new Error('No External Segment Connection listener registered!');
@@ -273,7 +292,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
         } catch (err) {
-          this.logErrorMessage(err);
+          this.executeCallbackWhenNeeded(request.feed_id, err, () => this.logErrorMessage(err));
           return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
         }
       },
@@ -285,10 +304,10 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       '/v1/user_segment_update',
       this.emptyBodyFilter,
       async (req: express.Request, res: express.Response) => {
+        const request = req.body as UserSegmentUpdateRequest;
+
         try {
           this.logger.debug(`POST /v1/user_segment_update ${JSON.stringify(req.body)}`);
-
-          const request = req.body as UserSegmentUpdateRequest;
 
           if (!this.onUserSegmentUpdate) {
             throw new Error('No User Segment Update listener registered!');
@@ -324,7 +343,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
           return res.status(statusCode).send(JSON.stringify(response));
         } catch (err) {
-          this.logErrorMessage(err);
+          this.executeCallbackWhenNeeded(request.feed_id, err, () => this.logErrorMessage(err));
           return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
         }
       },
