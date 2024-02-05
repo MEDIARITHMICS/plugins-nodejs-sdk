@@ -2,15 +2,16 @@
 
 import bodyParser from 'body-parser';
 import express from 'express';
+import got, { HTTPError, Method, Options, ResponseType } from 'got';
 import _ from 'lodash';
 import cache from 'memory-cache';
-import request from 'request';
-import rp from 'request-promise-native';
 import toobusy from 'toobusy-js';
 import winston from 'winston';
 
-import { Compartment, DataListResponse } from '../../';
+import { DataListResponse } from '../../api/core/common/Response';
+import { Compartment } from '../../api/core/compartment/Compartment';
 import { Datamart } from '../../api/core/datamart/Datamart';
+import { ApiError } from '../../api/core/error/ApiError';
 import {
   AdLayoutProperty,
   asAdLayoutProperty,
@@ -142,7 +143,7 @@ export abstract class BasePlugin<CacheValue = unknown> {
   logger: winston.Logger;
   credentials: Credentials;
 
-  _transport = rp;
+  _transport = got;
 
   enableThrottling = false; // Log level update implementation
 
@@ -231,76 +232,63 @@ export abstract class BasePlugin<CacheValue = unknown> {
   }
 
   fetchDataFile(uri: string): Promise<Buffer> {
-    return this.requestGatewayHelper(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/data_file/data`,
-      undefined,
-      { uri: uri },
-      false,
-      true,
-    );
+    return this.requestGatewayHelper({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/data_file/data`,
+      qs: { uri },
+      responseType: 'buffer',
+    });
   }
 
   // Log level update implementation
 
   fetchConfigurationFile(fileName: string): Promise<Buffer> {
-    return this.requestGatewayHelper(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/configuration/technical_name=${fileName}`,
-      undefined,
-      undefined,
-      false,
-      true,
-    );
+    return this.requestGatewayHelper({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/configuration/technical_name=${fileName}`,
+      responseType: 'buffer',
+    });
   }
 
-  async requestGatewayHelper<T>(
-    method: string,
-    uri: string,
-    body?: unknown,
-    qs?: unknown,
-    isJson?: boolean,
-    isBinary?: boolean,
-  ): Promise<T> {
-    const options: request.OptionsWithUri = {
+  async requestGatewayHelper<T>({
+    method,
+    url,
+    body,
+    qs,
+    responseType,
+  }: {
+    method: Method;
+    url: string;
+    body?: PluginProperty | Record<string, unknown>;
+    qs?: string | Record<string, string | number | boolean | null | undefined> | URLSearchParams;
+    responseType?: ResponseType;
+  }): Promise<T> {
+    const headers = { user: this.credentials.worker_id, pass: this.credentials.authentication_token };
+
+    const options: Options = {
       method: method,
-      uri: uri,
-      auth: {
-        user: this.credentials.worker_id,
-        pass: this.credentials.authentication_token,
-        sendImmediately: true,
-      },
-      proxy: false,
+      url: url,
+      headers,
+      json: body !== undefined ? body : undefined,
+      searchParams: qs !== undefined ? qs : undefined,
+      responseType: responseType ? responseType : undefined,
+      resolveBodyOnly: responseType ? true : false,
     };
-
-    // Set the body if provided
-    options.body = body !== undefined ? body : undefined;
-
-    // Set the querystring if provided
-    options.qs = qs !== undefined ? qs : undefined;
-
-    // Set the json flag if provided
-    options.json = isJson !== undefined ? isJson : true;
-
-    // Set the encoding to null if it is binary
-    options.encoding = isBinary !== undefined && isBinary ? null : undefined;
 
     this.logger.silly(`Doing gateway call with ${JSON.stringify(options)}`);
 
     try {
       return (await this._transport(options)) as T;
     } catch (e) {
-      const error = e as ResponseError;
+      const error = new ApiError(e as string | HTTPError | undefined, this.logger);
       if (error.name === 'StatusCodeError') {
-        const bodyString = (isJson !== undefined && !isJson ? body : JSON.stringify(body)) as string;
+        const bodyString = body && typeof body === 'string' ? body : body ? JSON.stringify(body) : '';
         throw new Error(
-          `Error while calling ${method} '${uri}' with the request body '${bodyString || ''}', the qs '${
+          `Error while calling ${method} '${url}' with the request body '${bodyString}', the qs '${
             JSON.stringify(qs) || ''
-          }', the auth user '${
-            obfuscateString(options.auth ? options.auth.user : undefined) || ''
-          }', the auth password '${obfuscateString(options.auth ? options.auth.pass : undefined) || ''}': got a ${
-            error.response.statusCode
-          } ${error.response.statusMessage} with the response body ${JSON.stringify(error.response.body)}`,
+          }', the auth user '${obfuscateString(headers.user ? headers.user : undefined) || ''}', the auth password '${
+            obfuscateString(headers.pass ? headers.pass : undefined) || ''
+          }': got a ${error.statusCode} ${error.statusMessage} with the response body ${JSON.stringify(error.error)}`,
         );
       } else {
         this.logger.error(
@@ -315,7 +303,7 @@ export abstract class BasePlugin<CacheValue = unknown> {
 
   // Health Status implementation
 
-  async requestPublicMicsApiHelper<T>(apiToken: string, options: rp.OptionsWithUri): Promise<T> {
+  async requestPublicMicsApiHelper<T>(apiToken: string, options: Options): Promise<T> {
     const tweakedOptions = {
       ...options,
       headers: {
@@ -332,7 +320,7 @@ export abstract class BasePlugin<CacheValue = unknown> {
       if (error.name === 'StatusCodeError') {
         throw new Error(
           `Error while calling ${options.method as string} '${
-            options.uri as string
+            options.url as string
           }' with the header body '${JSON.stringify(options.headers)}': got a ${error.response.statusCode} ${
             error.response.statusMessage
           } with the response body ${JSON.stringify(error.response.body)}`,
@@ -350,10 +338,10 @@ export abstract class BasePlugin<CacheValue = unknown> {
 
   async fetchDatamarts(apiToken: string, organisationId: string): Promise<DataListResponse<Datamart>> {
     const options = {
-      method: 'GET',
-      uri: 'https://api.mediarithmics.com/v1/datamarts',
+      method: 'GET' as Method,
+      url: 'https://api.mediarithmics.com/v1/datamarts',
       qs: { organisation_id: organisationId, allow_administrator: 'false' },
-      json: true,
+      responseType: 'json' as ResponseType,
     };
 
     return this.requestPublicMicsApiHelper(apiToken, options);
@@ -361,9 +349,9 @@ export abstract class BasePlugin<CacheValue = unknown> {
 
   async fetchDatamartCompartments(apiToken: string, datamartId: string): Promise<DataListResponse<Compartment>> {
     const options = {
-      method: 'GET',
+      method: 'GET' as Method,
       uri: `https://api.mediarithmics.com/v1/datamarts/${datamartId}/user_account_compartments`,
-      json: true,
+      responseType: 'json' as ResponseType,
     };
 
     return this.requestPublicMicsApiHelper(apiToken, options);
@@ -446,6 +434,7 @@ export abstract class BasePlugin<CacheValue = unknown> {
     };
 
   protected setErrorHandler() {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     this.app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
       this.logger.error(`Something bad happened : ${err.message} - ${err.stack ? err.stack : 'stack undefined'}`);
       return res.status(500).send(`${err.message} \n ${err.stack ? err.stack : 'stack undefined'}`);
@@ -491,14 +480,17 @@ export abstract class BasePlugin<CacheValue = unknown> {
     );
   }
 
-  public getMetadata() {
-    const dependencies: any = {};
+  public async getMetadata() {
+    const dependencies: Record<string, unknown> = {};
 
     try {
-      dependencies['@mediarithmics/plugins-nodejs-sdk'] = require(
-        process.cwd() + '/node_modules/@mediarithmics/plugins-nodejs-sdk/package.json',
-      )?.version;
-    } catch (err) {}
+      const packageJson = (await import(
+        `${process.cwd()}/node_modules/@mediarithmics/plugins-nodejs-sdk/package.json`
+      )) as { version?: string };
+      dependencies['@mediarithmics/plugins-nodejs-sdk'] = packageJson.version;
+    } catch (err) {
+      /* empty */
+    }
 
     return {
       runtime: 'node',
@@ -516,8 +508,9 @@ export abstract class BasePlugin<CacheValue = unknown> {
     this.app.get(
       '/v1/metadata',
       this.asyncMiddleware(async (req: express.Request, res: express.Response) => {
+        const metadata = await this.getMetadata();
         try {
-          res.status(200).send(this.getMetadata());
+          res.status(200).send(metadata);
         } catch (err) {
           res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
         }
