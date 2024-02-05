@@ -8,6 +8,7 @@ export * from './api/core/emailrouter/EmailRouterInterface';
 export * from './api/core/plugin/PluginPropertyInterface';
 export * from './api/core/plugin/ValueInterface';
 export * from './api/core/compartment/Compartment';
+export * from './api/core/error/ApiError';
 export * from './api/datamart';
 export * from './api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
 export * from './api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';

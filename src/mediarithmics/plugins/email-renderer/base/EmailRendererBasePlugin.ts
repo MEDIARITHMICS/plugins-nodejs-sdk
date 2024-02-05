@@ -27,12 +27,11 @@ export abstract class EmailRendererPlugin<
 
   // Helper to fetch the creative resource with caching
   async fetchCreative(id: string, forceReload = false): Promise<Creative> {
-    const response = await super.requestGatewayHelper<CreativeResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/creatives/${id}`,
-      undefined,
-      { 'force-reload': forceReload },
-    );
+    const response = await super.requestGatewayHelper<CreativeResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/creatives/${id}`,
+      qs: { 'force-reload': forceReload },
+    });
     this.logger.debug(`Fetched Creative: ${id} - ${JSON.stringify(response.data)}`);
     return response.data;
   }
@@ -41,12 +40,11 @@ export abstract class EmailRendererPlugin<
   // To be overriden to get a cutom behavior
 
   async fetchCreativeProperties(id: string, forceReload = false): Promise<PluginProperty[]> {
-    const response = await super.requestGatewayHelper<PluginPropertyResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/creatives/${id}/renderer_properties`,
-      undefined,
-      { 'force-reload': forceReload },
-    );
+    const response = await super.requestGatewayHelper<PluginPropertyResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/creatives/${id}/renderer_properties`,
+      qs: { 'force-reload': forceReload },
+    });
     this.logger.debug(`Fetched Email Templates Properties: ${id} - ${JSON.stringify(response.data)}`);
     return response.data;
   }

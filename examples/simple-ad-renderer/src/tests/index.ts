@@ -119,7 +119,7 @@ function buildRpMockup(): sinon.SinonStub {
   rpMockup
     .withArgs(
       sinon.match.has(
-        'uri',
+        'url',
         sinon.match(function (value: string) {
           return value.match(/\/v1\/creatives\/(.){1,10}/) !== null;
         }),
@@ -130,7 +130,7 @@ function buildRpMockup(): sinon.SinonStub {
   rpMockup
     .withArgs(
       sinon.match.has(
-        'uri',
+        'url',
         sinon.match(function (value: string) {
           return value.match(/\/v1\/creatives\/(.){1,10}\/renderer_properties/) !== null;
         }),
@@ -181,7 +181,7 @@ const adRequest: core.AdRendererRequest = {
 };
 
 describe('Test Example Handlebar Ad Renderer', function () {
-  it('Check overall execution of dummy handlebar adRenderer', function (done) {
+  it('Check overall execution of dummy handlebar adRenderer', async function () {
     // All the magic is here
 
     const rpMockup = buildRpMockup();
@@ -190,22 +190,12 @@ describe('Test Example Handlebar Ad Renderer', function () {
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     // Plugin log level to debug
-    request(runner.plugin.app)
-      .put('/v1/log_level')
-      .send({ level: 'silly' })
-      .end((err, res) => {
-        expect(res.status).to.equal(200);
+    const res1 = await request(runner.plugin.app).put('/v1/log_level').send({ level: 'silly' });
+    expect(res1.status).to.equal(200);
 
-        // Activity to process
-        request(runner.plugin.app)
-          .post('/v1/ad_contents')
-          .send(adRequest)
-          .end((err, res) => {
-            expect(res.status).to.eq(200);
-            expect(res.header['x-mics-display-context']).to.eq('{"hello":"\\u2764"}');
-
-            done();
-          });
-      });
+    // Activity to process
+    const res2 = await request(runner.plugin.app).post('/v1/ad_contents').send(adRequest);
+    expect(res2.status).to.eq(200);
+    expect(res2.header['x-mics-display-context']).to.eq('{"hello":"\\u2764"}');
   });
 });

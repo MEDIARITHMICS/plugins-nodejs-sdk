@@ -46,29 +46,27 @@ describe('Fetch analyzer API', () => {
   const plugin = new MyFakeActivityAnalyzerPlugin(false);
   const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-  it('Check that ActivityAnalyzerId is passed correctly in FetchActivityAnalyzer', function (done) {
+  it('Check that ActivityAnalyzerId is passed correctly in FetchActivityAnalyzer', async function () {
     const fakeActivityAnalyzerId = '42000000';
 
     // We try a call to the Gateway
-    void (runner.plugin as MyFakeActivityAnalyzerPlugin).fetchActivityAnalyzer(fakeActivityAnalyzerId).then(() => {
-      expect(rpMockup.args[0][0].uri).to.be.eq(
+    await (runner.plugin as MyFakeActivityAnalyzerPlugin).fetchActivityAnalyzer(fakeActivityAnalyzerId).then(() => {
+      expect(rpMockup.args[0][0].url).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/activity_analyzers/${fakeActivityAnalyzerId}`,
       );
-      done();
     });
   });
 
-  it('Check that ActivityAnalyzerId is passed correctly in FetchActivityAnalyzerProperties', function (done) {
+  it('Check that ActivityAnalyzerId is passed correctly in FetchActivityAnalyzerProperties', async function () {
     const fakeActivityAnalyzerId = '4255';
 
     // We try a call to the Gateway
-    void (runner.plugin as MyFakeActivityAnalyzerPlugin)
+    await (runner.plugin as MyFakeActivityAnalyzerPlugin)
       .fetchActivityAnalyzerProperties(fakeActivityAnalyzerId)
       .then(() => {
-        expect(rpMockup.args[1][0].uri).to.be.eq(
+        expect(rpMockup.args[1][0].url).to.be.eq(
           `${plugin.outboundPlatformUrl}/v1/activity_analyzers/${fakeActivityAnalyzerId}/properties`,
         );
-        done();
       });
   });
 

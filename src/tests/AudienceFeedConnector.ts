@@ -8,12 +8,7 @@ import sinon from 'sinon';
 import request from 'supertest';
 
 import { core } from '../';
-import {
-  AudienceFeedBatchContext,
-  BatchedUserSegmentUpdatePluginResponse,
-  UserSegmentUpdatePluginBatchDeliveryResponseData,
-  UserSegmentUpdatePluginFileDeliveryResponseData,
-} from '../mediarithmics';
+import { AudienceFeedBatchContext, UserSegmentUpdatePluginFileDeliveryResponseData } from '../mediarithmics';
 import { BatchUpdateRequest } from '../mediarithmics/api/core/batchupdate/BatchUpdateInterface';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
@@ -72,37 +67,40 @@ describe('Fetch Audience Feed Gateway API', () => {
   const plugin = new MyFakeAudienceFeedConnector(false);
   const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-  it('Check that feed_id is passed correctly in fetchAudienceFeedProperties', function (done) {
+  it('Check that feed_id is passed correctly in fetchAudienceFeedProperties', async function () {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    void (runner.plugin as MyFakeAudienceFeedConnector).fetchAudienceFeedProperties(fakeId).then(() => {
-      expect(rpMockup.args[0][0].uri).to.be.eq(
+    await (runner.plugin as MyFakeAudienceFeedConnector).fetchAudienceFeedProperties(fakeId).then(() => {
+      expect(rpMockup.args[0][0].url).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/audience_segment_external_feeds/${fakeId}/properties`,
       );
-      done();
     });
   });
 
-  it('Check that feed_id is passed correctly in fetchAudienceSegment', function (done) {
+  it('Check that feed_id is passed correctly in fetchAudienceSegment', async function () {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    void (runner.plugin as MyFakeAudienceFeedConnector).fetchAudienceSegment(fakeId).then(() => {
-      expect(rpMockup.args[1][0].uri).to.be.eq(
+    await (runner.plugin as MyFakeAudienceFeedConnector).fetchAudienceSegment(fakeId).then(() => {
+      expect(rpMockup.args[1][0].url).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/audience_segment_external_feeds/${fakeId}/audience_segment`,
       );
-      done();
     });
   });
 });
 
-describe.only('External Audience Feed API test', function () {
+describe('External Audience Feed API test', function () {
   // All the magic is here
   const plugin = new MyFakeAudienceFeedConnector(false);
   let runner: core.TestingPluginRunner;
 
-  it('Check that the plugin is giving good results with a simple handler', function (done) {
+  after(() => {
+    // We clear the cache so that we don't have any processing still running in the background
+    runner.plugin.pluginCache.clear();
+  });
+
+  it('Check that the plugin is giving good results with a simple handler', async function () {
     const rpMockup: sinon.SinonStub = sinon.stub();
 
     const audienceFeed: core.DataResponse<core.AudienceSegmentExternalFeedResource> = {
@@ -120,7 +118,7 @@ describe.only('External Audience Feed API test', function () {
     rpMockup
       .withArgs(
         sinon.match.has(
-          'uri',
+          'url',
           sinon.match(function (value: string) {
             return value.match(/\/v1\/audience_segment_external_feeds\/(.){1,10}/) !== null;
           }),
@@ -148,7 +146,7 @@ describe.only('External Audience Feed API test', function () {
     rpMockup
       .withArgs(
         sinon.match.has(
-          'uri',
+          'url',
           sinon.match(function (value: string) {
             return value.match(/\/v1\/audience_segment_external_feeds\/(.){1,10}\/properties/) !== null;
           }),
@@ -229,54 +227,30 @@ describe.only('External Audience Feed API test', function () {
       },
     };
 
-    void request(runner.plugin.app)
-      .post('/v1/external_segment_creation')
-      .send(externalSegmentCreation)
-      .end(function (err, res) {
-        expect(res.status).to.equal(200);
+    const res1 = await request(runner.plugin.app).post('/v1/external_segment_creation').send(externalSegmentCreation);
+    expect(res1.status).to.equal(200);
+    expect(JSON.parse(res1.text).status).to.be.eq('ok');
 
-        expect(JSON.parse(res.text).status).to.be.eq('ok');
+    const res2 = await request(runner.plugin.app)
+      .post('/v1/external_segment_connection')
+      .send(externalSegmentConnection);
+    expect(res2.status).to.equal(200);
+    expect(JSON.parse(res2.text).status).to.be.eq('ok');
 
-        void request(runner.plugin.app)
-          .post('/v1/external_segment_connection')
-          .send(externalSegmentConnection)
-          .end(function (err, res) {
-            expect(res.status).to.equal(200);
+    const res3 = await request(runner.plugin.app).post('/v1/user_segment_update').send(userSegmentUpdateRequest);
+    expect(res3.status).to.equal(200);
+    expect(JSON.parse(res3.text).data).to.deep.equal([
+      {
+        type: 'FILE_DELIVERY',
+        content: 'my_string',
+        grouping_key: 'groupingKey',
+        destination_token: 'destination_1',
+      },
+    ]);
+    expect(JSON.parse(res3.text).status).to.be.eq('ok');
 
-            expect(JSON.parse(res.text).status).to.be.eq('ok');
-
-            void request(runner.plugin.app)
-              .post('/v1/user_segment_update')
-              .send(userSegmentUpdateRequest)
-              .end(function (err, res) {
-                expect(res.status).to.equal(200);
-                expect(JSON.parse(res.text).data).to.deep.equal([
-                  {
-                    type: 'FILE_DELIVERY',
-                    content: 'my_string',
-                    grouping_key: 'groupingKey',
-                    destination_token: 'destination_1',
-                  },
-                ]);
-                expect(JSON.parse(res.text).status).to.be.eq('ok');
-              });
-
-            void request(runner.plugin.app)
-              .post('/v1/batch_update')
-              .send(batchUpdateRequest)
-              .end(function (err, res) {
-                expect(res.status).to.equal(500);
-
-                expect(JSON.parse(res.text).message).to.be.eq("Plugin doesn't support batch update");
-
-                done();
-              });
-          });
-      });
-  });
-
-  afterEach(() => {
-    // We clear the cache so that we don't have any processing still running in the background
-    runner.plugin.pluginCache.clear();
+    const res4 = await request(runner.plugin.app).post('/v1/batch_update').send(batchUpdateRequest);
+    expect(res4.status).to.equal(500);
+    expect(JSON.parse(res4.text).message).to.be.eq("Plugin doesn't support batch update");
   });
 });

@@ -75,7 +75,7 @@ class MyFakeBatchedAudienceFeedConnector extends core.BatchedAudienceFeedConnect
             return [
               {
                 type: 'BATCH_DELIVERY',
-                content: { uuid: (id as UserPointIdentifierInfo).user_point_id, user_list: 123 },
+                content: { uuid: id.user_point_id, user_list: 123 },
                 grouping_key: request.operation,
               },
             ];
@@ -105,37 +105,40 @@ describe('Fetch Audience Feed Gateway API', () => {
   const plugin = new MyFakeBatchedAudienceFeedConnector(false);
   const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-  it('Check that feed_id is passed correctly in fetchAudienceFeedProperties', function (done) {
+  it('Check that feed_id is passed correctly in fetchAudienceFeedProperties', async function () {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    void (runner.plugin as MyFakeBatchedAudienceFeedConnector).fetchAudienceFeedProperties(fakeId).then(() => {
-      expect(rpMockup.args[0][0].uri).to.be.eq(
+    await (runner.plugin as MyFakeBatchedAudienceFeedConnector).fetchAudienceFeedProperties(fakeId).then(() => {
+      expect(rpMockup.args[0][0].url).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/audience_segment_external_feeds/${fakeId}/properties`,
       );
-      done();
     });
   });
 
-  it('Check that feed_id is passed correctly in fetchAudienceSegment', function (done) {
+  it('Check that feed_id is passed correctly in fetchAudienceSegment', async function () {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    void (runner.plugin as MyFakeBatchedAudienceFeedConnector).fetchAudienceSegment(fakeId).then(() => {
-      expect(rpMockup.args[1][0].uri).to.be.eq(
+    await (runner.plugin as MyFakeBatchedAudienceFeedConnector).fetchAudienceSegment(fakeId).then(() => {
+      expect(rpMockup.args[1][0].url).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/audience_segment_external_feeds/${fakeId}/audience_segment`,
       );
-      done();
     });
   });
 });
 
-describe.only('External Audience Feed API test', function () {
+describe('External Audience Feed API test', function () {
   // All the magic is here
   const plugin = new MyFakeBatchedAudienceFeedConnector(false);
   let runner: core.TestingPluginRunner;
 
-  it('Check that the plugin is giving good results with a simple handler', function (done) {
+  after(() => {
+    // We clear the cache so that we don't have any processing still running in the background
+    runner.plugin.pluginCache.clear();
+  });
+
+  it('Check that the plugin is giving good results with a simple handler', async function () {
     const rpMockup: sinon.SinonStub = sinon.stub();
 
     const audienceFeed: core.DataResponse<core.AudienceSegmentExternalFeedResource> = {
@@ -153,7 +156,7 @@ describe.only('External Audience Feed API test', function () {
     rpMockup
       .withArgs(
         sinon.match.has(
-          'uri',
+          'url',
           sinon.match(function (value: string) {
             return value.match(/\/v1\/audience_segment_external_feeds\/(.){1,10}/) !== null;
           }),
@@ -181,7 +184,7 @@ describe.only('External Audience Feed API test', function () {
     rpMockup
       .withArgs(
         sinon.match.has(
-          'uri',
+          'url',
           sinon.match(function (value: string) {
             return value.match(/\/v1\/audience_segment_external_feeds\/(.){1,10}\/properties/) !== null;
           }),
@@ -268,53 +271,31 @@ describe.only('External Audience Feed API test', function () {
       },
     };
 
-    void request(runner.plugin.app)
-      .post('/v1/external_segment_creation')
-      .send(externalSegmentCreation)
-      .end(function (err, res) {
-        expect(res.status).to.equal(200);
+    const res1 = await request(runner.plugin.app).post('/v1/external_segment_creation').send(externalSegmentCreation);
+    expect(res1.status).to.equal(200);
+    expect(JSON.parse(res1.text).status).to.be.eq('ok');
 
-        expect(JSON.parse(res.text).status).to.be.eq('ok');
+    const res2 = await request(runner.plugin.app)
+      .post('/v1/external_segment_connection')
+      .send(externalSegmentConnection);
+    expect(res2.status).to.equal(200);
+    expect(JSON.parse(res2.text).status).to.be.eq('ok');
 
-        void request(runner.plugin.app)
-          .post('/v1/external_segment_connection')
-          .send(externalSegmentConnection)
-          .end(function (err, res) {
-            expect(res.status).to.equal(200);
+    const res3 = await request(runner.plugin.app).post('/v1/user_segment_update').send(userSegmentUpdateRequest);
+    expect(res3.status).to.equal(200);
+    expect(JSON.parse(res3.text).data).to.deep.equal([
+      {
+        type: 'BATCH_DELIVERY',
+        content: { uuid: upid, user_list: 123 },
+        grouping_key: userSegmentUpdateRequest.operation,
+      },
+    ]);
+    expect(JSON.parse(res3.text).status).to.be.eq('ok');
 
-            expect(JSON.parse(res.text).status).to.be.eq('ok');
-
-            void request(runner.plugin.app)
-              .post('/v1/user_segment_update')
-              .send(userSegmentUpdateRequest)
-              .end(function (err, res) {
-                expect(res.status).to.equal(200);
-                expect(JSON.parse(res.text).data).to.deep.equal([
-                  {
-                    type: 'BATCH_DELIVERY',
-                    content: { uuid: upid, user_list: 123 },
-                    grouping_key: userSegmentUpdateRequest.operation,
-                  },
-                ]);
-                expect(JSON.parse(res.text).status).to.be.eq('ok');
-              });
-
-            void request(runner.plugin.app)
-              .post('/v1/batch_update')
-              .send(batchUpdateRequest)
-              .end(function (err, res) {
-                expect(res.status).to.equal(200);
-                let result = JSON.parse(res.text) as BatchUpdatePluginResponse;
-                expect(result.status).to.be.eq('OK');
-                expect(result.message).to.be.eq(JSON.stringify(batchUpdateRequest.batch_content));
-                done();
-              });
-          });
-      });
-  });
-
-  afterEach(() => {
-    // We clear the cache so that we don't have any processing still running in the background
-    runner.plugin.pluginCache.clear();
+    const res4 = await request(runner.plugin.app).post('/v1/batch_update').send(batchUpdateRequest);
+    expect(res4.status).to.equal(200);
+    const result = JSON.parse(res4.text) as BatchUpdatePluginResponse;
+    expect(result.status).to.be.eq('OK');
+    expect(result.message).to.be.eq(JSON.stringify(batchUpdateRequest.batch_content));
   });
 });

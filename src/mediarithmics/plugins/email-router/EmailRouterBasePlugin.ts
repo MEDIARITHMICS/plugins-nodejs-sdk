@@ -36,10 +36,10 @@ export abstract class EmailRouterPlugin extends BasePlugin<EmailRouterBaseInstan
   // To be overriden to get a cutom behavior
 
   async fetchEmailRouterProperties(id: string): Promise<PluginProperty[]> {
-    const response = await super.requestGatewayHelper<PluginPropertyResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/email_routers/${id}/properties`,
-    );
+    const response = await super.requestGatewayHelper<PluginPropertyResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/email_routers/${id}/properties`,
+    });
     this.logger.debug(`Fetched Email Router Properties: ${id} - ${JSON.stringify(response.data)}`);
     return response.data;
   }

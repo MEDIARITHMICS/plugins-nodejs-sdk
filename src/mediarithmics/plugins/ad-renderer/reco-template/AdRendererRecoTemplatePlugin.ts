@@ -20,10 +20,10 @@ export abstract class AdRendererRecoTemplatePlugin extends AdRendererTemplatePlu
   async fetchUserCampaign(campaignId: string, userCampaignId: string): Promise<UserCampaignResource> {
     let userCampaignResponse: UserCampaignResponse;
     try {
-      userCampaignResponse = await super.requestGatewayHelper(
-        'GET',
-        `${this.outboundPlatformUrl}/v1/display_campaigns/${campaignId}/user_campaigns/${userCampaignId}`,
-      );
+      userCampaignResponse = await super.requestGatewayHelper({
+        method: 'GET',
+        url: `${this.outboundPlatformUrl}/v1/display_campaigns/${campaignId}/user_campaigns/${userCampaignId}`,
+      });
     } catch (e) {
       this.logger.error(
         `User campaign could not be fetched for: ${campaignId} - ${userCampaignId} Returning empty user campaign Error: ${
@@ -60,7 +60,7 @@ export abstract class AdRendererRecoTemplatePlugin extends AdRendererTemplatePlu
       return Promise.resolve([]);
     }
 
-    const uri = `${this.outboundPlatformUrl}/v1/recommenders/${instanceContext.recommender_id}/recommendations`;
+    const url = `${this.outboundPlatformUrl}/v1/recommenders/${instanceContext.recommender_id}/recommendations`;
 
     const body = {
       recommender_id: instanceContext.recommender_id,
@@ -69,9 +69,9 @@ export abstract class AdRendererRecoTemplatePlugin extends AdRendererTemplatePlu
       },
     };
 
-    this.logger.debug(`POST: ${uri} - ${JSON.stringify(body)}`);
+    this.logger.debug(`POST: ${url} - ${JSON.stringify(body)}`);
 
-    const response: RecommenderResponse = await super.requestGatewayHelper('POST', uri, body);
+    const response: RecommenderResponse = await super.requestGatewayHelper({ method: 'POST', url, body });
 
     this.logger.debug(`Recommender ${instanceContext.recommender_id} response : ${JSON.stringify(response)}`);
 

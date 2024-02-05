@@ -1,4 +1,4 @@
-import { UserDeviceTechnicalIdentifierType } from "../../reference/UserIdentifierInterface";
+import { UserDeviceTechnicalIdentifierType } from '../../reference/UserIdentifierInterface';
 
 export interface AssetFilePropertyResource {
   original_file_name?: string;
@@ -77,7 +77,6 @@ export interface NativeImagePropertyResource {
   asset_id?: string;
   file_path?: string;
 }
-
 
 export interface IdentifyingAccount {
   type: 'USER_ACCOUNT';

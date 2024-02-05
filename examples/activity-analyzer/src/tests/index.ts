@@ -1,5 +1,10 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 import 'mocha';
+
 import { core, helpers } from '@mediarithmics/plugins-nodejs-sdk';
+
 import { MyActivityAnalyzerPlugin } from '../MyPluginImpl';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';

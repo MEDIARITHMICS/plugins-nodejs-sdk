@@ -41,7 +41,7 @@ describe('Test Example Email Router', function () {
     rpMockup
       .withArgs(
         sinon.match.has(
-          'uri',
+          'url',
           sinon.match(function (value: string) {
             return value.match(/\/v1\/email_routers\/(.){1,10}\/properties/) !== null;
           }),
@@ -52,7 +52,7 @@ describe('Test Example Email Router', function () {
     return rpMockup;
   }
 
-  it('Check behavior of dummy Email Router', function (done) {
+  it('Check behavior of dummy Email Router', async function () {
     // All the magic is here
     const plugin = new MySimpleEmailRouter(false);
     const rpMockup = buildRpMockup();
@@ -130,7 +130,7 @@ describe('Test Example Email Router', function () {
     rpMockup
       .withArgs(
         sinon.match.has(
-          'uri',
+          'url',
           sinon.match(function (value: string) {
             return value.match(/\/v1\/external_services\/technical_name=(.){1,20}\/call/) !== null;
           }),
@@ -139,26 +139,15 @@ describe('Test Example Email Router', function () {
       .returns(mjResponse);
 
     // Plugin log level to debug
-    request(runner.plugin.app)
-      .put('/v1/log_level')
-      .send({ level: 'debug' })
-      .end((err, res) => {
-        expect(res.status).to.equal(200);
+    const res1 = await request(runner.plugin.app).put('/v1/log_level').send({ level: 'debug' });
+    expect(res1.status).to.equal(200);
 
-        // Activity to process
-        request(runner.plugin.app)
-          .post('/v1/email_routing')
-          .send(emailRoutingRequest)
-          .end((err, res) => {
-            expect(res.status).to.eq(200);
-
-            expect((JSON.parse(res.text) as core.EmailRoutingPluginResponse).result).to.be.true;
-            done();
-          });
-      });
+    const res2 = await request(runner.plugin.app).post('/v1/email_routing').send(emailRoutingRequest);
+    expect(res2.status).to.eq(200);
+    expect((JSON.parse(res2.text) as core.EmailRoutingPluginResponse).result).to.be.true;
   });
 
-  it('Check the Email Routeur retry', function (done) {
+  it('Check the Email Routeur retry', async function () {
     this.timeout(50000);
 
     // All the magic is here
@@ -237,7 +226,7 @@ describe('Test Example Email Router', function () {
 
     const mjMock = rpMockup.withArgs(
       sinon.match.has(
-        'uri',
+        'url',
         sinon.match(function (value: string) {
           return value.match(/\/v1\/external_services\/technical_name=(.){1,20}\/call/) !== null;
         }),
@@ -251,22 +240,11 @@ describe('Test Example Email Router', function () {
     mjMock.onCall(3).returns(mjResponse);
 
     // Plugin log level to debug
-    request(runner.plugin.app)
-      .put('/v1/log_level')
-      .send({ level: 'debug' })
-      .end((err, res) => {
-        expect(res.status).to.equal(200);
+    const res1 = await request(runner.plugin.app).put('/v1/log_level').send({ level: 'debug' });
+    expect(res1.status).to.equal(200);
 
-        // Activity to process
-        request(runner.plugin.app)
-          .post('/v1/email_routing')
-          .send(emailRoutingRequest)
-          .end((err, res) => {
-            expect(res.status).to.eq(200);
-
-            expect((JSON.parse(res.text) as core.EmailRoutingPluginResponse).result).to.be.true;
-            done();
-          });
-      });
+    const res2 = await request(runner.plugin.app).post('/v1/email_routing').send(emailRoutingRequest);
+    expect(res2.status).to.eq(200);
+    expect((JSON.parse(res2.text) as core.EmailRoutingPluginResponse).result).to.be.true;
   });
 });

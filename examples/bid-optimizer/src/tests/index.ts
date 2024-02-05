@@ -35,7 +35,7 @@ describe('Test Example BidOptimizer', function () {
   rpMockup
     .withArgs(
       sinon.match.has(
-        'uri',
+        'url',
         sinon.match(function (value: string) {
           return value.match(/\/v1\/bid_optimizers\/(.){1,10}/) !== null;
         }),
@@ -64,7 +64,7 @@ describe('Test Example BidOptimizer', function () {
   rpMockup
     .withArgs(
       sinon.match.has(
-        'uri',
+        'url',
         sinon.match(function (value: string) {
           return value.match(/\/v1\/bid_optimizers\/(.){1,10}\/properties/) !== null;
         }),
@@ -160,30 +160,19 @@ describe('Test Example BidOptimizer', function () {
             ]
          }`);
 
-  it('Check behavior of dummy bid optimizer', function (done) {
+  it('Check behavior of dummy bid optimizer', async function () {
     // All the magic is here
     const plugin = new MyBidOptimizerPlugin(false);
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     // Plugin log level to debug
-    request(runner.plugin.app)
-      .put('/v1/log_level')
-      .send({ level: 'debug' })
-      .end((err, res) => {
-        expect(res.status).to.equal(200);
+    const res1 = await request(runner.plugin.app).put('/v1/log_level').send({ level: 'debug' });
+    expect(res1.status).to.equal(200);
 
-        // Activity to process
-        request(runner.plugin.app)
-          .post('/v1/bid_decisions')
-          .send(bidDecisionRequest)
-          .end((err, res) => {
-            expect(res.status).to.eq(200);
-
-            expect((JSON.parse(res.text) as core.BidOptimizerPluginResponse).bids[0].bid_price).to.be.eq(
-              bidDecisionRequest.campaign_info.max_bid_price,
-            );
-            done();
-          });
-      });
+    const res2 = await request(runner.plugin.app).post('/v1/bid_decisions').send(bidDecisionRequest);
+    expect(res2.status).to.eq(200);
+    expect((JSON.parse(res2.text) as core.BidOptimizerPluginResponse).bids[0].bid_price).to.be.eq(
+      bidDecisionRequest.campaign_info.max_bid_price,
+    );
   });
 });

@@ -14,9 +14,14 @@ const PLUGIN_WORKER_ID = 'Calavera';
 process.env.PLUGIN_AUTHENTICATION_TOKEN = PLUGIN_AUTHENTICATION_TOKEN;
 process.env.PLUGIN_WORKER_ID = PLUGIN_WORKER_ID;
 
-describe.only('Test Email Renderer example', function () {
+describe('Test Email Renderer example', function () {
   const plugin = new ExampleEmailRenderer(false);
   let runner: core.TestingPluginRunner;
+
+  after(() => {
+    // We clear the cache so that we don't have any processing still running in the background
+    runner.plugin.pluginCache.clear();
+  });
 
   it('Check the behavior of a dummy email renderer', async () => {
     const rpMockup: sinon.SinonStub = sinon.stub();
@@ -51,7 +56,7 @@ describe.only('Test Email Renderer example', function () {
     rpMockup
       .withArgs(
         sinon.match.has(
-          'uri',
+          'url',
           sinon.match(function (value: string) {
             return value.match(/\/v1\/creatives\/(.){1,10}\/renderer_properties/) !== null;
           }),
@@ -84,10 +89,5 @@ describe.only('Test Email Renderer example', function () {
     };
 
     request(runner.plugin.app).post('/v1/email_contents').send(emailRenderRequest).expect(200);
-  });
-
-  afterEach(() => {
-    // We clear the cache so that we don't have any processing still running in the background
-    runner.plugin.pluginCache.clear();
   });
 });

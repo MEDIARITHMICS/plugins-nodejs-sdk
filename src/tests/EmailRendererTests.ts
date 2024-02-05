@@ -50,19 +50,18 @@ describe('Fetch Email Renderer API', () => {
   const plugin = new MyFakeEmailRendererPlugin(false);
   const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-  it('Check that email_renderer_id is passed correctly in fetchCreative & fetchCreativeProperties', function (done) {
+  it('Check that email_renderer_id is passed correctly in fetchCreative & fetchCreativeProperties', async function () {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    void (runner.plugin as MyFakeEmailRendererPlugin).fetchCreative(fakeId).then(() => {
-      expect(rpMockup.args[0][0].uri).to.be.eq(`${runner.plugin.outboundPlatformUrl}/v1/creatives/${fakeId}`);
+    await (runner.plugin as MyFakeEmailRendererPlugin).fetchCreative(fakeId).then(async () => {
+      expect(rpMockup.args[0][0].url).to.be.eq(`${runner.plugin.outboundPlatformUrl}/v1/creatives/${fakeId}`);
 
       // We try a call to the Gateway
-      void (runner.plugin as MyFakeEmailRendererPlugin).fetchCreativeProperties(fakeId).then(() => {
-        expect(rpMockup.args[1][0].uri).to.be.eq(
+      await (runner.plugin as MyFakeEmailRendererPlugin).fetchCreativeProperties(fakeId).then(() => {
+        expect(rpMockup.args[1][0].url).to.be.eq(
           `${runner.plugin.outboundPlatformUrl}/v1/creatives/${fakeId}/renderer_properties`,
         );
-        done();
       });
     });
   });
@@ -73,7 +72,12 @@ describe('Email Renderer API test', function () {
   const plugin = new MyFakeEmailRendererPlugin(false);
   let runner: core.TestingPluginRunner;
 
-  it('Check that the plugin is giving good results with a simple onEmailContents handler', function (done) {
+  after(() => {
+    // We clear the cache so that we don't have any processing still running in the background
+    runner.plugin.pluginCache.clear();
+  });
+
+  it('Check that the plugin is giving good results with a simple onEmailContents handler', async function () {
     const rpMockup = sinon.stub();
 
     rpMockup.onCall(0).returns(
@@ -104,6 +108,7 @@ describe('Email Renderer API test', function () {
         resolve(creative);
       }),
     );
+
     rpMockup.onCall(1).returns(
       new Promise((resolve, reject) => {
         const pluginInfo: core.PluginPropertyResponse = {
@@ -155,20 +160,8 @@ describe('Email Renderer API test', function () {
       email_tracking_url: null,
     };
 
-    void request(runner.plugin.app)
-      .post('/v1/email_contents')
-      .send(requestBody)
-      .end(function (err, res) {
-        expect(res.status).to.equal(200);
-
-        expect(JSON.parse(res.text).content.html).to.be.eq(requestBody.call_id);
-
-        done();
-      });
-  });
-
-  afterEach(() => {
-    // We clear the cache so that we don't have any processing still running in the background
-    runner.plugin.pluginCache.clear();
+    const res = await request(runner.plugin.app).post('/v1/email_contents').send(requestBody);
+    expect(res.status).to.equal(200);
+    expect(JSON.parse(res.text).content.html).to.be.eq(requestBody.call_id);
   });
 });

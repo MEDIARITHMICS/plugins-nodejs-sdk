@@ -55,42 +55,45 @@ describe('Fetch Scenario Custom Action Gateway API', () => {
   const plugin = new MyFakeCustomActionBasePlugin(false);
   const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-  it('Check that custom_action_id is passed correctly in fetchCustomActionProperties', function (done) {
-    const fakeToken = 'xxxx';
-    const fakeId = '62';
-
-    // We try to call the Gateway
-    void (runner.plugin as MyFakeCustomActionBasePlugin).fetchCustomActionProperties(fakeId).then(() => {
-      expect(rpMockup.args[0][0].uri).to.be.eq(
-        `${this.outboundPlatformUrl}/v1/scenario_custom_actions/${fakeId}/properties`,
-      );
-      done();
-    });
-  });
-
-  it('Check that custom_action_id is passed correctly in fetchCustomAction', function (done) {
-    const fakeToken = 'xxxx';
-    const fakeId = '62';
-
-    // We try to call the Gateway
-    void (runner.plugin as MyFakeCustomActionBasePlugin).fetchCustomAction(fakeId).then(() => {
-      expect(rpMockup.args[0][0].uri).to.be.eq(`${this.outboundPlatformUrl}/v1/scenario_custom_actions/${fakeId}`);
-      done();
-    });
-  });
-
   afterEach(() => {
     // We clear the cache so that we don't have any processing still running in the background
     runner.plugin.pluginCache.clear();
   });
+
+  it('Check that custom_action_id is passed correctly in fetchCustomActionProperties', async function () {
+    const fakeId = '62';
+
+    // We try to call the Gateway
+    await (runner.plugin as MyFakeCustomActionBasePlugin).fetchCustomActionProperties(fakeId).then(() => {
+      expect(rpMockup.args[0][0].url).to.be.eq(
+        `${runner.plugin.outboundPlatformUrl}/v1/scenario_custom_actions/${fakeId}/properties`,
+      );
+    });
+  });
+
+  it('Check that custom_action_id is passed correctly in fetchCustomAction', async function () {
+    const fakeId = '62';
+
+    // We try to call the Gateway
+    await (runner.plugin as MyFakeCustomActionBasePlugin).fetchCustomAction(fakeId).then(() => {
+      expect(rpMockup.args[1][0].url).to.be.eq(
+        `${runner.plugin.outboundPlatformUrl}/v1/scenario_custom_actions/${fakeId}`,
+      );
+    });
+  });
 });
 
-describe.only('Custom Action API test', function () {
+describe('Custom Action API test', function () {
   // All the magic is here
   const plugin = new MyFakeCustomActionBasePlugin(false);
   let runner: core.TestingPluginRunner;
 
-  it('Check that the plugin is giving good results with a simple handler', function (done) {
+  after(() => {
+    // We clear the cache so that we don't have any processing still running in the background
+    runner.plugin.pluginCache.clear();
+  });
+
+  it('Check that the plugin is giving good results with a simple handler', async function () {
     const rpMockup: sinon.SinonStub = sinon.stub();
 
     const customAction: core.DataResponse<core.CustomAction> = {
@@ -107,10 +110,11 @@ describe.only('Custom Action API test', function () {
         version_value: '1.0.0',
       },
     };
+
     rpMockup
       .withArgs(
         sinon.match.has(
-          'uri',
+          'url',
           sinon.match(function (value: string) {
             return value.match(/\/v1\/scenario_custom_actions\/(.){1,10}$/) !== null;
           }),
@@ -138,7 +142,7 @@ describe.only('Custom Action API test', function () {
     rpMockup
       .withArgs(
         sinon.match.has(
-          'uri',
+          'url',
           sinon.match(function (value: string) {
             return value.match(/\/v1\/scenario_custom_actions\/(.){1,10}\/properties/) !== null;
           }),
@@ -156,19 +160,8 @@ describe.only('Custom Action API test', function () {
       scenario_id: '888',
     };
 
-    void request(runner.plugin.app)
-      .post('/v1/scenario_custom_actions')
-      .send(customActionRequest)
-      .end(function (err, res) {
-        expect(res.status).to.equal(200);
-        expect(JSON.parse(res.text).status).to.be.eq('ok');
-
-        done();
-      });
-  });
-
-  afterEach(() => {
-    // We clear the cache so that we don't have any processing still running in the background
-    runner.plugin.pluginCache.clear();
+    const res = await request(runner.plugin.app).post('/v1/scenario_custom_actions').send(customActionRequest);
+    expect(res.status).to.equal(200);
+    expect(JSON.parse(res.text).status).to.be.eq('ok');
   });
 });

@@ -2,6 +2,11 @@
 
 # Unreleased
 
+# 0.21.0 - 2024-02-05
+
+- Changing `BasePlugin` \_transport property from `request/request-promise` lib to `got`.
+- Exporting an `ApiError` class based on `got` RequestError.
+
 # 0.20.0 - 2023-11-29
 
 - Make `UserIdentifierInfo` an union type, which will help infering type based on `type`.
