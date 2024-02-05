@@ -25,7 +25,7 @@ const rpMockupGlobal: sinon.SinonStub = sinon.stub();
 const mockApi = (uriPattern: RegExp): sinon.SinonStub => {
   return rpMockupGlobal.withArgs(
     sinon.match.has(
-      'uri',
+      'url',
       sinon.match((value: string) => value.match(uriPattern) !== null),
     ),
   );
@@ -36,30 +36,21 @@ mockApi(/\/v1\/activity_analyzers\/(.){1,10}/).returns(activityAnalyzer);
 const itFactory =
   (plugin: ActivityAnalyzerPlugin, property: core.PluginPropertyResponse, logLevel: LogLevel = 'info') =>
   (name: string, input: string, output: string) => {
-    it(name, function (done) {
+    const runner = new core.TestingPluginRunner(plugin, rpMockupGlobal);
+
+    after(function () {
+      runner.plugin.pluginCache.clear();
+    });
+
+    it(name, async function () {
       mockApi(/\/v1\/activity_analyzers\/(.){1,10}\/properties/).returns(property);
 
-      const runner = new core.TestingPluginRunner(plugin, rpMockupGlobal);
+      const res1 = await request(runner.plugin.app).put('/v1/log_level').send({ level: logLevel });
+      expect(res1.status).to.equal(200);
 
-      void request(runner.plugin.app)
-        .put('/v1/log_level')
-        .send({ level: logLevel })
-        .end((err, res) => {
-          expect(res.status).to.equal(200);
-
-          void request(runner.plugin.app)
-            .post('/v1/activity_analysis')
-            .send(input)
-            .end((err, res) => {
-              expect(res.status).to.eq(200);
-              expect(JSON.parse(res.text)).to.be.deep.equal(output);
-              done();
-            });
-        });
-
-      afterEach(function () {
-        runner.plugin.pluginCache.clear();
-      });
+      const res2 = await request(runner.plugin.app).post('/v1/activity_analysis').send(input);
+      expect(res2.status).to.eq(200);
+      expect(JSON.parse(res2.text)).to.be.deep.equal(output);
     });
   };
 

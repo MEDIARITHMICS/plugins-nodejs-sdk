@@ -15,10 +15,8 @@ import { BatchUpdateHandler } from '../../api/core/batchupdate/BatchUpdateHandle
 import { BatchUpdatePluginResponse, BatchUpdateRequest } from '../../api/core/batchupdate/BatchUpdateInterface';
 import {
   BatchedUserSegmentUpdatePluginResponse,
-  DeliveryType,
   ExternalSegmentConnectionPluginResponse,
   ExternalSegmentCreationPluginResponse,
-  UserSegmentUpdatePluginBatchDeliveryResponseData,
   UserSegmentUpdatePluginResponse,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
 import {
@@ -47,19 +45,19 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   }
 
   async fetchAudienceSegment(feedId: string): Promise<AudienceSegmentResource> {
-    const response = await super.requestGatewayHelper<AudienceSegmentResourceResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/audience_segment`,
-    );
+    const response = await super.requestGatewayHelper<AudienceSegmentResourceResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/audience_segment`,
+    });
     this.logger.debug(`Fetched External Segment: FeedId: ${feedId} - ${JSON.stringify(response.data)}`);
     return response.data;
   }
 
   async fetchAudienceFeed(feedId: string): Promise<AudienceSegmentExternalFeedResource> {
-    const response = await super.requestGatewayHelper<AudienceSegmentexternalResourceResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}`,
-    );
+    const response = await super.requestGatewayHelper<AudienceSegmentexternalResourceResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}`,
+    });
     this.logger.debug(`Fetched External Feed: ${feedId} - ${JSON.stringify(response.data)}`);
     return response.data;
   }
@@ -68,30 +66,30 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   // To be overriden to get a cutom behavior
 
   async fetchAudienceFeedProperties(feedId: string): Promise<PluginProperty[]> {
-    const response = await super.requestGatewayHelper<PluginPropertyResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/properties`,
-    );
+    const response = await super.requestGatewayHelper<PluginPropertyResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/properties`,
+    });
     this.logger.debug(`Fetched External Feed Properties: ${feedId} - ${JSON.stringify(response.data)}`);
     return response.data;
   }
 
   async createAudienceFeedProperties(feedId: string, property: PluginProperty): Promise<PluginProperty[]> {
-    const response = await super.requestGatewayHelper<PluginPropertyResponse>(
-      'POST',
-      `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/properties`,
-      property,
-    );
+    const response = await super.requestGatewayHelper<PluginPropertyResponse>({
+      method: 'POST',
+      url: `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/properties`,
+      body: property,
+    });
     this.logger.debug(`Created External Feed Properties: ${feedId} - ${JSON.stringify(response.data)}`);
     return response.data;
   }
 
   async updateAudienceFeedProperties(feedId: string, property: PluginProperty): Promise<PluginProperty[]> {
-    const response = await super.requestGatewayHelper<PluginPropertyResponse>(
-      'PUT',
-      `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/properties/technical_name=${property.technical_name}`,
-      property,
-    );
+    const response = await super.requestGatewayHelper<PluginPropertyResponse>({
+      method: 'PUT',
+      url: `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/properties/technical_name=${property.technical_name}`,
+      body: property,
+    });
     this.logger.debug(`Updated External Feed Properties: ${feedId} - ${JSON.stringify(response.data)}`);
     return response.data;
   }
@@ -130,11 +128,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   ): Promise<R>;
 
   private logErrorMessage(err: Error) {
-    this.logger.error(
-      `Something bad happened : ${(err as Error).message} - ${
-        (err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
-      }`,
-    );
+    this.logger.error(`Something bad happened : ${err.message} - ${err.stack ? err.stack : 'stack undefined'}`);
   }
 
   protected async getInstanceContext(feedId: string): Promise<AudienceFeedConnectorBaseInstanceContext> {
@@ -201,7 +195,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
         } catch (err) {
-          this.logErrorMessage(err);
+          this.logErrorMessage(err as Error);
           const pluginResponse: ExternalSegmentCreationPluginResponse = {
             status: 'error',
             message: `${(err as Error).message}`,
@@ -265,7 +259,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
         } catch (err) {
-          this.logErrorMessage(err);
+          this.logErrorMessage(err as Error);
           return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
         }
       },
@@ -316,7 +310,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
           return res.status(statusCode).send(JSON.stringify(response));
         } catch (err) {
-          this.logErrorMessage(err);
+          this.logErrorMessage(err as Error);
           return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
         }
       },
@@ -359,7 +353,7 @@ export abstract class AudienceFeedConnectorBasePlugin extends GenericAudienceFee
   }
 
   private initBatchUpdate(): void {
-    this.app.post('/v1/batch_update', this.emptyBodyFilter, async (req: express.Request, res: express.Response) => {
+    this.app.post('/v1/batch_update', this.emptyBodyFilter, (req: express.Request, res: express.Response) => {
       res.status(500).send({ status: 'error', message: "Plugin doesn't support batch update" });
     });
   }

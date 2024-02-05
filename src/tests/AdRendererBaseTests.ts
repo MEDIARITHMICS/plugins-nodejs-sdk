@@ -35,7 +35,7 @@ describe('Fetch DisplayAd API', () => {
   const plugin = new MyFakeAdRenderer(false);
   const runner = new core.TestingPluginRunner(plugin, requestPromiseProx);
 
-  it('Check that creativeId is passed correctly in fetchDisplayAd', function (done) {
+  it('Check that creativeId is passed correctly in fetchDisplayAd', async function () {
     const fakeCreativeId = '422';
 
     // Creative stub
@@ -64,26 +64,24 @@ describe('Fetch DisplayAd API', () => {
       },
     };
 
-    requestPromiseProx.withArgs(sinon.match.has('uri', sinon.match(/\/v1\/creatives\/(.){1,10}$/))).returns(creative);
+    requestPromiseProx.withArgs(sinon.match.has('url', sinon.match(/\/v1\/creatives\/(.){1,10}$/))).returns(creative);
 
     // We try a call to the Gateway
-    void plugin.fetchDisplayAd(fakeCreativeId).then(() => {
-      expect(requestPromiseProx.args[0][0].uri).to.be.eq(
+    await plugin.fetchDisplayAd(fakeCreativeId).then(() => {
+      expect(requestPromiseProx.args[0][0].url).to.be.eq(
         `${plugin.outboundPlatformUrl}/v1/creatives/${fakeCreativeId}`,
       );
-      done();
     });
   });
 
-  it('Check that fakeCreativeId is passed correctly in fetchDisplayAdProperties', function (done) {
+  it('Check that fakeCreativeId is passed correctly in fetchDisplayAdProperties', async function () {
     const fakeCreativeId = '4255';
 
     // We try a call to the Gateway
-    void plugin.fetchDisplayAdProperties(fakeCreativeId).then(() => {
-      expect(requestPromiseProx.args[1][0].uri).to.be.eq(
+    await plugin.fetchDisplayAdProperties(fakeCreativeId).then(() => {
+      expect(requestPromiseProx.args[1][0].url).to.be.eq(
         `${plugin.outboundPlatformUrl}/v1/creatives/${fakeCreativeId}/renderer_properties`,
       );
-      done();
     });
   });
 
@@ -107,7 +105,7 @@ describe('Ad Contents API test', function () {
   const plugin = new MyFakeAdRenderer2(false);
   let runner: core.TestingPluginRunner;
 
-  it('Check that the plugin is giving good results with a simple adContents handler', function (done) {
+  it('Check that the plugin is giving good results with a simple adContents handler', function () {
     const rpMockup = sinon.stub();
     rpMockup.onCall(0).returns(
       new Promise((resolve, reject) => {
@@ -203,8 +201,6 @@ describe('Ad Contents API test', function () {
       .end(function (err, res) {
         expect(res.status).to.equal(200);
         expect(res.text).to.be.eq(requestBody.call_id);
-
-        done();
       });
   });
 
@@ -261,7 +257,13 @@ describe('Instance Context check', () => {
   const plugin = new MyFakeAdRenderer(false);
   const runner = new core.TestingPluginRunner(plugin);
 
-  it('Check that the instanceContext is rebuilt at each call for PREVIEW', function (done) {
+  after(() => {
+    // We clear the cache so that we don't have any processing still running in the background
+    runner.plugin.pluginCache.clear();
+    ICStub.reset();
+  });
+
+  it('Check that the instanceContext is rebuilt at each call for PREVIEW', async function () {
     // Fake "Preview" AdCall
 
     const adRequest: core.AdRendererRequest = {
@@ -302,39 +304,18 @@ describe('Instance Context check', () => {
     };
 
     // Plugin log level to debug
-    void request(runner.plugin.app)
-      .put('/v1/log_level')
-      .send({ level: 'silly' })
-      .end((err, res) => {
-        expect(res.status).to.equal(200);
+    const res1 = await request(runner.plugin.app).put('/v1/log_level').send({ level: 'silly' });
+    expect(res1.status).to.equal(200);
 
-        // First AdCall
-        void request(runner.plugin.app)
-          .post('/v1/ad_contents')
-          .send(adRequest)
-          .end((err, res) => {
-            expect(res.status).to.eq(200);
+    // First AdCall
+    const res2 = await request(runner.plugin.app).post('/v1/ad_contents').send(adRequest);
+    expect(res2.status).to.eq(200);
 
-            // Second AdCall
-            void request(runner.plugin.app)
-              .post('/v1/ad_contents')
-              .send(adRequest)
-              .end((err, res) => {
-                expect(res.status).to.eq(200);
-
-                // As it's a PREVIEW AdCall, we should have loaded the InstanceContext twice
-                expect(ICStub.callCount).to.eq(2);
-
-                done();
-              });
-          });
-      });
-
-    afterEach(() => {
-      // We clear the cache so that we don't have any processing still running in the background
-      runner.plugin.pluginCache.clear();
-      ICStub.reset();
-    });
+    // Second AdCall
+    const res3 = await request(runner.plugin.app).post('/v1/ad_contents').send(adRequest);
+    expect(res3.status).to.eq(200);
+    // As it's a PREVIEW AdCall, we should have loaded the InstanceContext twice
+    expect(ICStub.callCount).to.eq(2);
   });
 });
 

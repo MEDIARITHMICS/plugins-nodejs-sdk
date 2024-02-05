@@ -47,27 +47,25 @@ describe('Fetch recommender API', () => {
   const plugin = new MyFakeRecommenderPlugin();
   const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-  it('Check that recommenderId is passed correctly in fetchRecommenderProperties', function (done) {
+  it('Check that recommenderId is passed correctly in fetchRecommenderProperties', async function () {
     const fakeRecommenderId = '42000000';
 
     // We try a call to the Gateway
-    void (runner.plugin as MyFakeRecommenderPlugin).fetchRecommenderProperties(fakeRecommenderId).then(() => {
-      expect(rpMockup.args[0][0].uri).to.be.eq(
+    await (runner.plugin as MyFakeRecommenderPlugin).fetchRecommenderProperties(fakeRecommenderId).then(() => {
+      expect(rpMockup.args[0][0].url).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/recommenders/${fakeRecommenderId}/properties`,
       );
-      done();
     });
   });
 
-  it('Check that RecommenderId is passed correctly in fetchRecommenderCatalogs', function (done) {
+  it('Check that RecommenderId is passed correctly in fetchRecommenderCatalogs', async function () {
     const fakeRecommenderId = '4255';
 
     // We try a call to the Gateway
-    void (runner.plugin as MyFakeRecommenderPlugin).fetchRecommenderCatalogs(fakeRecommenderId).then(() => {
-      expect(rpMockup.args[1][0].uri).to.be.eq(
+    await (runner.plugin as MyFakeRecommenderPlugin).fetchRecommenderCatalogs(fakeRecommenderId).then(() => {
+      expect(rpMockup.args[1][0].url).to.be.eq(
         `${plugin.outboundPlatformUrl}/v1/recommenders/${fakeRecommenderId}/catalogs`,
       );
-      done();
     });
   });
 });
@@ -91,7 +89,12 @@ describe('Recommender API test', function () {
   const plugin = new MyFakeSimpleRecommenderPlugin();
   let runner: core.TestingPluginRunner;
 
-  it('Check that the plugin is giving good results with a simple onRecommendationRequest handler', function (done) {
+  after(() => {
+    // We clear the cache so that we don't have any processing still running in the background
+    runner.plugin.pluginCache.clear();
+  });
+
+  it('Check that the plugin is giving good results with a simple onRecommendationRequest handler', async function () {
     const rpMockup = sinon.stub();
 
     const fakeRecommenderProperties = {
@@ -114,7 +117,7 @@ describe('Recommender API test', function () {
     rpMockup
       .withArgs(
         sinon.match.has(
-          'uri',
+          'url',
           sinon.match(function (value: string) {
             return value.match(/\/v1\/recommenders\/(.){1,10}\/properties/) !== null;
           }),
@@ -133,18 +136,7 @@ describe('Recommender API test', function () {
       },
     };
 
-    void request(runner.plugin.app)
-      .post('/v1/recommendations')
-      .send(requestBody)
-      .end(function (err, res) {
-        expect(res.status).to.equal(200);
-
-        done();
-      });
-  });
-
-  afterEach(() => {
-    // We clear the cache so that we don't have any processing still running in the background
-    runner.plugin.pluginCache.clear();
+    const res = await request(runner.plugin.app).post('/v1/recommendations').send(requestBody);
+    expect(res.status).to.equal(200);
   });
 });

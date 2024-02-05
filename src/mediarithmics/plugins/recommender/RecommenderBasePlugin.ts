@@ -23,10 +23,10 @@ export abstract class RecommenderPlugin extends BasePlugin<RecommenderBaseInstan
 
   // Helper to fetch the activity analyzer resource with caching
   async fetchRecommenderCatalogs(recommenderId: string): Promise<Catalog[]> {
-    const recommenderCatalogsResponse = await super.requestGatewayHelper<CatalogResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/recommenders/${recommenderId}/catalogs`,
-    );
+    const recommenderCatalogsResponse = await super.requestGatewayHelper<CatalogResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/recommenders/${recommenderId}/catalogs`,
+    });
     this.logger.debug(
       `Fetched recommender catalogs: ${recommenderId} - ${JSON.stringify(recommenderCatalogsResponse.data)}`,
     );
@@ -38,10 +38,10 @@ export abstract class RecommenderPlugin extends BasePlugin<RecommenderBaseInstan
 
   // Helper to fetch the activity analyzer resource with caching
   async fetchRecommenderProperties(recommenderId: string): Promise<PluginProperty[]> {
-    const recommenderPropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/recommenders/${recommenderId}/properties`,
-    );
+    const recommenderPropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/recommenders/${recommenderId}/properties`,
+    });
     this.logger.debug(
       `Fetched recommender Properties: ${recommenderId} - ${JSON.stringify(recommenderPropertyResponse.data)}`,
     );

@@ -29,10 +29,10 @@ export abstract class BidOptimizerPlugin extends BasePlugin<BidOptimizerBaseInst
    * @param bidOptimizerId
    */
   async fetchBidOptimizer(bidOptimizerId: string): Promise<BidOptimizer> {
-    const bidOptimizerResponse = await super.requestGatewayHelper<BidOptimizerResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/bid_optimizers/${bidOptimizerId}`,
-    );
+    const bidOptimizerResponse = await super.requestGatewayHelper<BidOptimizerResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/bid_optimizers/${bidOptimizerId}`,
+    });
     this.logger.debug(`Fetched Bid Optimizer: ${bidOptimizerId} - ${JSON.stringify(bidOptimizerResponse.data)}`);
     return bidOptimizerResponse.data;
   }
@@ -43,10 +43,10 @@ export abstract class BidOptimizerPlugin extends BasePlugin<BidOptimizerBaseInst
    */
 
   async fetchBidOptimizerProperties(bidOptimizerId: string): Promise<PluginProperty[]> {
-    const bidOptimizerPropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/bid_optimizers/${bidOptimizerId}/properties`,
-    );
+    const bidOptimizerPropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/bid_optimizers/${bidOptimizerId}/properties`,
+    });
     this.logger.debug(
       `Fetched BidOptimizer Properties: ${bidOptimizerId} - ${JSON.stringify(bidOptimizerPropertyResponse.data)}`,
     );

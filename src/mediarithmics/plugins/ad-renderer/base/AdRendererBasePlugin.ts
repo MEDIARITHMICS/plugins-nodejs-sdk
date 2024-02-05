@@ -25,12 +25,11 @@ export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceConte
 
   // Helper to fetch the Display Ad resource with caching
   async fetchDisplayAd(displayAdId: string, forceReload = false): Promise<DisplayAd> {
-    const response = await super.requestGatewayHelper<DisplayAdResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/creatives/${displayAdId}`,
-      undefined,
-      { 'force-reload': forceReload },
-    );
+    const response = await super.requestGatewayHelper<DisplayAdResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/creatives/${displayAdId}`,
+      qs: { 'force-reload': forceReload },
+    });
 
     this.logger.debug(`Fetched Creative: ${displayAdId} - ${JSON.stringify(response.data)}`);
 
@@ -43,12 +42,11 @@ export abstract class AdRendererBasePlugin<T extends AdRendererBaseInstanceConte
 
   // Helper to fetch the Display Ad properties resource with caching
   async fetchDisplayAdProperties(displayAdId: string, forceReload = false): Promise<PluginProperty[]> {
-    const creativePropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/creatives/${displayAdId}/renderer_properties`,
-      undefined,
-      { 'force-reload': forceReload },
-    );
+    const creativePropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/creatives/${displayAdId}/renderer_properties`,
+      qs: { 'force-reload': forceReload },
+    });
 
     this.logger.debug(`Fetched Creative Properties: ${displayAdId} - ${JSON.stringify(creativePropertyResponse.data)}`);
 

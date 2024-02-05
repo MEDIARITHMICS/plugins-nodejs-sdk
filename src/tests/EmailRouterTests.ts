@@ -48,15 +48,14 @@ describe('Fetch Email Router API', () => {
   const plugin = new MyFakeEmailRouterPlugin(false);
   const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-  it('Check that email_router_id is passed correctly in fetchEmailRouterProperties', function (done) {
+  it('Check that email_router_id is passed correctly in fetchEmailRouterProperties', async function () {
     const fakeId = '42000000';
 
     // We try a call to the Gateway
-    void (runner.plugin as MyFakeEmailRouterPlugin).fetchEmailRouterProperties(fakeId).then(() => {
-      expect(rpMockup.args[0][0].uri).to.be.eq(
+    await (runner.plugin as MyFakeEmailRouterPlugin).fetchEmailRouterProperties(fakeId).then(() => {
+      expect(rpMockup.args[0][0].url).to.be.eq(
         `${runner.plugin.outboundPlatformUrl}/v1/email_routers/${fakeId}/properties`,
       );
-      done();
     });
   });
 });
@@ -66,7 +65,12 @@ describe('Email Router API test', function () {
   const plugin = new MyFakeEmailRouterPlugin(false);
   let runner: core.TestingPluginRunner;
 
-  it('Check that the plugin is giving good results with a simple onEmailRouting handler', function (done) {
+  afterEach(() => {
+    // We clear the cache so that we don't have any processing still running in the background
+    runner.plugin.pluginCache.clear();
+  });
+
+  it('Check that the plugin is giving good results with a simple onEmailRouting handler', async function () {
     const rpMockup = sinon.stub();
 
     rpMockup.onCall(0).returns(
@@ -153,29 +157,12 @@ describe('Email Router API test', function () {
       "data": {}
     }`;
 
-    void request(runner.plugin.app)
-      .post('/v1/email_router_check')
-      .send(requestBody)
-      .end(function (err, res) {
-        expect(res.status).to.equal(200);
+    const res1 = await request(runner.plugin.app).post('/v1/email_router_check').send(requestBody);
+    expect(res1.status).to.equal(200);
+    expect(JSON.parse(res1.text).result).to.be.true;
 
-        expect(JSON.parse(res.text).result).to.be.true;
-
-        void request(runner.plugin.app)
-          .post('/v1/email_routing')
-          .send(requestBody)
-          .end(function (err, res) {
-            expect(res.status).to.equal(200);
-
-            expect(JSON.parse(res.text).result).to.be.true;
-
-            done();
-          });
-      });
-  });
-
-  afterEach(() => {
-    // We clear the cache so that we don't have any processing still running in the background
-    runner.plugin.pluginCache.clear();
+    const res2 = await request(runner.plugin.app).post('/v1/email_routing').send(requestBody);
+    expect(res2.status).to.equal(200);
+    expect(JSON.parse(res2.text).result).to.be.true;
   });
 });

@@ -26,10 +26,10 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin<ActivityAnalyzer
 
   // Helper to fetch the activity analyzer resource with caching
   async fetchActivityAnalyzer(activityAnalyzerId: string): Promise<ActivityAnalyzer> {
-    const activityAnalyzerResponse = await super.requestGatewayHelper<ActivityAnalyzerResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/activity_analyzers/${activityAnalyzerId}`,
-    );
+    const activityAnalyzerResponse = await super.requestGatewayHelper<ActivityAnalyzerResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/activity_analyzers/${activityAnalyzerId}`,
+    });
 
     this.logger.debug(
       `Fetched Activity Analyzer: ${activityAnalyzerId} - ${JSON.stringify(activityAnalyzerResponse.data)}`,
@@ -42,10 +42,10 @@ export abstract class ActivityAnalyzerPlugin extends BasePlugin<ActivityAnalyzer
 
   // Helper to fetch the activity analyzer resource with caching
   async fetchActivityAnalyzerProperties(activityAnalyzerId: string): Promise<PluginProperty[]> {
-    const activityAnalyzerPropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/activity_analyzers/${activityAnalyzerId}/properties`,
-    );
+    const activityAnalyzerPropertyResponse = await super.requestGatewayHelper<PluginPropertyResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/activity_analyzers/${activityAnalyzerId}/properties`,
+    });
     this.logger.debug(
       `Fetched Activity Analyzer Properties: ${activityAnalyzerId} - ${JSON.stringify(
         activityAnalyzerPropertyResponse.data,

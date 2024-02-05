@@ -15,12 +15,17 @@ const PLUGIN_WORKER_ID = 'Calavera';
 process.env.PLUGIN_AUTHENTICATION_TOKEN = PLUGIN_AUTHENTICATION_TOKEN;
 process.env.PLUGIN_WORKER_ID = PLUGIN_WORKER_ID;
 
-describe.only('Test Custom Action example', function () {
+describe('Test Custom Action example', function () {
   // All the magic is here
   const plugin = new MyCustomActionPlugin(false);
   let runner: core.TestingPluginRunner;
 
-  it('Check the behavior of a dummy custom action', function (done) {
+  after(() => {
+    // We clear the cache so that we don't have any processing still running in the background
+    runner.plugin.pluginCache.clear();
+  });
+
+  it('Check the behavior of a dummy custom action', async function () {
     const rpMockup: sinon.SinonStub = sinon.stub();
 
     const customAction: core.DataResponse<core.CustomAction> = {
@@ -40,7 +45,7 @@ describe.only('Test Custom Action example', function () {
     rpMockup
       .withArgs(
         sinon.match.has(
-          'uri',
+          'url',
           sinon.match(function (value: string) {
             return value.match(/\/v1\/scenario_custom_actions\/(.){1,10}$/) !== null;
           }),
@@ -68,7 +73,7 @@ describe.only('Test Custom Action example', function () {
     rpMockup
       .withArgs(
         sinon.match.has(
-          'uri',
+          'url',
           sinon.match(function (value: string) {
             return value.match(/\/v1\/scenario_custom_actions\/(.){1,10}\/properties/) !== null;
           }),
@@ -86,19 +91,8 @@ describe.only('Test Custom Action example', function () {
       scenario_id: '',
     };
 
-    request(runner.plugin.app)
-      .post('/v1/scenario_custom_actions')
-      .send(customActionRequest)
-      .end(function (err, res) {
-        expect(res.status).to.equal(200);
-        expect(JSON.parse(res.text).status).to.be.eq('ok');
-
-        done();
-      });
-  });
-
-  afterEach(() => {
-    // We clear the cache so that we don't have any processing still running in the background
-    runner.plugin.pluginCache.clear();
+    const res = await request(runner.plugin.app).post('/v1/scenario_custom_actions').send(customActionRequest);
+    expect(res.status).to.equal(200);
+    expect(JSON.parse(res.text).status).to.be.eq('ok');
   });
 });

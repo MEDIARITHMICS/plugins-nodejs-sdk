@@ -31,10 +31,10 @@ export abstract class CustomActionBasePlugin extends BasePlugin<CustomActionBase
    * @param customActionId
    */
   async fetchCustomAction(customActionId: string): Promise<CustomAction> {
-    const customActionResponse = await super.requestGatewayHelper<CustomActionResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/scenario_custom_actions/${customActionId}`,
-    );
+    const customActionResponse = await super.requestGatewayHelper<CustomActionResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/scenario_custom_actions/${customActionId}`,
+    });
     this.logger.debug(`Fetched Custom Action: ${customActionId} - %j`, customActionResponse.data);
     return customActionResponse.data;
   }
@@ -44,10 +44,10 @@ export abstract class CustomActionBasePlugin extends BasePlugin<CustomActionBase
    * @param customActionId
    */
   async fetchCustomActionProperties(customActionId: string): Promise<PluginProperty[]> {
-    const customActionPropertiesResponse = await super.requestGatewayHelper<PluginPropertyResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/scenario_custom_actions/${customActionId}/properties`,
-    );
+    const customActionPropertiesResponse = await super.requestGatewayHelper<PluginPropertyResponse>({
+      method: 'GET',
+      url: `${this.outboundPlatformUrl}/v1/scenario_custom_actions/${customActionId}/properties`,
+    });
     this.logger.debug(`Fetched Custom Action Properties: ${customActionId} - %j`, customActionPropertiesResponse.data);
     return customActionPropertiesResponse.data;
   }

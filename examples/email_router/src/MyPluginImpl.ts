@@ -1,6 +1,6 @@
+import * as express from 'express';
 import * as rp from 'request-promise-native';
 import * as retry from 'retry';
-import * as express from 'express';
 
 import { core } from '@mediarithmics/plugins-nodejs-sdk';
 
@@ -107,11 +107,11 @@ export class MySimpleEmailRouter extends core.EmailRouterPlugin {
       'Mj-campaign': request.campaign_id,
     };
 
-    const mailjetResponse: MailjetSentResponse = await this.requestGatewayHelper(
-      'POST',
-      `${this.outboundPlatformUrl}/v1/external_services/technical_name=mailjet/call`,
-      emailData,
-    );
+    const mailjetResponse: MailjetSentResponse = await this.requestGatewayHelper({
+      method: 'POST',
+      url: `${this.outboundPlatformUrl}/v1/external_services/technical_name=mailjet/call`,
+      body: emailData,
+    });
 
     if (mailjetResponse.Sent.length === 0) {
       this.logger.error('Mailjet sent an empty response, will retry');

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { core } from '@mediarithmics/plugins-nodejs-sdk';
 
 export class MyBidOptimizerPlugin extends core.BidOptimizerPlugin {

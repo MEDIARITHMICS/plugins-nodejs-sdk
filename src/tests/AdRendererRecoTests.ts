@@ -127,6 +127,7 @@ describe('Fetch recommendation API', () => {
     writable: true,
     deletable: false,
   };
+
   const fakeInstanceContext: core.AdRendererRecoTemplateInstanceContext = {
     recommender_id: '74',
     width: '300',
@@ -141,37 +142,35 @@ describe('Fetch recommendation API', () => {
   const rpMockup: sinon.SinonStub = sinon.stub();
 
   rpMockup
-    .withArgs(sinon.match.has('uri', sinon.match(/\/v1\/recommenders\/(.){1,10}\/recommendations/)))
+    .withArgs(sinon.match.has('url', sinon.match(/\/v1\/recommenders\/(.){1,10}\/recommendations/)))
     .returns(fakeRecommenderResponse);
 
-  it('Check that recommenderId and userAgentId are passed correctly in fetchRecommendations', function (done) {
+  it('Check that recommenderId and userAgentId are passed correctly in fetchRecommendations', async function () {
     const plugin = new MyDummyHandlebarsAdRenderer(false);
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     // We try a call to the Gateway
-    void (runner.plugin as MyDummyHandlebarsAdRenderer)
+    await (runner.plugin as MyDummyHandlebarsAdRenderer)
       .fetchRecommendations(fakeInstanceContext, fakeUserAgentId)
       .then(() => {
-        expect(rpMockup.args[0][0].uri).to.be.eq(
+        expect(rpMockup.args[0][0].url).to.be.eq(
           `${plugin.outboundPlatformUrl}/v1/recommenders/${fakeInstanceContext.recommender_id}/recommendations`,
         );
-        expect(rpMockup.args[0][0].body.input_data.user_agent_id).to.be.eq(fakeUserAgentId);
-        done();
+        expect(rpMockup.args[0][0].json.input_data.user_agent_id).to.be.eq(fakeUserAgentId);
       });
   });
 
-  it('Check that fetched itemProposal are the same as sent by the recommender', function (done) {
+  it('Check that fetched itemProposal are the same as sent by the recommender', async function () {
     const plugin = new MyDummyHandlebarsAdRenderer(false);
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     // We try a call to the Gateway
-    void (runner.plugin as MyDummyHandlebarsAdRenderer)
+    await (runner.plugin as MyDummyHandlebarsAdRenderer)
       .fetchRecommendations(fakeInstanceContext, fakeUserAgentId)
       .then((proposals: Array<core.ItemProposal>) => {
         expect(proposals[0]).to.deep.eq(fakeRecommenderResponse.data.proposals[0]);
         expect(proposals[1]).to.deep.eq(fakeRecommenderResponse.data.proposals[1]);
         expect(proposals[2]).to.deep.eq(fakeRecommenderResponse.data.proposals[2]);
-        done();
       });
   });
 });
