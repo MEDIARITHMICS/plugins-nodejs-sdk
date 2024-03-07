@@ -2,7 +2,7 @@
 
 import bodyParser from 'body-parser';
 import express from 'express';
-import got, { HTTPError, Method, Options, RequestError, ResponseType } from 'got';
+import { Got, HTTPError, Method, Options, RequestError, ResponseType } from 'got';
 import _ from 'lodash';
 import cache from 'memory-cache';
 import toobusy from 'toobusy-js';
@@ -11,7 +11,6 @@ import winston from 'winston';
 import { DataListResponse } from '../../api/core/common/Response';
 import { Compartment } from '../../api/core/compartment/Compartment';
 import { Datamart } from '../../api/core/datamart/Datamart';
-import { MicsApiError } from '../../api/core/error/MicsApiError';
 import {
   AdLayoutProperty,
   asAdLayoutProperty,
@@ -36,6 +35,8 @@ import {
   StringProperty,
   UrlProperty,
 } from '../../api/core/plugin/PluginPropertyInterface';
+import { getTransportClient } from '../../api/core/transport/client';
+import { MicsApiError } from '../../api/core/transport/error/MicsApiError';
 import { flatMap, Index, obfuscateString, Option } from '../../utils';
 import { normalizeArray } from '../../utils/Normalizer';
 import { MsgCmd, SocketMsg } from './index';
@@ -143,7 +144,7 @@ export abstract class BasePlugin<CacheValue = unknown> {
   logger: winston.Logger;
   credentials: Credentials;
 
-  _transport = got;
+  _transport: Got;
 
   enableThrottling = false; // Log level update implementation
 
@@ -196,6 +197,8 @@ export abstract class BasePlugin<CacheValue = unknown> {
       format: winston.format.combine(winston.format.splat(), winston.format.simple()),
       transports: [new winston.transports.Console()],
     });
+
+    this._transport = getTransportClient(this.logger);
 
     this.pluginCache = cache;
     this.pluginCache.clear();
