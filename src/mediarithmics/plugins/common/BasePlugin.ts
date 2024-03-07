@@ -2,7 +2,7 @@
 
 import bodyParser from 'body-parser';
 import express from 'express';
-import got, { HTTPError, Method, Options, ResponseType } from 'got';
+import got, { HTTPError, Method, Options, RequestError, ResponseType } from 'got';
 import _ from 'lodash';
 import cache from 'memory-cache';
 import toobusy from 'toobusy-js';
@@ -11,7 +11,7 @@ import winston from 'winston';
 import { DataListResponse } from '../../api/core/common/Response';
 import { Compartment } from '../../api/core/compartment/Compartment';
 import { Datamart } from '../../api/core/datamart/Datamart';
-import { ApiError } from '../../api/core/error/ApiError';
+import { MicsApiError } from '../../api/core/error/MicsApiError';
 import {
   AdLayoutProperty,
   asAdLayoutProperty,
@@ -263,15 +263,18 @@ export abstract class BasePlugin<CacheValue = unknown> {
     qs?: string | Record<string, string | number | boolean | null | undefined> | URLSearchParams;
     responseType?: ResponseType;
   }): Promise<T> {
-    const headers = { user: this.credentials.worker_id, pass: this.credentials.authentication_token };
+    const headers = {
+      user: this.credentials.worker_id,
+      pass: this.credentials.authentication_token,
+    };
 
     const options: Options = {
-      method: method,
-      url: url,
+      method,
+      url,
       headers,
-      json: body !== undefined ? body : undefined,
-      searchParams: qs !== undefined ? qs : undefined,
-      responseType: responseType ? responseType : undefined,
+      json: body,
+      searchParams: qs,
+      responseType,
       resolveBodyOnly: responseType ? true : false,
     };
 
@@ -280,24 +283,24 @@ export abstract class BasePlugin<CacheValue = unknown> {
     try {
       return (await this._transport(options)) as T;
     } catch (e) {
-      const error = new ApiError(e as string | HTTPError | undefined, this.logger);
-      if (error.name === 'StatusCodeError') {
+      if (e instanceof HTTPError || e instanceof RequestError) {
+        const micsApiError = new MicsApiError(e, this.logger);
         const bodyString = body && typeof body === 'string' ? body : body ? JSON.stringify(body) : '';
         throw new Error(
           `Error while calling ${method} '${url}' with the request body '${bodyString}', the qs '${
             JSON.stringify(qs) || ''
           }', the auth user '${obfuscateString(headers.user ? headers.user : undefined) || ''}', the auth password '${
             obfuscateString(headers.pass ? headers.pass : undefined) || ''
-          }': got a ${error.statusCode} ${error.statusMessage} with the response body ${JSON.stringify(error.error)}`,
-        );
-      } else {
-        this.logger.error(
-          `Got an issue while doing a Gateway call: ${(e as Error).message} - ${
-            (e as Error).stack ? ((e as Error).stack as string) : 'stack undefined'
+          }': got a ${micsApiError.statusCode} ${micsApiError.statusMessage} with the response body ${
+            micsApiError.error
           }`,
         );
-        throw e;
+      } else if (!(e instanceof Error)) {
+        throw new Error(`requestGatewayHelper - Non-standard error type: ${typeof e}`);
       }
+
+      this.logger.error(`Got an issue while doing a Gateway call: ${e.message} - ${e.stack || 'stack undefined'}`);
+      throw e;
     }
   }
 
@@ -316,23 +319,23 @@ export abstract class BasePlugin<CacheValue = unknown> {
     try {
       return (await this._transport(tweakedOptions)) as T;
     } catch (e) {
-      const error = e as ResponseError;
-      if (error.name === 'StatusCodeError') {
+      if (e instanceof HTTPError || e instanceof RequestError) {
+        const micsApiError = new MicsApiError(e, this.logger);
         throw new Error(
           `Error while calling ${options.method as string} '${
             options.url as string
-          }' with the header body '${JSON.stringify(options.headers)}': got a ${error.response.statusCode} ${
-            error.response.statusMessage
-          } with the response body ${JSON.stringify(error.response.body)}`,
+          }' with the header body '${JSON.stringify(options.headers)}': got a ${micsApiError.statusCode} ${
+            micsApiError.statusMessage
+          } with the response body ${micsApiError.error}`,
         );
-      } else {
-        this.logger.error(
-          `Got an issue while doing a mediarithmics API call: ${(e as Error).message} - ${
-            (e as Error).stack ? ((e as Error).stack as string) : 'stack undefined'
-          }`,
-        );
-        throw e;
+      } else if (!(e instanceof Error)) {
+        throw new Error(`requestPublicMicsApiHelper - Non-standard error type: ${typeof e}`);
       }
+
+      this.logger.error(
+        `Got an issue while doing a mediarithmics API call: ${e.message} - ${e.stack ? e.stack : 'stack undefined'}`,
+      );
+      throw e;
     }
   }
 

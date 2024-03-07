@@ -5,7 +5,7 @@
 # 0.21.0 - 2024-02-05
 
 - Changing `BasePlugin` \_transport property from `request/request-promise` lib to `got`.
-- Exporting an `ApiError` class based on `got` RequestError.
+- Exporting an `MicsApiError` class based on `got` RequestError for mediarithmics basePlugin requests.
 
 # 0.20.0 - 2023-11-29
 
