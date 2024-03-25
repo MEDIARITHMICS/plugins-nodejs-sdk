@@ -1,8 +1,11 @@
 # Changelog
 
-- Fix `/troubleshoot` was declared as GET instead of POST
 
 # Unreleased
+
+# 0.22.1 - 2024-03-25
+
+- Fix `/v1/troubleshoot` was declared as GET instead of POST
 
 # 0.22.0 - 2024-03-25
 
