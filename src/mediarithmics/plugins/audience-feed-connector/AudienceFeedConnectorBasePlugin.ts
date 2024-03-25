@@ -335,7 +335,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   }
 
   private initTroubleshoot(): void {
-    this.app.get('/v1/troubleshoot', this.emptyBodyFilter, async (req: express.Request, res: express.Response) => {
+    this.app.post('/v1/troubleshoot', this.emptyBodyFilter, async (req: express.Request, res: express.Response) => {
       try {
         this.logger.debug(`POST /v1/troubleshoot ${JSON.stringify(req.body)}`);
 
