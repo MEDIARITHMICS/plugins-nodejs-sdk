@@ -1,5 +1,7 @@
 # Changelog
 
+- Fix `/troubleshoot` was declared as GET instead of POST
+
 # Unreleased
 
 - Add new optional route `/troubleshoot` on AudienceSegmentExternalFeed which take `ExternalSegmentTroubleshootRequest` and return an `ExternalSegmentTroubleshootResponse`. This is will be helpful to debug feeds (example: return volumes on third party)
