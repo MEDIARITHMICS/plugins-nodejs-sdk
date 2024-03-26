@@ -30,6 +30,7 @@ export * from './plugins/bid-optimizer/BidOptimizerBasePlugin';
 export * from './plugins/custom-action/CustomActionBasePlugin';
 export * from './plugins/custom-action/CustomActionInterface';
 export * from './plugins/common';
+export * from './plugins/computed-field/ComputedFieldBasePlugin';
 export * from './plugins/email-renderer/base/EmailRendererBasePlugin';
 export * from './plugins/email-renderer/template/EmailRendererTemplatePlugin';
 export * from './plugins/email-router/EmailRouterBasePlugin';
