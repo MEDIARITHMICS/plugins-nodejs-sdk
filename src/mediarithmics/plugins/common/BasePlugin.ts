@@ -192,8 +192,14 @@ export abstract class BasePlugin<CacheValue = unknown> {
     this.app.use(bodyParser.json({ type: '*/*', limit: '5mb' }));
 
     this.logger = winston.createLogger({
-      format: winston.format.combine(winston.format.splat(), winston.format.simple()),
-      transports: [new winston.transports.Console()],
+      transports: [
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.json(),
+            winston.format.colorize({ all: true }),
+          ),
+        }),
+      ],
     });
 
     this.pluginCache = cache;
@@ -209,7 +215,7 @@ export abstract class BasePlugin<CacheValue = unknown> {
       authentication_token: process.env.PLUGIN_AUTHENTICATION_TOKEN,
       worker_id: process.env.PLUGIN_WORKER_ID,
     };
-
+    
     this.initInitRoute();
     this.initStatusRoute();
     this.initLogLevelUpdateRoute();

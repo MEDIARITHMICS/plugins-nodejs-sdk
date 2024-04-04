@@ -3,6 +3,8 @@
 
 # Unreleased
 
+- Update winston logger to push json format instead of raw text and enable colors
+
 # 0.22.1 - 2024-03-25
 
 - Fix `/v1/troubleshoot` was declared as GET instead of POST
