@@ -1,9 +1,9 @@
 # Changelog
 
-
 # Unreleased
 
 - Update winston logger to push json format instead of raw text and enable colors
+- Update typing for `/v1/troubleshoot`, now it will behaved like an action route
 
 # 0.22.1 - 2024-03-25
 

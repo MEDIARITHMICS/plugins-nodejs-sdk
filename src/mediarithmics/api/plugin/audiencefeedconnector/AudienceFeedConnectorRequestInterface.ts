@@ -34,9 +34,24 @@ export interface AudienceFeedBatchContext extends BatchUpdateContext {
   grouping_key: string;
 }
 
-export interface ExternalSegmentTroubleshootRequest {
+export const ExternalSegmentTroubleshootActions = ['FETCH_DESTINATION_AUDIENCE'] as const;
+export type ExternalSegmentTroubleshootAction = (typeof ExternalSegmentTroubleshootActions)[number];
+
+type ExternalSegmentTroubleshootBaseRequest = {
   feed_id: string;
   datamart_id: string;
   segment_id: string;
-  params?: {};
-}
+};
+
+export type TroubleshootActionFetchDestinationAudience = ExternalSegmentTroubleshootBaseRequest & {
+  action: 'FETCH_DESTINATION_AUDIENCE';
+};
+
+// This comment is just to have an example when an action with args will be implemented
+//
+// export type TroubleshootActionWithArgs = ExternalSegmentTroubleshootBaseRequest & {
+//   action: 'ACTION_WITH_ARGS';
+//   args: {}; // Put args for specific action
+// };
+
+export type ExternalSegmentTroubleshootRequest = TroubleshootActionFetchDestinationAudience; // | TroubleshootActionWithArgs;

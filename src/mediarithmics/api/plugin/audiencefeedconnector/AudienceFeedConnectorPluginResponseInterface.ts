@@ -62,7 +62,7 @@ export interface ExternalSegmentConnectionPluginResponse {
 export interface ExternalSegmentTroubleshootResponse {
   status: AudienceFeedConnectorTroubleshootStatus;
   message?: string;
-  data?: {};
+  data?: any;
 }
 
 export interface AudienceFeedStatTag {
