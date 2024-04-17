@@ -24,6 +24,7 @@ import {
   AudienceFeedBatchContext,
   ExternalSegmentConnectionRequest,
   ExternalSegmentCreationRequest,
+  ExternalSegmentTroubleshootActions,
   ExternalSegmentTroubleshootRequest,
   UserSegmentUpdateRequest,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
@@ -340,6 +341,14 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
         this.logger.debug(`POST /v1/troubleshoot ${JSON.stringify(req.body)}`);
 
         const request = req.body as ExternalSegmentTroubleshootRequest;
+
+        if(!ExternalSegmentTroubleshootActions.includes(request.action)) {
+          const response: ExternalSegmentTroubleshootResponse = {
+            status: 'not_implemented',
+            message: `Action ${request.action} not supported`,
+          }; 
+          return res.status(400).send(JSON.stringify(response));
+        }
 
         const instanceContext = await this.getInstanceContext(request.feed_id);
 
