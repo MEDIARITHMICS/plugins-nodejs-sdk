@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 0.23.1 - 2024-04-18
+
 - Fix winston logger, remove colors
 
 # 0.23.0 - 2024-04-18
