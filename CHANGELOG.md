@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Fix winston logger, remove colors
+
 # 0.23.0 - 2024-04-18
 
 - Update winston logger to push json format instead of raw text and enable colors

@@ -194,10 +194,7 @@ export abstract class BasePlugin<CacheValue = unknown> {
     this.logger = winston.createLogger({
       transports: [
         new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.json(),
-            winston.format.colorize({ all: true }),
-          ),
+          format: winston.format.json(),
         }),
       ],
     });
@@ -215,7 +212,7 @@ export abstract class BasePlugin<CacheValue = unknown> {
       authentication_token: process.env.PLUGIN_AUTHENTICATION_TOKEN,
       worker_id: process.env.PLUGIN_WORKER_ID,
     };
-    
+
     this.initInitRoute();
     this.initStatusRoute();
     this.initLogLevelUpdateRoute();
