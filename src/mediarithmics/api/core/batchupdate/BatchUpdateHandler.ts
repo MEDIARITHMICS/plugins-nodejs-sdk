@@ -34,8 +34,8 @@ export class BatchUpdateHandler<C extends BatchUpdateContext, T> {
 
         const pluginResponse: BatchUpdatePluginResponse = {
           status: response.status,
-          send_items_in_error: response.send_items_in_error,
-          send_items_in_success: response.send_items_in_success,
+          sent_items_in_error: response.sent_items_in_error,
+          sent_items_in_success: response.sent_items_in_success,
         };
 
         if (response.next_msg_delay_in_ms) {

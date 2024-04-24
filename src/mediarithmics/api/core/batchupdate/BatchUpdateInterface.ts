@@ -12,8 +12,8 @@ export interface BatchUpdatePluginResponse {
   status: BatchUpdatePluginResponseStatus;
   message?: string;
   next_msg_delay_in_ms?: number;
-  send_items_in_success: number;
-  send_items_in_error: number;
+  sent_items_in_success: number;
+  sent_items_in_error: number;
 }
 
 export type BatchUpdatePluginResponseStatus = 'OK' | 'ERROR' | 'RETRY';

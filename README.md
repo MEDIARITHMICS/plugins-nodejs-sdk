@@ -163,15 +163,15 @@ Testing Plugins is highly recommended.
 
 ## Migration from 0.16.x to 0.17.x
 
-- The `BatchUpdatePluginResponse` return now two new fields, `send_items_in_error` and `send_items_in_success`
+- The `BatchUpdatePluginResponse` return now two new fields, `sent_items_in_error` and `sent_items_in_success`
 
 ```ts
 export interface BatchUpdatePluginResponse {
   status: BatchUpdatePluginResponseStatus;
   message?: string;
   next_msg_delay_in_ms?: number;
-  send_items_in_success: number;
-  send_items_in_error: number;
+  sent_items_in_success: number;
+  sent_items_in_error: number;
 }
 ```
 
