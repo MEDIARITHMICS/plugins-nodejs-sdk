@@ -7,6 +7,8 @@ import sinon from 'sinon';
 import request from 'supertest';
 
 import { core } from '../';
+import { ResourceNotFoundError } from "../mediarithmics";
+import { fail } from "node:assert";
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
 const PLUGIN_WORKER_ID = 'Calavera';
@@ -204,6 +206,25 @@ describe('Data File helper Tests', function () {
       expect(file).to.be.eq(fakeDataFile);
       done();
     });
+  });
+
+  it('ConfigurationFile: returns a TechnicalConfigNotFoundError on a 404', async () => {
+    const confFileName = 'toto';
+    const method = 'GET';
+    const confFileGatewayURI = `/v1/configuration/technical_name=${confFileName}`;
+
+    const rpMockup = sinon.stub().throws({
+      name: "StatusCodeError",
+      response: { statusCode: 404, statusMessage: "", body: "" }
+    });
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    try {
+      await runner.plugin.fetchConfigurationFile(confFileName);
+      fail();
+    } catch (e) {
+      expect(e).to.be.instanceof(ResourceNotFoundError);
+    }
   });
 });
 
