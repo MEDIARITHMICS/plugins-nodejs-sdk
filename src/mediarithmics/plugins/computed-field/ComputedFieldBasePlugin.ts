@@ -51,54 +51,52 @@ export abstract class ComputedFieldPlugin<State, Data, Result> extends BasePlugi
     return this.onUpdate(state, reducedData);
   }
 
+  private formatResponse(req: express.Request, data: any): any {
+    return req.headers['accept'] === 'application/ion' ? ion.dumpBinary(data) : data;
+  }
+
+  private formatRequestData(req: express.Request): any {
+    return req.headers['content-type'] === 'application/ion' ? JSON.stringify(ion.load(req.body.data)) : req.body.data;
+  }
+
   private initUpdateRoute(): void {
-    this.app.post('/v1/update', (req: express.Request, res: express.Response) => {
-      const json = JSON.parse(JSON.stringify(ion.load(req.body.data))) as RequestData<State, Data>;
+    this.app.post('/v1/computed_field/update/single', (req: express.Request, res: express.Response) => {
+      const json = JSON.parse(this.formatRequestData(req)) as RequestData<State, Data>;
+
       const updatedState = this.onUpdate(json.state, json.data);
-      const binaryState = ion.dumpBinary(updatedState);
       const pluginResponse: OnUpdatePluginResponse<State | null> = {
         status: 'ok',
         data: updatedState,
-        // Send Uint8Array
-        // data: binaryState
       };
-      // here check error code
-      res.status(200).send(pluginResponse);
+      res.status(200).send(this.formatResponse(req, pluginResponse));
     });
   }
 
   private initUpdateBatchRoute(): void {
-    this.app.post('/v1/update/batch', (req: express.Request, res: express.Response) => {
-      const json = JSON.parse(JSON.stringify(ion.load(req.body.data))) as RequestDataBatch<State, Data>;
+    this.app.post('/v1/computed_field/update/batch', (req: express.Request, res: express.Response) => {
+      const json = JSON.parse(this.formatRequestData(req)) as RequestDataBatch<State, Data>;
       const updatedState = this.onUpdateBatch(json.state, json.data);
-      const binaryState = ion.dumpBinary(updatedState);
       const pluginResponse: OnUpdatePluginResponse<State | null> = {
         status: 'ok',
         data: updatedState,
-        // Send Uint8Array
-        // data: binaryState
       };
-      // here check error code
-      res.status(200).send(pluginResponse);
+      res.status(200).send(this.formatResponse(req, pluginResponse));
     });
   }
 
   private initBuildResultRoute(): void {
-    this.app.post('/v1/buildresult', (req: express.Request, res: express.Response) => {
-      const json = JSON.parse(JSON.stringify(ion.load(req.body.data))) as State;
+    this.app.post('/v1/computed_field/build_result', (req: express.Request, res: express.Response) => {
+      const json = JSON.parse(this.formatRequestData(req)) as State;
+
       const buildResult = this.buildResult(json);
-      const binaryState = ion.dumpBinary(buildResult);
       const pluginResponse: BuildResultPluginResponse<{
         state: State | null;
         result: Result;
       }> = {
         status: 'ok',
         data: buildResult,
-        // Send Uint8Array
-        // data: binaryState
       };
-      // here check error code
-      res.status(200).send(pluginResponse);
+      res.status(200).send(this.formatResponse(req, pluginResponse));
     });
   }
 }

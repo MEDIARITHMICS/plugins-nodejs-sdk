@@ -7,7 +7,12 @@ export type TimeStamp = number; //long
 export type UserEmailIdentifierProviderResource = unknown; //TODO
 export type UserAgentInfo = unknown; //TODO
 
-export type UserIdentifierInfo = UserDevicePointIdentifierInfo | UserPointIdentifierInfo | UserEmailIdentifierInfo | UserAccountIdentifierInfo | UserAgentIdentifierInfo;
+export type UserIdentifierInfo =
+  | UserDevicePointIdentifierInfo
+  | UserPointIdentifierInfo
+  | UserEmailIdentifierInfo
+  | UserAccountIdentifierInfo
+  | UserAgentIdentifierInfo;
 
 export enum UserDeviceTechnicalIdentifierType {
   MUM_ID = 'MUM_ID',

@@ -495,9 +495,8 @@ export abstract class BasePlugin<CacheValue = unknown> {
     const dependencies: any = {};
 
     try {
-      dependencies['@mediarithmics/plugins-nodejs-sdk'] = require(
-        process.cwd() + '/node_modules/@mediarithmics/plugins-nodejs-sdk/package.json',
-      )?.version;
+      dependencies['@mediarithmics/plugins-nodejs-sdk'] = require(process.cwd() +
+        '/node_modules/@mediarithmics/plugins-nodejs-sdk/package.json')?.version;
     } catch (err) {}
 
     return {
