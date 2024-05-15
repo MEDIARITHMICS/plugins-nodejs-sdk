@@ -61,6 +61,13 @@ export interface ResponseError {
   response: { statusCode: number; statusMessage: string; body: unknown };
 }
 
+export class ResourceNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ResourceNotFoundError';
+  }
+}
+
 export class PropertiesWrapper {
   readonly normalized: Index<PluginProperty>;
 
@@ -296,15 +303,19 @@ export abstract class BasePlugin<CacheValue = unknown> {
       const error = e as ResponseError;
       if (error.name === 'StatusCodeError') {
         const bodyString = (isJson !== undefined && !isJson ? body : JSON.stringify(body)) as string;
-        throw new Error(
-          `Error while calling ${method} '${uri}' with the request body '${bodyString || ''}', the qs '${
-            JSON.stringify(qs) || ''
-          }', the auth user '${
-            obfuscateString(options.auth ? options.auth.user : undefined) || ''
-          }', the auth password '${obfuscateString(options.auth ? options.auth.pass : undefined) || ''}': got a ${
-            error.response.statusCode
-          } ${error.response.statusMessage} with the response body ${JSON.stringify(error.response.body)}`,
-        );
+        const message = `Error while calling ${method} '${uri}' with the request body '${bodyString || ''}', the qs '${
+          JSON.stringify(qs) || ''
+        }', the auth user '${
+          obfuscateString(options.auth ? options.auth.user : undefined) || ''
+        }', the auth password '${obfuscateString(options.auth ? options.auth.pass : undefined) || ''}': got a ${
+          error.response.statusCode
+        } ${error.response.statusMessage} with the response body ${JSON.stringify(error.response.body)}`;
+
+        if (error.response.statusCode === 404) {
+          throw new ResourceNotFoundError(message);
+        } else {
+          throw new Error(message);
+        }
       } else {
         this.logger.error(
           `Got an issue while doing a Gateway call: ${(e as Error).message} - ${
