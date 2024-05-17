@@ -2,7 +2,10 @@
 
 # Unreleased
 
+# 0.24.1 - 2024-05-17
+
 - Improve logger for `AudienceFeedConnectorBasePlugin`, use metadata instead of stringify
+- Raise custom error on 404 to propagate correctly the info to the end user
 
 # 0.24.0 - 2024-04-24
 
