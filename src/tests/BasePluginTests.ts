@@ -7,8 +7,8 @@ import sinon from 'sinon';
 import request from 'supertest';
 
 import { core } from '../';
-import { ResourceNotFoundError } from "../mediarithmics";
-import { fail } from "node:assert";
+import { ResourceNotFoundError } from '../mediarithmics';
+import { fail } from 'node:assert';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
 const PLUGIN_WORKER_ID = 'Calavera';
@@ -214,8 +214,8 @@ describe('Data File helper Tests', function () {
     const confFileGatewayURI = `/v1/configuration/technical_name=${confFileName}`;
 
     const rpMockup = sinon.stub().throws({
-      name: "StatusCodeError",
-      response: { statusCode: 404, statusMessage: "", body: "" }
+      name: 'StatusCodeError',
+      response: { statusCode: 404, statusMessage: '', body: '' },
     });
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
 

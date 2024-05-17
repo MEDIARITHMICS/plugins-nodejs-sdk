@@ -53,7 +53,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       'GET',
       `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/audience_segment`,
     );
-    this.logger.debug(`Fetched External Segment: FeedId: ${feedId} - ${JSON.stringify(response.data)}`);
+    this.logger.debug(`Fetched External Segment: FeedId: ${feedId}`, response);
     return response.data;
   }
 
@@ -62,7 +62,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       'GET',
       `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}`,
     );
-    this.logger.debug(`Fetched External Feed: ${feedId} - ${JSON.stringify(response.data)}`);
+    this.logger.debug(`Fetched External Feed: ${feedId}`, { response });
     return response.data;
   }
 
@@ -74,7 +74,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       'GET',
       `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/properties`,
     );
-    this.logger.debug(`Fetched External Feed Properties: ${feedId} - ${JSON.stringify(response.data)}`);
+    this.logger.debug(`Fetched External Feed Properties: ${feedId}`, { response });
     return response.data;
   }
 
@@ -84,7 +84,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/properties`,
       property,
     );
-    this.logger.debug(`Created External Feed Properties: ${feedId} - ${JSON.stringify(response.data)}`);
+    this.logger.debug(`Created External Feed Properties: ${feedId}`, { response });
     return response.data;
   }
 
@@ -94,7 +94,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/properties/technical_name=${property.technical_name}`,
       property,
     );
-    this.logger.debug(`Updated External Feed Properties: ${feedId} - ${JSON.stringify(response.data)}`);
+    this.logger.debug(`Updated External Feed Properties: ${feedId}`, { response });
     return response.data;
   }
 
@@ -138,14 +138,6 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     return Promise.resolve({ status: 'not_implemented' });
   }
 
-  private logErrorMessage(err: Error) {
-    this.logger.error(
-      `Something bad happened : ${(err as Error).message} - ${
-        (err as Error).stack ? ((err as Error).stack as string) : 'stack undefined'
-      }`,
-    );
-  }
-
   protected async getInstanceContext(
     feedId: string,
     forceRefresh?: boolean,
@@ -153,10 +145,10 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     if (forceRefresh || !this.pluginCache.get(feedId)) {
       void this.pluginCache.put(
         feedId,
-        this.instanceContextBuilder(feedId).catch((err) => {
-          this.logger.error(`Error while caching instance context: ${(err as Error).message}`);
+        this.instanceContextBuilder(feedId).catch((error) => {
+          this.logger.error(`Error while caching instance context`, { error });
           this.pluginCache.del(feedId);
-          throw err;
+          throw error;
         }),
         this.getInstanceContextCacheExpiration(),
       );
@@ -182,7 +174,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       this.emptyBodyFilter,
       async (req: express.Request, res: express.Response) => {
         try {
-          this.logger.debug(`POST /v1/external_segment_creation ${JSON.stringify(req.body)}`);
+          this.logger.debug('POST /v1/external_segment_creation', { request: req.body });
 
           if (!this.httpIsReady()) {
             throw new Error('Plugin not initialized');
@@ -198,8 +190,6 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
           const response = await this.onExternalSegmentCreation(request, instanceContext);
 
-          this.logger.debug(`Returning: ${JSON.stringify(response)}`);
-
           const pluginResponse: ExternalSegmentCreationPluginResponse = {
             status: response.status,
             visibility: response.visibility || 'PUBLIC',
@@ -211,12 +201,16 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
           const statusCode = response.status === 'ok' ? 200 : 500;
 
+          this.logger.debug(`FeedId: ${request.feed_id} - External segment creation returning: ${statusCode}`, {
+            response,
+          });
+
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
-        } catch (err) {
-          this.logErrorMessage(err);
+        } catch (error) {
+          this.logger.error('Something bad happened on creation', { error });
           const pluginResponse: ExternalSegmentCreationPluginResponse = {
             status: 'error',
-            message: `${(err as Error).message}`,
+            message: `${(error as Error).message}`,
             visibility: 'PRIVATE',
           };
           return res.status(500).send(pluginResponse);
@@ -231,7 +225,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       this.emptyBodyFilter,
       async (req: express.Request, res: express.Response) => {
         try {
-          this.logger.debug(`POST /v1/external_segment_connection ${JSON.stringify(req.body)}`);
+          this.logger.debug('POST /v1/external_segment_connection', { request: req.body });
 
           if (!this.httpIsReady()) {
             throw new Error('Plugin not initialized');
@@ -246,8 +240,6 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
           const instanceContext = await this.getInstanceContext(request.feed_id);
 
           const response = await this.onExternalSegmentConnection(request, instanceContext);
-
-          this.logger.debug(`FeedId: ${request.feed_id} - Plugin impl returned: ${JSON.stringify(response)}`);
 
           const pluginResponse: ExternalSegmentConnectionPluginResponse = {
             status: response.status,
@@ -273,12 +265,14 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
               statusCode = 500;
           }
 
-          this.logger.debug(`FeedId: ${request.feed_id} - Returning: ${statusCode} - ${JSON.stringify(response)}`);
+          this.logger.debug(`FeedId: ${request.feed_id} - External segment connection returning: ${statusCode}`, {
+            response,
+          });
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
-        } catch (err) {
-          this.logErrorMessage(err);
-          return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
+        } catch (error) {
+          this.logger.error('Something bad happened on connection', { error });
+          return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
         }
       },
     );
@@ -290,7 +284,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       this.emptyBodyFilter,
       async (req: express.Request, res: express.Response) => {
         try {
-          this.logger.debug(`POST /v1/user_segment_update ${JSON.stringify(req.body)}`);
+          this.logger.debug('POST /v1/user_segment_update', { request: req.body });
 
           const request = req.body as UserSegmentUpdateRequest;
 
@@ -301,8 +295,6 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
           const instanceContext = await this.getInstanceContext(request.feed_id);
 
           const response: R = await this.onUserSegmentUpdate(request, instanceContext);
-
-          this.logger.debug(`Returning: ${JSON.stringify(response)}`);
 
           if (response.next_msg_delay_in_ms) {
             res.set('x-mics-next-msg-delay', response.next_msg_delay_in_ms.toString());
@@ -326,10 +318,14 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
               statusCode = 500;
           }
 
+          this.logger.debug(`FeedId: ${request.feed_id} - External segment update returning: ${statusCode}`, {
+            response,
+          });
+
           return res.status(statusCode).send(JSON.stringify(response));
-        } catch (err) {
-          this.logErrorMessage(err);
-          return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
+        } catch (error) {
+          this.logger.error('Something bad happened on update', { error });
+          return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
         }
       },
     );
@@ -338,23 +334,21 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   private initTroubleshoot(): void {
     this.app.post('/v1/troubleshoot', this.emptyBodyFilter, async (req: express.Request, res: express.Response) => {
       try {
-        this.logger.debug(`POST /v1/troubleshoot ${JSON.stringify(req.body)}`);
+        this.logger.debug('POST /v1/troubleshoot', { request: req.body });
 
         const request = req.body as ExternalSegmentTroubleshootRequest;
 
-        if(!ExternalSegmentTroubleshootActions.includes(request.action)) {
+        if (!ExternalSegmentTroubleshootActions.includes(request.action)) {
           const response: ExternalSegmentTroubleshootResponse = {
             status: 'not_implemented',
             message: `Action ${request.action} not supported`,
-          }; 
+          };
           return res.status(400).send(JSON.stringify(response));
         }
 
         const instanceContext = await this.getInstanceContext(request.feed_id);
 
         const response = await this.onTroubleshoot(request, instanceContext);
-
-        this.logger.debug(`Returning: ${JSON.stringify(response)}`);
 
         let statusCode: number;
         switch (response.status) {
@@ -371,10 +365,12 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
             statusCode = 500;
         }
 
+        this.logger.debug(`FeedId: ${request.feed_id} - Troubleshoot returning: ${statusCode}`, { response });
+
         return res.status(statusCode).send(JSON.stringify(response));
-      } catch (err) {
-        this.logErrorMessage(err);
-        return res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
+      } catch (error) {
+        this.logger.error('Something bad happened on troubleshoot', { error });
+        return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
       }
     });
   }
