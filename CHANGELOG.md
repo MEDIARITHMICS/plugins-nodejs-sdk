@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Improve logger for `AudienceFeedConnectorBasePlugin`, use metadata instead of stringify
+
 # 0.24.0 - 2024-04-24
 
 - Fix typo batching stats, changing `send_items_in_success` -> `sent_items_in_success` and `send_items_in_error` -> `sent_items_in_error`
