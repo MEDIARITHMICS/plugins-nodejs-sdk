@@ -211,7 +211,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
           const pluginResponse: ExternalSegmentCreationPluginResponse = {
             status: 'error',
             message: `${(error as Error).message}`,
-            visibility: 'PRIVATE',
+            visibility: error.visibility === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE',
           };
           return res.status(500).send(pluginResponse);
         }

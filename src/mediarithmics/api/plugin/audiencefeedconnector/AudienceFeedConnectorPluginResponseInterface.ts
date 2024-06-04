@@ -48,10 +48,21 @@ export interface UserSegmentUpdatePluginResponseStats {
   tags?: AudienceFeedStatTag[];
 }
 
+export type Visibility = 'PRIVATE' | 'PUBLIC';
+
+export class AudienceFeedInstanceContextError extends Error {
+  constructor(
+    public message: string,
+    public visibility: Visibility = 'PUBLIC',
+  ) {
+    super();
+  }
+}
+
 export interface ExternalSegmentCreationPluginResponse {
   status: AudienceFeedConnectorStatus;
   message?: string;
-  visibility?: 'PRIVATE' | 'PUBLIC';
+  visibility?: Visibility;
 }
 
 export interface ExternalSegmentConnectionPluginResponse {
