@@ -2,6 +2,11 @@
 
 # Unreleased
 
+- Add new Error named `AudienceFeedInstanceContextError` for `AudienceFeedConnectorBasePlugin` that can be used
+on instance context creation. It has a field `visibility` which can be `'PUBLIC'` or `'PRIVATE'` (default).
+This is only useful for `onExternalSegmentCreation`, if set to `'PUBLIC'` the error will be displayed on `navigator.mediarithmics.com`
+to the end user when the feed is activated.
+
 # 0.24.1 - 2024-05-17
 
 - Improve logger for `AudienceFeedConnectorBasePlugin`, use metadata instead of stringify
