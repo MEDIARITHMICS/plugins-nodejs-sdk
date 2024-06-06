@@ -110,8 +110,13 @@ export class ExampleAudienceFeed extends core.BatchedAudienceFeedConnectorBasePl
     const response: core.BatchUpdatePluginResponse = {
       status: 'OK',
       message: 'test_batch_update',
-      sent_items_in_error: 0,
-      sent_items_in_success: request.batch_content.length,
+      stats: [
+        {
+          successes: request.batch_content.length,
+          errors: 0,
+          operation: 'UPSERT',
+        },
+      ],
     };
     return Promise.resolve(response);
   }

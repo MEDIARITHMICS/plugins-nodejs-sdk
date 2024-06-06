@@ -3,6 +3,8 @@
 # Unreleased
 
 - Add DeviceIdRegistryResource class and DeviceIdRegistryType enum
+- Remove fields `sent_items_in_error` and `sent_items_in_success` from `BatchUpdatePluginResponse`.
+- Add instead the field `stats` which is an Array of `BatchUpdatePluginResponseStat` containing `errors`, `successes` and `operation` fields.
 
 # 0.25.0 - 2024-06-11
 
