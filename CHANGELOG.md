@@ -6,6 +6,7 @@
 on instance context creation. It has a field `visibility` which can be `'PUBLIC'` or `'PRIVATE'` (default).
 This is only useful for `onExternalSegmentCreation`, if set to `'PUBLIC'` the error will be displayed on `navigator.mediarithmics.com`
 to the end user when the feed is activated.
+- Create example for `AudienceFeedConnectorBasePlugin` with `BatchedAudienceFeedConnectorBasePlugin` in `./examples/audience-feed`
 
 # 0.24.1 - 2024-05-17
 
