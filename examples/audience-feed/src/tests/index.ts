@@ -126,8 +126,9 @@ describe.only('Test Audience Feed example', function () {
                     expect(response.status).to.eq(200);
                     const body: core.BatchUpdatePluginResponse = JSON.parse(response.text);
                     expect(body.message).to.eq('test_batch_update');
-                    expect(body.sent_items_in_error).to.eq(0);
-                    expect(body.sent_items_in_success).to.eq(2);
+                    expect(body.stats[0].errors).to.eq(0);
+                    expect(body.stats[0].successes).to.eq(2);
+                    expect(body.stats[0].operation).to.eq('UPSERT');
                     done();
                   });
               });
