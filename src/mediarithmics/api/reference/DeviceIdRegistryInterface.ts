@@ -12,7 +12,17 @@ export interface DeviceIdRegistryResource {
   creation_ts: TimeStamp;
   last_modified_ts?: TimeStamp;
   created_by: string;
-  last_modified_by?: TimeStamp;
+  last_modified_by?: string;
+}
+export interface DeviceIdRegistryDatamartSelectionResource {
+  id: string;
+  device_id_registry_id: string;
+  datamart_id: string;
+  triggers_device_point_merge: boolean;
+  creation_ts: TimeStamp;
+  created_by: string;
+  last_modified_ts: TimeStamp;
+  last_modified_by: string;
 }
 
 export type DeviceIdRegistryType =
