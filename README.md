@@ -161,6 +161,38 @@ The Plugin examples provided with the SDK are all tested and you can read their 
 
 Testing Plugins is highly recommended.
 
+## Migration from 0.25.x to 0.26.x
+
+The fields `sent_items_in_error` and `sent_items_in_success` from `BatchUpdatePluginResponse` has been removed.
+Instead, use the field `stats` which is an Array of `BatchUpdatePluginResponseStat` containing `errors`, `successes` and `operation` fields.
+
+Before:
+
+```ts
+const response: core.BatchUpdatePluginResponse = {
+  status: 'OK',
+  message: 'test_batch_update',
+  sent_items_in_error: 0,
+  sent_items_in_success: request.batch_content.length,
+};
+```
+
+After:
+
+```ts
+const response: core.BatchUpdatePluginResponse = {
+  status: 'OK',
+  message: 'test_batch_update',
+  stats: [
+    {
+      successes: request.batch_content.length,
+      errors: 0,
+      operation: 'UPSERT',
+    },
+  ],
+};
+```
+
 ## Migration from 0.16.x to 0.17.x
 
 - The `BatchUpdatePluginResponse` return now two new fields, `sent_items_in_error` and `sent_items_in_success`
