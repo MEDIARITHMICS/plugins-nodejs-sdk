@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 0.26.1 - 2024-06-14
+
 - Add missing export for DeviceIdRegistryResource and DeviceIdRegistryDatamartSelectionResource
 
 # 0.26.0 - 2024-06-13
