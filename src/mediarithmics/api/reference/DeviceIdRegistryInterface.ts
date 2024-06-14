@@ -1,5 +1,3 @@
-export type TimeStamp = number; //long
-
 export interface DeviceIdRegistryResource {
   id: string;
   token: string;
@@ -9,8 +7,8 @@ export interface DeviceIdRegistryResource {
   type: DeviceIdRegistryType;
   image_uri?: string;
   organisation_id: string;
-  creation_ts: TimeStamp;
-  last_modified_ts?: TimeStamp;
+  creation_ts: number;
+  last_modified_ts?: number;
   created_by: string;
   last_modified_by?: string;
 }
@@ -19,9 +17,9 @@ export interface DeviceIdRegistryDatamartSelectionResource {
   device_id_registry_id: string;
   datamart_id: string;
   triggers_device_point_merge: boolean;
-  creation_ts: TimeStamp;
+  creation_ts: number;
   created_by: string;
-  last_modified_ts: TimeStamp;
+  last_modified_ts: number;
   last_modified_by: string;
 }
 

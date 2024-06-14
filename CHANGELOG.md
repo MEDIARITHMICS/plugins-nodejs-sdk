@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Add missing export for DeviceIdRegistryResource and DeviceIdRegistryDatamartSelectionResource
+
 # 0.26.0 - 2024-06-13
 
 - Add DeviceIdRegistryResource and DeviceIdRegistryDatamartSelectionResource classes and DeviceIdRegistryType enum
