@@ -8,12 +8,7 @@ import sinon from 'sinon';
 import request from 'supertest';
 
 import { core } from '../';
-import {
-  AudienceFeedBatchContext,
-  BatchedUserSegmentUpdatePluginResponse,
-  UserSegmentUpdatePluginBatchDeliveryResponseData,
-  UserSegmentUpdatePluginFileDeliveryResponseData,
-} from '../mediarithmics';
+import { AudienceFeedBatchContext, UserSegmentUpdatePluginFileDeliveryResponseData } from '../mediarithmics';
 import { BatchUpdateRequest } from '../mediarithmics/api/core/batchupdate/BatchUpdateInterface';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';

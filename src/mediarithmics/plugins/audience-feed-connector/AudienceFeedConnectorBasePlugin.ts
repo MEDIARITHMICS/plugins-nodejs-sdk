@@ -1,3 +1,4 @@
+import { isWebDomainRealmFilter } from './../../api/core/webdomain/UserAgentIdentifierRealmSelectionInterface';
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/unbound-method */
 
@@ -14,6 +15,7 @@ import {
 import { BatchUpdateHandler } from '../../api/core/batchupdate/BatchUpdateHandler';
 import { BatchUpdatePluginResponse, BatchUpdateRequest } from '../../api/core/batchupdate/BatchUpdateInterface';
 import {
+  AudienceFeedInstanceContextError,
   BatchedUserSegmentUpdatePluginResponse,
   ExternalSegmentConnectionPluginResponse,
   ExternalSegmentCreationPluginResponse,
@@ -29,6 +31,11 @@ import {
   UserSegmentUpdateRequest,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
 import { BasePlugin, PropertiesWrapper } from '../common';
+import {
+  RealmFilter,
+  UserAgentIdentifierRealmSelectionResource,
+  UserAgentIdentifierRealmSelectionResourcesResponse,
+} from '../../api/core/webdomain/UserAgentIdentifierRealmSelectionInterface';
 
 export interface AudienceFeedConnectorBaseInstanceContext {
   feed: AudienceSegmentExternalFeedResource;
@@ -55,6 +62,47 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     );
     this.logger.debug(`Fetched External Segment: FeedId: ${feedId}`, response);
     return response.data;
+  }
+
+  async fetchUserAgentIdentifierRealms(
+    apiToken: string,
+    datamartId: string,
+  ): Promise<Array<UserAgentIdentifierRealmSelectionResource>> {
+    const options = {
+      method: 'GET',
+      uri: `https://api.mediarithmics.com/v1/datamarts/${datamartId}/user_agent_identifier_realm_selections`,
+      json: true,
+    };
+
+    return this.requestPublicMicsApiHelper<UserAgentIdentifierRealmSelectionResourcesResponse>(apiToken, options).then(
+      (resRealms) => {
+        this.logger.debug(`Fetched user agent identifier realms for the datamart with id: ${datamartId}`);
+
+        return resRealms.data;
+      },
+    );
+  }
+
+  async checkUserAgentIdentifierRealm(
+    apiToken: string,
+    datamartId: string,
+    realmFilter: RealmFilter,
+  ): Promise<boolean> {
+    return this.fetchUserAgentIdentifierRealms(apiToken, datamartId).then((realms) => {
+      const hasRealm = realms.some((realm) => {
+        if (isWebDomainRealmFilter(realmFilter)) {
+          return realm.realm_type === realmFilter.realmType && realm.web_domain.sld_name === realmFilter.sld_name;
+        } else return realm.realm_type === realmFilter.realmType;
+      });
+      if (hasRealm === false) {
+        throw new AudienceFeedInstanceContextError(
+          `No user agent identifier realm selection of type ${realmFilter.realmType}${
+            isWebDomainRealmFilter(realmFilter) ? ` with sld_name ${realmFilter.sld_name} ` : ' '
+          }was found in datamart ${datamartId}`,
+        );
+      }
+      return hasRealm;
+    });
   }
 
   async fetchAudienceFeed(feedId: string): Promise<AudienceSegmentExternalFeedResource> {
