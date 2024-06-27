@@ -2,7 +2,10 @@
 
 # Unreleased
 
+# 0.27.0 - 2024-06-27
+
 - Add functions to fetch and check user agent identifier realm selection resources for external feeds
+- Add computed fields support
 
 # 0.26.1 - 2024-06-14
 
