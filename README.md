@@ -161,6 +161,13 @@ The Plugin examples provided with the SDK are all tested and you can read their 
 
 Testing Plugins is highly recommended.
 
+## Migration from 0.26.x to 0.27.x
+
+Add plugin computed field.
+- POST `/v1/computed_field/update/single` update state with data
+- POST `/v1/computed_field/update/batch` update state with batch data
+- POST `/v1/computed_field/build_result` build result
+
 ## Migration from 0.25.x to 0.26.x
 
 The fields `sent_items_in_error` and `sent_items_in_success` from `BatchUpdatePluginResponse` has been removed.
