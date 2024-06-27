@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Add functions to fetch and check user agent identifier realm selection resources for external feeds
+
 # 0.26.1 - 2024-06-14
 
 - Add missing export for DeviceIdRegistryResource and DeviceIdRegistryDatamartSelectionResource
