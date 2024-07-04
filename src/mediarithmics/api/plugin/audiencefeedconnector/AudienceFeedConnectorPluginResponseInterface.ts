@@ -1,4 +1,5 @@
 import { StatusCode } from '../../core/common/Response';
+import { RealmFilter, isWebDomainRealmFilter } from '../../core/webdomain/UserAgentIdentifierRealmSelectionInterface';
 
 export type AudienceFeedConnectorStatus = 'ok' | 'error' | 'retry' | 'no_eligible_identifier';
 export declare type AudienceFeedConnectorConnectionStatus = 'ok' | 'error' | 'external_segment_not_ready_yet';
@@ -48,17 +49,6 @@ export interface UserSegmentUpdatePluginResponseStats {
   tags?: AudienceFeedStatTag[];
 }
 
-export type Visibility = 'PRIVATE' | 'PUBLIC';
-
-export class AudienceFeedInstanceContextError extends Error {
-  constructor(
-    public message: string,
-    public visibility: Visibility = 'PUBLIC',
-  ) {
-    super();
-  }
-}
-
 export interface ExternalSegmentCreationPluginResponse {
   status: AudienceFeedConnectorStatus;
   message?: string;
@@ -79,4 +69,74 @@ export interface ExternalSegmentTroubleshootResponse {
 export interface AudienceFeedStatTag {
   key: string;
   value: string;
+}
+
+export type Visibility = 'PRIVATE' | 'PUBLIC';
+
+export class AudienceFeedInstanceContextError extends Error {
+  public visibility: Visibility = 'PUBLIC';
+
+  constructor(public message: string) {
+    super();
+  }
+}
+
+export class MissingConfigurationPropertyError extends AudienceFeedInstanceContextError {
+  public log: string;
+
+  constructor(
+    public feed_id: string,
+    public property_name: string,
+  ) {
+    super(
+      'Invalid technical configuration - It seems your audience feed has not been configured correctly. Please contact your support with the provided error id.',
+    );
+    this.log = `Missing configuration property: ${property_name}`;
+  }
+}
+
+export class InvalidPropertyValueError extends AudienceFeedInstanceContextError {
+  public log: string;
+
+  constructor(
+    public feed_id: string,
+    public property_name: string,
+    public porperty_value: string,
+    public allowed: string[],
+  ) {
+    super(
+      `${porperty_value} is an invalid value for ${property_name} property. Only one of the following can be used: ${allowed.join(
+        ',',
+      )}. Please select a valid value when creating the feed.`,
+    );
+    this.log = `Invalid value ${porperty_value} for ${property_name} property `;
+  }
+}
+
+export class FileDownloadError extends AudienceFeedInstanceContextError {
+  public log: string;
+
+  constructor(
+    public feed_id: string,
+    public file_name: string,
+  ) {
+    super('Error downloading configuration file, please contact your support with the provided error id.');
+    this.log = `Error while fetching file: ${file_name}`;
+  }
+}
+
+export class MissingRealmError extends AudienceFeedInstanceContextError {
+  public log: string;
+
+  constructor(
+    public datamart_id: string,
+    public realmFilter: RealmFilter,
+  ) {
+    super(
+      'Invalid technical configuration - It seems your audience feed has not been configured correctly. Please contact your support with the provided error id.',
+    );
+    this.log = `No user agent identifier realm selection of type ${realmFilter.realmType}${
+      isWebDomainRealmFilter(realmFilter) ? ` with sld_name ${realmFilter.sld_name} ` : ' '
+    }was found in datamart ${datamart_id}`;
+  }
 }

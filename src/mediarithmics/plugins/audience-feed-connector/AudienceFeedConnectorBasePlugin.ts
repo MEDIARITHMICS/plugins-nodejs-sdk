@@ -20,6 +20,7 @@ import {
   ExternalSegmentConnectionPluginResponse,
   ExternalSegmentCreationPluginResponse,
   ExternalSegmentTroubleshootResponse,
+  MissingRealmError,
   UserSegmentUpdatePluginResponse,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
 import {
@@ -95,11 +96,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
         } else return realm.realm_type === realmFilter.realmType;
       });
       if (hasRealm === false) {
-        throw new AudienceFeedInstanceContextError(
-          `No user agent identifier realm selection of type ${realmFilter.realmType}${
-            isWebDomainRealmFilter(realmFilter) ? ` with sld_name ${realmFilter.sld_name} ` : ' '
-          }was found in datamart ${datamartId}`,
-        );
+        throw new MissingRealmError(datamartId, realmFilter);
       }
       return hasRealm;
     });
@@ -194,7 +191,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       void this.pluginCache.put(
         feedId,
         this.instanceContextBuilder(feedId).catch((error) => {
-          this.logger.error(`Error while caching instance context`, { error });
+          this.logger.error(`Error while caching instance context`, error);
           this.pluginCache.del(feedId);
           throw error;
         }),
@@ -255,7 +252,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
         } catch (error) {
-          this.logger.error('Something bad happened on creation', { error });
+          this.logger.error('Something bad happened on creation', error);
           const pluginResponse: ExternalSegmentCreationPluginResponse = {
             status: 'error',
             message: `${(error as Error).message}`,
@@ -319,7 +316,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
           return res.status(statusCode).send(JSON.stringify(pluginResponse));
         } catch (error) {
-          this.logger.error('Something bad happened on connection', { error });
+          this.logger.error('Something bad happened on connection', error);
           return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
         }
       },
@@ -372,7 +369,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
           return res.status(statusCode).send(JSON.stringify(response));
         } catch (error) {
-          this.logger.error('Something bad happened on update', { error });
+          this.logger.error('Something bad happened on update', error);
           return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
         }
       },
@@ -417,7 +414,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
         return res.status(statusCode).send(JSON.stringify(response));
       } catch (error) {
-        this.logger.error('Something bad happened on troubleshoot', { error });
+        this.logger.error('Something bad happened on troubleshoot', error);
         return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
       }
     });

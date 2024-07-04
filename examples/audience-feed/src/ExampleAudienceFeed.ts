@@ -1,6 +1,5 @@
 import { core } from '@mediarithmics/plugins-nodejs-sdk';
 import * as winston from 'winston';
-import { AudienceFeedInstanceContextError } from '../../../lib/mediarithmics';
 
 export type ExampleAudienceFeedContext = {
   test: string;
@@ -29,12 +28,23 @@ export class ExampleAudienceFeed extends core.BatchedAudienceFeedConnectorBasePl
   protected async instanceContextBuilder(feedId: string) {
     const baseInstanceContext = await super.instanceContextBuilder(feedId);
 
-    const configFile = this.fetchConfigurationFile(CONFIG_FILE_NAME).catch((error) => {
+    // How to check realm configuration, it will automatically throw an error
+    // this.checkUserAgentIdentifierRealm('api:xxx', '1', { realmType: 'WEB_DOMAIN', sld_name: 'test.com' });
+
+    // If you need to check a property in an enum/union type/...
+    // throw new core.InvalidPropertyValueError(feedId, 'my_property', 'TATO', ['TOTO', 'TATA']);
+
+    const configFile = this.fetchConfigurationFile(CONFIG_FILE_NAME).then(file => {
+      // throw new core.MissingConfigurationPropertyError(feedId, 'config_option');
+    }).catch((error) => {
       const message = `Error fetching config file ${CONFIG_FILE_NAME}`;
       LoggerWrapper.logger.error(message, error);
-      // Using AudienceFeedInstanceContextError with visibility 'PUBLIC' will propagate the message to the end user on navigator
-      throw new AudienceFeedInstanceContextError(message, 'PUBLIC');
+      // For error on file download, use FileDownloadError as it will generate a generic message to the end user
+      throw new core.FileDownloadError(feedId, CONFIG_FILE_NAME);
     });
+
+    // If you want a customized message for the end user you can use AudienceFeedInstanceContextError
+    // throw new core.AudienceFeedInstanceContextError('Example public message');
 
     return {
       test: 'test',
