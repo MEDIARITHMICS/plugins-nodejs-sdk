@@ -2,8 +2,11 @@
 
 # Unreleased
 
-- Add new Error classes to have generic end user messages: `MissingConfigurationPropertyError`, 
-`InvalidPropertyValueError`, `FileDownloadError` and `MissingRealmError`.
+- Add new Error classes to have generic end user messages: `MissingConfigurationPropertyError`,
+  `InvalidPropertyValueError`, `FileDownloadError` and `MissingRealmError`.
+
+- The field `stats` has been removed from `BatchUpdatePluginResponse`.
+- The fields `sent_items_in_error` and `sent_items_in_success` are reintroduced instead.
 
 # 0.27.0 - 2024-06-27
 
