@@ -2,6 +2,9 @@
 
 # Unreleased
 
+- Add new Error classes to have generic end user messages: `MissingConfigurationPropertyError`, 
+`InvalidPropertyValueError`, `FileDownloadError` and `MissingRealmError`.
+
 # 0.27.0 - 2024-06-27
 
 - Add functions to fetch and check user agent identifier realm selection resources for external feeds
