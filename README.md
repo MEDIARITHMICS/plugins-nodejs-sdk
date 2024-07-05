@@ -161,6 +161,11 @@ The Plugin examples provided with the SDK are all tested and you can read their 
 
 Testing Plugins is highly recommended.
 
+## Migration from 0.27.x to 0.28.x
+
+The field `stats` has been removed from `BatchUpdatePluginResponse`.
+The fields `sent_items_in_error` and `sent_items_in_success` are reintroduced instead.
+
 ## Migration from 0.25.x to 0.26.x
 
 The fields `sent_items_in_error` and `sent_items_in_success` from `BatchUpdatePluginResponse` has been removed.

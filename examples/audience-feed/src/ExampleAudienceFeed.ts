@@ -34,14 +34,16 @@ export class ExampleAudienceFeed extends core.BatchedAudienceFeedConnectorBasePl
     // If you need to check a property in an enum/union type/...
     // throw new core.InvalidPropertyValueError(feedId, 'my_property', 'TATO', ['TOTO', 'TATA']);
 
-    const configFile = this.fetchConfigurationFile(CONFIG_FILE_NAME).then(file => {
-      // throw new core.MissingConfigurationPropertyError(feedId, 'config_option');
-    }).catch((error) => {
-      const message = `Error fetching config file ${CONFIG_FILE_NAME}`;
-      LoggerWrapper.logger.error(message, error);
-      // For error on file download, use FileDownloadError as it will generate a generic message to the end user
-      throw new core.FileDownloadError(feedId, CONFIG_FILE_NAME);
-    });
+    const configFile = this.fetchConfigurationFile(CONFIG_FILE_NAME)
+      .then((file) => {
+        // throw new core.MissingConfigurationPropertyError(feedId, 'config_option');
+      })
+      .catch((error) => {
+        const message = `Error fetching config file ${CONFIG_FILE_NAME}`;
+        LoggerWrapper.logger.error(message, error);
+        // For error on file download, use FileDownloadError as it will generate a generic message to the end user
+        throw new core.FileDownloadError(feedId, CONFIG_FILE_NAME);
+      });
 
     // If you want a customized message for the end user you can use AudienceFeedInstanceContextError
     // throw new core.AudienceFeedInstanceContextError('Example public message');
@@ -120,13 +122,8 @@ export class ExampleAudienceFeed extends core.BatchedAudienceFeedConnectorBasePl
     const response: core.BatchUpdatePluginResponse = {
       status: 'OK',
       message: 'test_batch_update',
-      stats: [
-        {
-          successes: request.batch_content.length,
-          errors: 0,
-          operation: 'UPSERT',
-        },
-      ],
+      sent_items_in_success: request.batch_content.length,
+      sent_items_in_error: 0,
     };
     return Promise.resolve(response);
   }
