@@ -101,15 +101,15 @@ export class InvalidPropertyValueError extends AudienceFeedInstanceContextError 
   constructor(
     public feed_id: string,
     public property_name: string,
-    public porperty_value: string,
+    public property_value: string,
     public allowed: string[],
   ) {
     super(
-      `${porperty_value} is an invalid value for ${property_name} property. Only one of the following can be used: ${allowed.join(
+      `${property_value} is an invalid value for ${property_name} property. Only one of the following can be used: ${allowed.join(
         ',',
       )}. Please select a valid value when creating the feed.`,
     );
-    this.log = `Invalid value ${porperty_value} for ${property_name} property `;
+    this.log = `Invalid value ${property_value} for ${property_name} property `;
   }
 }
 
