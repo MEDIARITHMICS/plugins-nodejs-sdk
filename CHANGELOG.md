@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 0.28.0 - 2024-07-09
+
 - Add new Error classes to have generic end user messages: `MissingConfigurationPropertyError`,
   `InvalidPropertyValueError`, `FileDownloadError` and `MissingRealmError`.
 
