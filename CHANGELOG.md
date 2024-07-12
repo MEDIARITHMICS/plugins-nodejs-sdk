@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 0.28.1 - 2024-07-12
+
 - Add new Error class to have generic end user message: `MandatoryPropertyValueError`
 
 # 0.28.0 - 2024-07-09
