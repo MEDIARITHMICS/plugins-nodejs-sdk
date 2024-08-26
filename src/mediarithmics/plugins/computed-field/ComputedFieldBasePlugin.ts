@@ -29,6 +29,10 @@ export interface RequestDataBatch<S, D> {
   data: D[];
 }
 
+export interface RequestResult<S> {
+  state: S;
+}
+
 export abstract class ComputedFieldPlugin<State, Data, Result> extends BasePlugin {
   constructor() {
     super();
@@ -51,52 +55,64 @@ export abstract class ComputedFieldPlugin<State, Data, Result> extends BasePlugi
     return this.onUpdate(state, reducedData);
   }
 
-  private formatResponse(req: express.Request, data: any): any {
-    return req.headers['accept'] === 'application/ion' ? ion.dumpBinary(data) : data;
+  private formatResponse(req: express.Request<unknown, unknown, string>, data: PluginResponse): string | Buffer {
+    return req.headers['accept'] === 'application/ion'
+      ? Buffer.from(ion.dumpBinary(ion.load(JSON.stringify(data))))
+      : JSON.stringify(data);
   }
 
-  private formatRequestData(req: express.Request): any {
-    return req.headers['content-type'] === 'application/ion' ? JSON.stringify(ion.load(req.body.data)) : req.body.data;
+  private formatRequestData<T>(req: express.Request<unknown, unknown, string>): T {
+    return req.headers['content-type'] === 'application/ion'
+      ? (JSON.parse(JSON.stringify(ion.load(req.body))) as T)
+      : (req.body as T);
   }
 
   private initUpdateRoute(): void {
-    this.app.post('/v1/computed_field/update/single', (req: express.Request, res: express.Response) => {
-      const json = JSON.parse(this.formatRequestData(req)) as RequestData<State, Data>;
-
-      const updatedState = this.onUpdate(json.state, json.data);
-      const pluginResponse: OnUpdatePluginResponse<State | null> = {
-        status: 'ok',
-        data: updatedState,
-      };
-      res.status(200).send(this.formatResponse(req, pluginResponse));
-    });
+    this.app.post(
+      '/v1/computed_field/update/single',
+      (req: express.Request<unknown, unknown, string>, res: express.Response) => {
+        const body = this.formatRequestData<RequestData<State, Data>>(req);
+        const updatedState = this.onUpdate(body.state, body.data);
+        const pluginResponse: OnUpdatePluginResponse<State | null> = {
+          status: 'ok',
+          data: updatedState,
+        };
+        const response = this.formatResponse(req, pluginResponse);
+        res.status(200).send(response);
+      },
+    );
   }
 
   private initUpdateBatchRoute(): void {
-    this.app.post('/v1/computed_field/update/batch', (req: express.Request, res: express.Response) => {
-      const json = JSON.parse(this.formatRequestData(req)) as RequestDataBatch<State, Data>;
-      const updatedState = this.onUpdateBatch(json.state, json.data);
-      const pluginResponse: OnUpdatePluginResponse<State | null> = {
-        status: 'ok',
-        data: updatedState,
-      };
-      res.status(200).send(this.formatResponse(req, pluginResponse));
-    });
+    this.app.post(
+      '/v1/computed_field/update/batch',
+      (req: express.Request<unknown, unknown, string>, res: express.Response) => {
+        const body = this.formatRequestData<RequestDataBatch<State, Data>>(req);
+        const updatedState = this.onUpdateBatch(body.state, body.data);
+        const pluginResponse: OnUpdatePluginResponse<State | null> = {
+          status: 'ok',
+          data: updatedState,
+        };
+        res.status(200).send(this.formatResponse(req, pluginResponse));
+      },
+    );
   }
 
   private initBuildResultRoute(): void {
-    this.app.post('/v1/computed_field/build_result', (req: express.Request, res: express.Response) => {
-      const json = JSON.parse(this.formatRequestData(req)) as State;
-
-      const buildResult = this.buildResult(json);
-      const pluginResponse: BuildResultPluginResponse<{
-        state: State | null;
-        result: Result;
-      }> = {
-        status: 'ok',
-        data: buildResult,
-      };
-      res.status(200).send(this.formatResponse(req, pluginResponse));
-    });
+    this.app.post(
+      '/v1/computed_field/build_result',
+      (req: express.Request<unknown, unknown, string>, res: express.Response) => {
+        const body = this.formatRequestData<RequestResult<State>>(req);
+        const buildResult = this.buildResult(body.state);
+        const pluginResponse: BuildResultPluginResponse<{
+          state: State | null;
+          result: Result;
+        }> = {
+          status: 'ok',
+          data: buildResult,
+        };
+        res.status(200).send(this.formatResponse(req, pluginResponse));
+      },
+    );
   }
 }
