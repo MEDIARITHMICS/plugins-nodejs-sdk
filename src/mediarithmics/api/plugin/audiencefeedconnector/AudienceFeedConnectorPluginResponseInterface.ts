@@ -102,9 +102,7 @@ export class MandatoryPropertyValueError extends AudienceFeedInstanceContextErro
     public feed_id: string,
     public property_name: string,
   ) {
-    super(
-      `${property_name} is a mandatory property. Please provide it when creating the feed.`,
-    );
+    super(`${property_name} is a mandatory property. Please provide it when creating the feed.`);
     this.log = `Mandatory property: ${property_name}`;
   }
 }

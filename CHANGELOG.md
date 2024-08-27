@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Fix computed fields APIs serialization and deserialization.
+
 # 0.28.1 - 2024-07-12
 
 - Add new Error class to have generic end user message: `MandatoryPropertyValueError`
