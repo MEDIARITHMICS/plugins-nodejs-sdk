@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 0.28.2 - 2024-08-27
+
 - Fix computed fields APIs serialization and deserialization.
 
 # 0.28.1 - 2024-07-12
