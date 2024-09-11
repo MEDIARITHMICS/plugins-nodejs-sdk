@@ -1,12 +1,15 @@
 import { core } from '@mediarithmics/plugins-nodejs-sdk';
 
+export interface Event {
+  basketPrice: number;
+}
+
 export interface State {
-  ts: number;
-  amount: number;
+  totalSpentAmount: number;
 }
 
 export interface Data {
-  events: State[];
+  events: Event[];
 }
 
 export interface Result {
@@ -18,26 +21,17 @@ export class MyComputedField extends core.ComputedFieldPlugin<State, Data, Resul
     super();
   }
 
-  dataReduce(data: Data): State {
-    return data.events.reduce((acc, curr) => {
-      return { ...acc, ...curr };
-    });
-  }
-
   onUpdate(state: State | null, data: Data): State {
     if (!state) {
-      return this.dataReduce(data);
+      state = { totalSpentAmount: 0 };
     }
-    return { ...state, ...this.dataReduce(data) };
+
+    data.events.map((event) => (state.totalSpentAmount += event.basketPrice));
+
+    return state;
   }
 
-  buildResult(state: State | null): {
-    state: State | null;
-    result: Result;
-  } {
-    return {
-      state: state,
-      result: { score: 1 },
-    };
+  buildResult(state: State | null): Result {
+    return { score: state.totalSpentAmount };
   }
 }

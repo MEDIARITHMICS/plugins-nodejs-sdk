@@ -7,16 +7,22 @@ export type OnUpdatePluginStatus = 'ok' | 'error';
 export interface PluginResponse {
   status: OnUpdatePluginStatus;
 }
-export interface OnUpdatePluginResponse<D> extends PluginResponse {
-  data: D;
+export interface OnUpdatePluginResponse<S> extends PluginResponse {
+  data: {
+    state: S;
+  };
 }
 
-export interface OnUpdateBatchPluginResponse<D> extends PluginResponse {
-  data: D[];
+export interface OnUpdateBatchPluginResponse<S> extends PluginResponse {
+  data: {
+    state: S;
+  };
 }
 
 export interface BuildResultPluginResponse<D> extends PluginResponse {
-  data: D;
+  data: {
+    result: D;
+  };
 }
 
 export interface RequestData<S, D> {
@@ -43,16 +49,12 @@ export abstract class ComputedFieldPlugin<State, Data, Result> extends BasePlugi
 
   abstract onUpdate(state: State | null, data: Data): State | null;
 
-  abstract buildResult(state: State | null): {
-    state: State | null;
-    result: Result;
-  };
+  abstract buildResult(state: State | null): Result | null;
 
   private onUpdateBatch(state: State, data: Data[]): State | null {
-    const reducedData = data.reduce((acc, curr) => {
-      return { ...acc, ...curr };
-    });
-    return this.onUpdate(state, reducedData);
+    return data.reduce((acc, curr) => {
+      return this.onUpdate(acc, curr);
+    }, state);
   }
 
   private formatResponse(req: express.Request<unknown, unknown, string>, data: PluginResponse): string | Buffer {
@@ -75,7 +77,9 @@ export abstract class ComputedFieldPlugin<State, Data, Result> extends BasePlugi
         const updatedState = this.onUpdate(body.state, body.data);
         const pluginResponse: OnUpdatePluginResponse<State | null> = {
           status: 'ok',
-          data: updatedState,
+          data: {
+            state: updatedState,
+          },
         };
         const response = this.formatResponse(req, pluginResponse);
         res.status(200).send(response);
@@ -91,7 +95,9 @@ export abstract class ComputedFieldPlugin<State, Data, Result> extends BasePlugi
         const updatedState = this.onUpdateBatch(body.state, body.data);
         const pluginResponse: OnUpdatePluginResponse<State | null> = {
           status: 'ok',
-          data: updatedState,
+          data: {
+            state: updatedState,
+          },
         };
         res.status(200).send(this.formatResponse(req, pluginResponse));
       },
@@ -104,12 +110,11 @@ export abstract class ComputedFieldPlugin<State, Data, Result> extends BasePlugi
       (req: express.Request<unknown, unknown, string>, res: express.Response) => {
         const body = this.formatRequestData<RequestResult<State>>(req);
         const buildResult = this.buildResult(body.state);
-        const pluginResponse: BuildResultPluginResponse<{
-          state: State | null;
-          result: Result;
-        }> = {
+        const pluginResponse: BuildResultPluginResponse<Result | null> = {
           status: 'ok',
-          data: buildResult,
+          data: {
+            result: buildResult,
+          },
         };
         res.status(200).send(this.formatResponse(req, pluginResponse));
       },
