@@ -4,8 +4,8 @@ import 'mocha';
 
 import { core } from '@mediarithmics/plugins-nodejs-sdk';
 import { expect } from 'chai';
-import * as ion from 'ion-js';
 import { MyComputedField, Result, State } from '../MyComputedField';
+import { DataType, Operation } from '../../../../lib/mediarithmics/plugins/computed-field/ComputedFieldBasePlugin';
 
 process.env.PLUGIN_WORKER_ID = 'Calavera';
 process.env.PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
@@ -18,8 +18,10 @@ describe('ClientComputedField - json data', function () {
     runner = new core.TestingPluginRunner(plugin);
 
     const data = {
-      data: {
-        events: [{ basketPrice: 1 }, { basketPrice: 2 }, { basketPrice: 3 }, { basketPrice: 2 }],
+      update: {
+        dataType: DataType.USER_ACTIVITY,
+        operation: Operation.INSERT,
+        data: { events: [{ basketPrice: 1 }, { basketPrice: 2 }, { basketPrice: 3 }, { basketPrice: 2 }] },
       },
     };
     const response = JSON.parse(
@@ -39,8 +41,12 @@ describe('ClientComputedField - json data', function () {
 
     const data = {
       state: { totalSpentAmount: 10 },
-      data: {
-        events: [{ basketPrice: 1 }, { basketPrice: 2 }, { basketPrice: 3 }, { basketPrice: 2 }],
+      update: {
+        dataType: DataType.USER_ACTIVITY,
+        operation: Operation.INSERT,
+        data: {
+          events: [{ basketPrice: 1 }, { basketPrice: 2 }, { basketPrice: 3 }, { basketPrice: 2 }],
+        },
       },
     };
 
@@ -59,10 +65,16 @@ describe('ClientComputedField - json data', function () {
 
     const data = {
       state: { totalSpentAmount: 55 },
-      data: [
-        { events: [{ basketPrice: 1 }] },
+      updates: [
         {
-          events: [{ basketPrice: 2 }, { basketPrice: 3 }],
+          dataType: DataType.USER_ACTIVITY,
+          operation: Operation.INSERT,
+          data: { events: [{ basketPrice: 1 }] },
+        },
+        {
+          dataType: DataType.USER_ACTIVITY,
+          operation: Operation.INSERT,
+          data: { events: [{ basketPrice: 2 }, { basketPrice: 3 }] },
         },
       ],
     };
@@ -82,10 +94,16 @@ describe('ClientComputedField - json data', function () {
 
     const data1 = {
       state: { totalSpentAmount: 55 },
-      data: [
-        { events: [{ basketPrice: 1 }] },
+      updates: [
         {
-          events: [{ basketPrice: 2 }, { basketPrice: 3 }],
+          dataType: DataType.USER_ACTIVITY,
+          operation: Operation.INSERT,
+          data: { events: [{ basketPrice: 1 }] },
+        },
+        {
+          dataType: DataType.USER_ACTIVITY,
+          operation: Operation.INSERT,
+          data: { events: [{ basketPrice: 2 }, { basketPrice: 3 }] },
         },
       ],
     };
@@ -101,10 +119,16 @@ describe('ClientComputedField - json data', function () {
 
     const data2 = {
       state: update1.data.state,
-      data: [
-        { events: [{ basketPrice: 2 }] },
+      updates: [
         {
-          events: [{ basketPrice: 4 }, { basketPrice: 6 }],
+          dataType: DataType.USER_ACTIVITY,
+          operation: Operation.INSERT,
+          data: { events: [{ basketPrice: 2 }] },
+        },
+        {
+          dataType: DataType.USER_ACTIVITY,
+          operation: Operation.INSERT,
+          data: { events: [{ basketPrice: 4 }, { basketPrice: 6 }] },
         },
       ],
     };

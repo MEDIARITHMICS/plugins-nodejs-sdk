@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Breaking change in computed field sdk: Replace the onUpdate method with 3 distinct methods (one for UserActivity updates, one for UserProfile and one for ComputedField).
+
 # 0.28.2 - 2024-08-27
 
 - Fix computed fields APIs serialization and deserialization.
