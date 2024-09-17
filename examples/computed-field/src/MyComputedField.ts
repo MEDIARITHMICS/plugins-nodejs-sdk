@@ -1,43 +1,52 @@
 import { core } from '@mediarithmics/plugins-nodejs-sdk';
+import {
+  BaseUserActivity,
+  BaseUserProfile,
+  BaseComputedField,
+} from '../../../lib/mediarithmics/plugins/computed-field/ComputedFieldBasePlugin';
 
-export interface State {
-  ts: number;
-  amount: number;
+interface Event {
+  basketPrice: number;
 }
 
-export interface Data {
-  events: State[];
+export interface State {
+  totalSpentAmount: number;
 }
 
 export interface Result {
   score: number;
 }
 
-export class MyComputedField extends core.ComputedFieldPlugin<State, Data, Result> {
+interface UserActivity extends BaseUserActivity {
+  events: Event[];
+}
+
+interface UserProfile extends BaseUserProfile {}
+
+interface ComputedField extends BaseComputedField {}
+
+export class MyComputedField extends core.ComputedFieldPlugin<State, Result, UserActivity, UserProfile, ComputedField> {
   constructor() {
     super();
   }
 
-  dataReduce(data: Data): State {
-    return data.events.reduce((acc, curr) => {
-      return { ...acc, ...curr };
-    });
-  }
-
-  onUpdate(state: State | null, data: Data): State {
+  onUpdateActivity(state: State, userActivity: UserActivity): State {
     if (!state) {
-      return this.dataReduce(data);
+      state = { totalSpentAmount: 0 };
     }
-    return { ...state, ...this.dataReduce(data) };
+
+    userActivity.events.map((event) => (state.totalSpentAmount += event.basketPrice));
+
+    return state;
+  }
+  onUpdateUserProfile(state: State, userProfile: UserProfile, operation: core.Operation): State {
+    return state;
+  }
+  onUpdateComputedField(state: State, computedField: ComputedField): State {
+    return state;
   }
 
-  buildResult(state: State | null): {
-    state: State | null;
-    result: Result;
-  } {
-    return {
-      state: state,
-      result: { score: 1 },
-    };
+  buildResult(state: State | null): Result {
+    return { score: state.totalSpentAmount };
   }
 }

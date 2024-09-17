@@ -10,7 +10,7 @@
     "testOnly": "./testOnly.sh",
     "prepublishOnly": "tsc",
     "build": "tsc",
-    "docs": "typedoc --out docs/ --mode modules --target es6 --module commonjs ./src",
+    "docs": "typedoc --out docs/ ./src",
     "prettier:fix": "prettier --write '**/*.ts'",
     "test:Helper": "npm run build && NODE_ENV=development mocha lib/helpers/StatsClient.spec.js"
   },
