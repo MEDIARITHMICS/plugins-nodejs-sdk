@@ -65,41 +65,25 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     return response.data;
   }
 
-  async fetchUserAgentIdentifierRealms(
-    apiToken: string,
-    datamartId: string,
-  ): Promise<Array<UserAgentIdentifierRealmSelectionResource>> {
-    const options = {
-      method: 'GET',
-      uri: `https://api.mediarithmics.com/v1/datamarts/${datamartId}/user_agent_identifier_realm_selections`,
-      json: true,
-    };
-
-    return this.requestPublicMicsApiHelper<UserAgentIdentifierRealmSelectionResourcesResponse>(apiToken, options).then(
-      (resRealms) => {
-        this.logger.debug(`Fetched user agent identifier realms for the datamart with id: ${datamartId}`);
-
-        return resRealms.data;
-      },
+  async fetchUserAgentIdentifierRealms(datamartId: string): Promise<Array<UserAgentIdentifierRealmSelectionResource>> {
+    const response = await super.requestGatewayHelper<UserAgentIdentifierRealmSelectionResourcesResponse>(
+      'GET',
+      `${this.outboundPlatformUrl}/v1/datamarts/${datamartId}/user_agent_identifier_realm_selections`,
     );
+    this.logger.debug(`Fetched user agent identifier realms for the datamart with id: ${datamartId}`);
+    return response.data;
   }
 
-  async checkUserAgentIdentifierRealm(
-    apiToken: string,
-    datamartId: string,
-    realmFilter: RealmFilter,
-  ): Promise<boolean> {
-    return this.fetchUserAgentIdentifierRealms(apiToken, datamartId).then((realms) => {
-      const hasRealm = realms.some((realm) => {
-        if (isWebDomainRealmFilter(realmFilter)) {
-          return realm.realm_type === realmFilter.realmType && realm.web_domain.sld_name === realmFilter.sld_name;
-        } else return realm.realm_type === realmFilter.realmType;
-      });
-      if (hasRealm === false) {
-        throw new MissingRealmError(datamartId, realmFilter);
-      }
-      return hasRealm;
+  async checkUserAgentIdentifierRealm(datamartId: string, realmFilter: RealmFilter): Promise<void> {
+    const realms = await this.fetchUserAgentIdentifierRealms(datamartId);
+    const hasRealm = realms.some((realm) => {
+      if (isWebDomainRealmFilter(realmFilter)) {
+        return realm.realm_type === realmFilter.realmType && realm.web_domain.sld_name === realmFilter.sld_name;
+      } else return realm.realm_type === realmFilter.realmType;
     });
+    if (!hasRealm) {
+      throw new MissingRealmError(datamartId, realmFilter);
+    }
   }
 
   async fetchAudienceFeed(feedId: string): Promise<AudienceSegmentExternalFeedResource> {
