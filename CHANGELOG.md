@@ -2,7 +2,10 @@
 
 # Unreleased
 
+# v0.29.0 2024-09-24
+
 - Breaking change in computed field sdk: Replace the onUpdate method with 3 distinct methods (one for UserActivity updates, one for UserProfile and one for ComputedField).
+- change source of identifier realm selections
 
 # 0.28.2 - 2024-08-27
 
