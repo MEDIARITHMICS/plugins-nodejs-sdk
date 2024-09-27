@@ -2,6 +2,10 @@
 
 # Unreleased
 
+# v0.29.1 2024-09-27
+
+- Fix the data type in in computed field sdk: snake case is used instead of the camel case
+
 # v0.29.0 2024-09-24
 
 - Breaking change in computed field sdk: Replace the onUpdate method with 3 distinct methods (one for UserActivity updates, one for UserProfile and one for ComputedField).
