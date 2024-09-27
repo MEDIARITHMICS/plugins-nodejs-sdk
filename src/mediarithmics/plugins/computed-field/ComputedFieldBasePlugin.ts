@@ -42,7 +42,7 @@ export interface BaseUserProfile {}
 export interface BaseComputedField {}
 
 export interface Update {
-  dataType: DataType;
+  data_type: DataType;
   operation: Operation;
   data: BaseUserActivity | BaseUserProfile | BaseComputedField;
 }
@@ -82,7 +82,7 @@ export abstract class ComputedFieldPlugin<
   abstract buildResult(state: State | null): Result | null;
 
   private getUpdateMethod(state: State | null, update: Update): State | null {
-    switch (update.dataType) {
+    switch (update.data_type) {
       case DataType.USER_ACTIVITY:
         return this.onUpdateActivity(state, update.data as UserActivity);
       case DataType.USER_PROFILE:
