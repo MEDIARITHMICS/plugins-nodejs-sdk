@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Fix the data_type and operation in computed field sdk: Use string instead of enum to prevent deserialization issues
+
 # v0.29.1 2024-09-27
 
 - Fix the data type in in computed field sdk: snake case is used instead of the camel case

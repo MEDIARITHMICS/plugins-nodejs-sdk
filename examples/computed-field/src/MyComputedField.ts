@@ -47,6 +47,6 @@ export class MyComputedField extends core.ComputedFieldPlugin<State, Result, Use
   }
 
   buildResult(state: State | null): Result {
-    return { score: state.totalSpentAmount };
+    return { score: state ? state.totalSpentAmount : null };
   }
 }

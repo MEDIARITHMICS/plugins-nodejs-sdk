@@ -19,8 +19,8 @@ describe('ClientComputedField - json data', function () {
 
     const data = {
       update: {
-        data_type: DataType.USER_ACTIVITY,
-        operation: Operation.INSERT,
+        data_type: 'USER_ACTIVITY',
+        operation: 'INSERT',
         data: { events: [{ basketPrice: 1 }, { basketPrice: 2 }, { basketPrice: 3 }, { basketPrice: 2 }] },
       },
     };
@@ -42,8 +42,8 @@ describe('ClientComputedField - json data', function () {
     const data = {
       state: { totalSpentAmount: 10 },
       update: {
-        data_type: DataType.USER_ACTIVITY,
-        operation: Operation.INSERT,
+        data_type: 'USER_ACTIVITY',
+        operation: 'INSERT',
         data: {
           events: [{ basketPrice: 1 }, { basketPrice: 2 }, { basketPrice: 3 }, { basketPrice: 2 }],
         },
@@ -67,13 +67,13 @@ describe('ClientComputedField - json data', function () {
       state: { totalSpentAmount: 55 },
       updates: [
         {
-          data_type: DataType.USER_ACTIVITY,
-          operation: Operation.INSERT,
+          data_type: 'USER_ACTIVITY',
+          operation: 'INSERT',
           data: { events: [{ basketPrice: 1 }] },
         },
         {
-          data_type: DataType.USER_ACTIVITY,
-          operation: Operation.INSERT,
+          data_type: 'USER_ACTIVITY',
+          operation: 'INSERT',
           data: { events: [{ basketPrice: 2 }, { basketPrice: 3 }] },
         },
       ],
@@ -96,13 +96,13 @@ describe('ClientComputedField - json data', function () {
       state: { totalSpentAmount: 55 },
       updates: [
         {
-          data_type: DataType.USER_ACTIVITY,
-          operation: Operation.INSERT,
+          data_type: 'USER_ACTIVITY',
+          operation: 'INSERT',
           data: { events: [{ basketPrice: 1 }] },
         },
         {
-          data_type: DataType.USER_ACTIVITY,
-          operation: Operation.INSERT,
+          data_type: 'USER_ACTIVITY',
+          operation: 'INSERT',
           data: { events: [{ basketPrice: 2 }, { basketPrice: 3 }] },
         },
       ],
@@ -121,13 +121,13 @@ describe('ClientComputedField - json data', function () {
       state: update1.data.state,
       updates: [
         {
-          data_type: DataType.USER_ACTIVITY,
-          operation: Operation.INSERT,
+          data_type: 'USER_ACTIVITY',
+          operation: 'INSERT',
           data: { events: [{ basketPrice: 2 }] },
         },
         {
-          data_type: DataType.USER_ACTIVITY,
-          operation: Operation.INSERT,
+          data_type: 'USER_ACTIVITY',
+          operation: 'INSERT',
           data: { events: [{ basketPrice: 4 }, { basketPrice: 6 }] },
         },
       ],
