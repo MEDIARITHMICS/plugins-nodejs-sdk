@@ -25,21 +25,12 @@ export interface BuildResultPluginResponse<R> extends PluginResponse {
   };
 }
 
-export enum DataType {
-  USER_ACTIVITY,
-  USER_PROFILE,
-  COMPUTED_FIELD,
-}
-
-export enum Operation {
-  INSERT,
-  DELETE,
-  UPDATE,
-}
-
 export interface BaseUserActivity {}
 export interface BaseUserProfile {}
 export interface BaseComputedField {}
+
+export type DataType = 'USER_ACTIVITY' | 'USER_PROFILE' | 'COMPUTED_FIELD';
+export type Operation = 'INSERT' | 'DELETE' | 'UPDATE';
 
 export interface Update {
   data_type: DataType;
@@ -83,11 +74,11 @@ export abstract class ComputedFieldPlugin<
 
   private getUpdateMethod(state: State | null, update: Update): State | null {
     switch (update.data_type) {
-      case DataType.USER_ACTIVITY:
+      case 'USER_ACTIVITY':
         return this.onUpdateActivity(state, update.data as UserActivity);
-      case DataType.USER_PROFILE:
+      case 'USER_PROFILE':
         return this.onUpdateUserProfile(state, update.data as UserProfile, update.operation);
-      case DataType.COMPUTED_FIELD:
+      case 'COMPUTED_FIELD':
         return this.onUpdateComputedField(state, update.data as ComputedField);
       default:
         return state;
