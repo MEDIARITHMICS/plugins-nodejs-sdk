@@ -2,7 +2,10 @@
 
 # Unreleased
 
+# v0.29.2 2024-10-03
+
 - Fix the data_type and operation in computed field sdk: Use string instead of enum to prevent deserialization issues
+- Update dependencies to fix known vulnerabilities
 
 # v0.29.1 2024-09-27
 
