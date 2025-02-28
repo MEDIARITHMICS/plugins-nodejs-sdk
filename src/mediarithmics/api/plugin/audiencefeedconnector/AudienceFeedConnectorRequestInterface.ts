@@ -1,5 +1,6 @@
 import { BatchUpdateContext } from '../../core/batchupdate/BatchUpdateInterface';
 import { UserIdentifierInfo } from '../../reference/UserIdentifierInterface';
+import { PluginProperty } from '../../core/plugin/PluginPropertyInterface';
 
 export type UpdateType = 'UPSERT' | 'DELETE';
 
@@ -55,3 +56,17 @@ export type TroubleshootActionFetchDestinationAudience = ExternalSegmentTroubles
 // };
 
 export type ExternalSegmentTroubleshootRequest = TroubleshootActionFetchDestinationAudience; // | TroubleshootActionWithArgs;
+
+export interface ExternalSegmentAuthenticationStatusRequest {
+  segment_id?: string;
+  datamart_id: string;
+  user_id: string;
+  properties?: PluginProperty[];
+}
+
+export interface ExternalSegmentDynamicPropertyValuesRequest {
+  segment_id?: string;
+  datamart_id: string;
+  user_id: string;
+  properties?: PluginProperty[];
+}
