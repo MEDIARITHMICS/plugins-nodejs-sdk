@@ -249,6 +249,7 @@ describe.only('External Audience Feed API test', function () {
           mappings: [],
         } as core.UserAgentIdentifierInfo,
       ],
+      user_profiles: [],
     };
 
     const batchUpdateRequest: BatchUpdateRequest<AudienceFeedBatchContext, string> = {

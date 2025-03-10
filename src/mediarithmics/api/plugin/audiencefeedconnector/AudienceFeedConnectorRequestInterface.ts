@@ -1,5 +1,6 @@
 import { BatchUpdateContext } from '../../core/batchupdate/BatchUpdateInterface';
 import { UserIdentifierInfo } from '../../reference/UserIdentifierInterface';
+import { UserProfileInfo } from '../../reference/UserProfileInfo';
 
 export type UpdateType = 'UPSERT' | 'DELETE';
 
@@ -9,6 +10,7 @@ export interface UserSegmentUpdateRequest {
   datamart_id: string;
   segment_id: string;
   user_identifiers: UserIdentifierInfo[];
+  user_profiles: UserProfileInfo[];
   ts: number;
   operation: UpdateType;
 }
