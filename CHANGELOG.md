@@ -2,6 +2,10 @@
 
 # Unreleased
 
+# v0.29.3 2025-03-14
+
+- Add user profiles on user segment update
+
 # v0.29.2 2024-10-03
 
 - Fix the data_type and operation in computed field sdk: Use string instead of enum to prevent deserialization issues
