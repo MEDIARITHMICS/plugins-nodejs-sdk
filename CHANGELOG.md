@@ -2,6 +2,10 @@
 
 # Unreleased
 
+# v0.29.4 2025-03-14
+
+- Fix missing export of profiles interface
+
 # v0.29.3 2025-03-14
 
 - Add user profiles on user segment update
