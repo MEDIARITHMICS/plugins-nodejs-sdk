@@ -18,6 +18,7 @@ export * from './api/plugin/emailtemplaterenderer';
 export * from './api/plugin/emailtemplaterouter/EmailRouterRequestInterface';
 export * from './api/plugin/recommender/RecommenderRequestInterface';
 export * from './api/reference/UserIdentifierInterface';
+export * from './api/reference/UserProfileInfo';
 export * from './api/reference/DeviceIdRegistryInterface';
 export * from './plugins/audience-feed-connector/AudienceFeedConnectorBasePlugin';
 export * from './plugins/activity-analyzer/ActivityAnalyzerBasePlugin';
