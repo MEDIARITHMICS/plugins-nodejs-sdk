@@ -2,6 +2,10 @@
 
 # Unreleased
 
+# v0.29.5 2025-03-18
+
+- Fix CVE-2024-52798
+
 # v0.29.4 2025-03-14
 
 - Fix missing export of profiles interface
