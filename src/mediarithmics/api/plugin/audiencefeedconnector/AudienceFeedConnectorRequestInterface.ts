@@ -59,14 +59,14 @@ export type TroubleshootActionFetchDestinationAudience = ExternalSegmentTroubles
 
 export type ExternalSegmentTroubleshootRequest = TroubleshootActionFetchDestinationAudience; // | TroubleshootActionWithArgs;
 
-export interface ExternalSegmentAuthenticationStatusRequest {
+export interface ExternalSegmentAuthenticationStatusQueryRequest {
   segment_id?: string;
   datamart_id: string;
   user_id: string;
   properties?: PluginProperty[];
 }
 
-export interface ExternalSegmentDynamicPropertyValuesRequest {
+export interface ExternalSegmentDynamicPropertyValuesQueryRequest {
   segment_id?: string;
   datamart_id: string;
   user_id: string;

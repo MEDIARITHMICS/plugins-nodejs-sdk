@@ -19,8 +19,8 @@ import {
   ExternalSegmentConnectionPluginResponse,
   ExternalSegmentCreationPluginResponse,
   ExternalSegmentTroubleshootResponse,
-  ExternalSegmentAuthenticationStatusResponse,
-  ExternalSegmentDynamicPropertyValuesResponse,
+  ExternalSegmentAuthenticationStatusQueryResponse,
+  ExternalSegmentDynamicPropertyValuesQueryResponse,
   MissingRealmError,
   UserSegmentUpdatePluginResponse,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
@@ -30,8 +30,8 @@ import {
   ExternalSegmentCreationRequest,
   ExternalSegmentTroubleshootActions,
   ExternalSegmentTroubleshootRequest,
-  ExternalSegmentAuthenticationStatusRequest,
-  ExternalSegmentDynamicPropertyValuesRequest,
+  ExternalSegmentAuthenticationStatusQueryRequest,
+  ExternalSegmentDynamicPropertyValuesQueryRequest,
   UserSegmentUpdateRequest,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
 import { BasePlugin, PropertiesWrapper } from '../common';
@@ -57,8 +57,8 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     this.initExternalSegmentConnection();
     this.initUserSegmentUpdate();
     this.initTroubleshoot();
-    this.initAuthenticationStatus();
-    this.initDynamicPropertyValues();
+    this.initAuthenticationStatusQuery();
+    this.initDynamicPropertyValuesQuery();
   }
 
   async fetchAudienceSegment(feedId: string): Promise<AudienceSegmentResource> {
@@ -172,15 +172,15 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     return Promise.resolve({ status: 'not_implemented' });
   }
 
-  protected onAuthenticationStatus(
-    request: ExternalSegmentAuthenticationStatusRequest,
-  ): Promise<ExternalSegmentAuthenticationStatusResponse> {
+  protected onAuthenticationStatusQuery(
+    request: ExternalSegmentAuthenticationStatusQueryRequest,
+  ): Promise<ExternalSegmentAuthenticationStatusQueryResponse> {
     return Promise.resolve({ status: 'not_implemented' });
   }
 
-  protected onDynamicPropertyValues(
-    request: ExternalSegmentDynamicPropertyValuesRequest,
-  ): Promise<ExternalSegmentDynamicPropertyValuesResponse> {
+  protected onDynamicPropertyValuesQuery(
+    request: ExternalSegmentDynamicPropertyValuesQueryRequest,
+  ): Promise<ExternalSegmentDynamicPropertyValuesQueryResponse> {
     return Promise.resolve({ status: 'not_implemented' });
   }
 
@@ -421,14 +421,14 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     });
   }
 
-  private initAuthenticationStatus(): void {
+  private initAuthenticationStatusQuery(): void {
     this.app.post(
-      '/v1/authentication_status',
+      '/v1/authentication_status_queries',
       this.emptyBodyFilter,
       async (req: express.Request, res: express.Response) => {
         try {
-          const request = req.body as ExternalSegmentAuthenticationStatusRequest;
-          const response = await this.onAuthenticationStatus(request);
+          const request = req.body as ExternalSegmentAuthenticationStatusQueryRequest;
+          const response = await this.onAuthenticationStatusQuery(request);
           let statusCode: number;
           switch (response.status) {
             case 'authenticated':
@@ -444,26 +444,29 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
             default:
               statusCode = 500;
           }
-          this.logger.debug(`Request: ${JSON.stringify(request)} - Authentication status returning: ${statusCode}`, {
-            response,
-          });
+          this.logger.debug(
+            `Request: ${JSON.stringify(request)} - Authentication status query returning: ${statusCode}`,
+            {
+              response,
+            },
+          );
           return res.status(statusCode).send(JSON.stringify(response));
         } catch (error) {
-          this.logger.error('Something bad happened on authentication status', error);
+          this.logger.error('Something bad happened on authentication status query', error);
           return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
         }
       },
     );
   }
 
-  private initDynamicPropertyValues(): void {
+  private initDynamicPropertyValuesQuery(): void {
     this.app.post(
-      '/v1/dynamic_property_values',
+      '/v1/dynamic_property_values_queries',
       this.emptyBodyFilter,
       async (req: express.Request, res: express.Response) => {
         try {
-          const request = req.body as ExternalSegmentDynamicPropertyValuesRequest;
-          const response = await this.onDynamicPropertyValues(request);
+          const request = req.body as ExternalSegmentDynamicPropertyValuesQueryRequest;
+          const response = await this.onDynamicPropertyValuesQuery(request);
           let statusCode: number;
           switch (response.status) {
             case 'ok':
@@ -478,12 +481,15 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
             default:
               statusCode = 500;
           }
-          this.logger.debug(`Request: ${JSON.stringify(request)} - Dynamic property values returning: ${statusCode}`, {
-            response,
-          });
+          this.logger.debug(
+            `Request: ${JSON.stringify(request)} - Dynamic property values query returning: ${statusCode}`,
+            {
+              response,
+            },
+          );
           return res.status(statusCode).send(JSON.stringify(response));
         } catch (error) {
-          this.logger.error('Something bad happened on dynamic property values', error);
+          this.logger.error('Something bad happened on dynamic property values query', error);
           return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
         }
       },

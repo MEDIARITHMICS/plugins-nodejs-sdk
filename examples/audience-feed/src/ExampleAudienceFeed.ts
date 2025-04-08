@@ -152,19 +152,18 @@ export class ExampleAudienceFeed extends core.BatchedAudienceFeedConnectorBasePl
     }
   }
 
-  protected onAuthenticationStatus(
-    request: core.ExternalSegmentAuthenticationStatusRequest,
-  ): Promise<core.ExternalSegmentAuthenticationStatusResponse> {
+  protected onAuthenticationStatusQuery(
+    request: core.ExternalSegmentAuthenticationStatusQueryRequest,
+  ): Promise<core.ExternalSegmentAuthenticationStatusQueryResponse> {
     return Promise.resolve({ status: 'authenticated' });
   }
 
-
-  protected onDynamicPropertyValues(
-    request: core.ExternalSegmentDynamicPropertyValuesRequest
-  ): Promise<core.ExternalSegmentDynamicPropertyValuesResponse> {
+  protected onDynamicPropertyValuesQuery(
+    request: core.ExternalSegmentDynamicPropertyValuesQueryRequest,
+  ): Promise<core.ExternalSegmentDynamicPropertyValuesQueryResponse> {
     return Promise.resolve({
       status: 'ok',
-      data:[]
+      data: [],
     });
   }
 }
