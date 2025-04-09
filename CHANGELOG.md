@@ -2,6 +2,9 @@
 
 # Unreleased
 
+- Add new optional route /v1/authentication_status_queries that takes ExternalSegmentAuthenticationStatusQueryRequest and responds ExternalSegmentAuthenticationStatusQueryResponse allowing plugins to check authentification status
+- Add new optional route /v1/dynamic_property_values_queries that take ExternalSegmentDynamicPropertyValuesQueryRequest and responds ExternalSegmentDynamicPropertyValuesQueryResponse allowing plugins to define dynamics properties values
+
 # v0.29.5 2025-03-18
 
 - Fix CVE-2024-52798

@@ -203,7 +203,7 @@ describe.only('Test Audience Feed example', function () {
       });
   });
 
-  it('Test authentication_status and dynamic_property_values', (done) => {
+  it('Test authentication_status_queries', (done) => {
     const rpMockup: sinon.SinonStub = sinon.stub();
     runner = new core.TestingPluginRunner(plugin, rpMockup);
 
@@ -211,16 +211,16 @@ describe.only('Test Audience Feed example', function () {
     const user_id = '1000';
 
     request(runner.plugin.app)
-      .post('/v1/authentication_status')
-      .send({ datamart_id, user_id})
+      .post('/v1/authentication_status_queries')
+      .send({ datamart_id, user_id })
       .end((error, response) => {
-        const body: core.ExternalSegmentAuthenticationStatusResponse = JSON.parse(response.text);
+        const body: core.ExternalSegmentAuthenticationStatusQueryResponse = JSON.parse(response.text);
         expect(body.status).to.eq('authenticated');
         done();
       });
   });
 
-  it('Test authentication_status and dynamic_property_values', (done) => {
+  it('Test dynamic_property_values_query', (done) => {
     const rpMockup: sinon.SinonStub = sinon.stub();
     runner = new core.TestingPluginRunner(plugin, rpMockup);
 
@@ -228,10 +228,10 @@ describe.only('Test Audience Feed example', function () {
     const user_id = '1000';
 
     request(runner.plugin.app)
-      .post('/v1/dynamic_property_values')
-      .send({ datamart_id, user_id})
+      .post('/v1/dynamic_property_values_queries')
+      .send({ datamart_id, user_id })
       .end((error, response) => {
-        const body: core.ExternalSegmentDynamicPropertyValuesResponse = JSON.parse(response.text);
+        const body: core.ExternalSegmentDynamicPropertyValuesQueryResponse = JSON.parse(response.text);
         expect(body.status).to.eq('ok');
         expect(body.data).to.deep.eq([]);
         done();
