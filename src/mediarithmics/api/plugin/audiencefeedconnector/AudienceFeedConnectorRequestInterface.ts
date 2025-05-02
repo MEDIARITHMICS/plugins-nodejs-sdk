@@ -66,6 +66,12 @@ export interface ExternalSegmentAuthenticationStatusQueryRequest {
   properties?: PluginProperty[];
 }
 
+export interface ExternalSegmentAuthenticationRequest {
+  datamart_id: string;
+  user_id: string;
+  params?: Map<string, string>;
+}
+
 export interface ExternalSegmentDynamicPropertyValuesQueryRequest {
   segment_id?: string;
   datamart_id: string;
