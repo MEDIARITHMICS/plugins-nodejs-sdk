@@ -158,6 +158,12 @@ export class ExampleAudienceFeed extends core.BatchedAudienceFeedConnectorBasePl
     return Promise.resolve({ status: 'authenticated' });
   }
 
+  protected onAuthentication(
+    request: core.ExternalSegmentAuthenticationRequest,
+  ): Promise<core.ExternalSegmentAuthenticationResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
   protected onDynamicPropertyValuesQuery(
     request: core.ExternalSegmentDynamicPropertyValuesQueryRequest,
   ): Promise<core.ExternalSegmentDynamicPropertyValuesQueryResponse> {

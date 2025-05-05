@@ -228,6 +228,35 @@ describe('Data File helper Tests', function () {
   });
 });
 
+describe('Data File helper Tests', function () {
+  class MyFakePlugin extends core.BasePlugin {}
+
+  const fakeDataFile = Buffer.from('Hello');
+
+  const simpleResponse = {
+    status: 'ok',
+  };
+  const rpMockup = sinon.stub().returns(Promise.resolve(simpleResponse));
+  const plugin = new MyFakePlugin(false);
+  const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+  it('ConfigurationFile: try to upsert it', function (done) {
+    const confFileName = 'toto';
+    const method = 'PUT';
+    const confFileGatewayURI = `/v1/configuration/technical_name=${confFileName}`;
+
+    // We try a call to the Gateway
+    void runner.plugin.upsertConfigurationFile(confFileName, fakeDataFile).then((response) => {
+      expect(rpMockup.args[0][0].method).to.be.eq(method);
+      expect(rpMockup.args[0][0].uri).to.be.eq(
+        `http://${runner.plugin.gatewayHost}:${runner.plugin.gatewayPort}${confFileGatewayURI}`,
+      );
+      expect(response.status).to.be.eq('ok');
+      done();
+    });
+  });
+});
+
 describe('Instance Context Expiration Tests', function () {
   class MyFakePlugin extends core.BasePlugin {}
 

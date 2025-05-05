@@ -8,6 +8,7 @@ export declare type AudienceFeedConnectorAuthenticationStatus =
   | 'not_authenticated'
   | 'error'
   | 'not_implemented';
+export declare type AudienceFeedAuthenticationStatus = 'ok' | 'error' | 'not_implemented';
 export declare type AudienceFeedConnectorDynamicPropertyValuesQueryStatus = 'ok' | 'error' | 'not_implemented';
 export type AudienceFeedConnectorContentType = 'text/csv' | 'application/json' | 'text/plain';
 
@@ -78,6 +79,11 @@ export interface ExternalSegmentAuthenticationStatusQueryResponse {
     login_url?: string;
     [key: string]: any;
   };
+}
+
+export interface ExternalSegmentAuthenticationResponse {
+  status: AudienceFeedAuthenticationStatus;
+  message?: string;
 }
 
 export interface ExternalSegmentDynamicPropertyValuesQueryResponse {

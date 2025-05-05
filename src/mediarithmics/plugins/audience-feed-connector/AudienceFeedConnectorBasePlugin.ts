@@ -23,6 +23,7 @@ import {
   ExternalSegmentDynamicPropertyValuesQueryResponse,
   MissingRealmError,
   UserSegmentUpdatePluginResponse,
+  ExternalSegmentAuthenticationResponse as ExternalSegmentAuthenticationResponse,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
 import {
   AudienceFeedBatchContext,
@@ -33,6 +34,7 @@ import {
   ExternalSegmentAuthenticationStatusQueryRequest,
   ExternalSegmentDynamicPropertyValuesQueryRequest,
   UserSegmentUpdateRequest,
+  ExternalSegmentAuthenticationRequest,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
 import { BasePlugin, PropertiesWrapper } from '../common';
 import {
@@ -58,6 +60,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     this.initUserSegmentUpdate();
     this.initTroubleshoot();
     this.initAuthenticationStatusQuery();
+    this.initAuthentication();
     this.initDynamicPropertyValuesQuery();
   }
 
@@ -175,6 +178,12 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   protected onAuthenticationStatusQuery(
     request: ExternalSegmentAuthenticationStatusQueryRequest,
   ): Promise<ExternalSegmentAuthenticationStatusQueryResponse> {
+    return Promise.resolve({ status: 'not_implemented' });
+  }
+
+  protected onAuthentication(
+    request: ExternalSegmentAuthenticationRequest,
+  ): Promise<ExternalSegmentAuthenticationResponse> {
     return Promise.resolve({ status: 'not_implemented' });
   }
 
@@ -457,6 +466,36 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
         }
       },
     );
+  }
+
+  private initAuthentication(): void {
+    this.app.post('/v1/authentication', this.emptyBodyFilter, async (req: express.Request, res: express.Response) => {
+      try {
+        const request = req.body as ExternalSegmentAuthenticationRequest;
+        const response = await this.onAuthentication(request);
+        let statusCode: number;
+        switch (response.status) {
+          case 'ok':
+            statusCode = 200;
+            break;
+          case 'error':
+            statusCode = 500;
+            break;
+          case 'not_implemented':
+            statusCode = 400;
+            break;
+          default:
+            statusCode = 500;
+        }
+        this.logger.debug(`Request: ${JSON.stringify(req.body)} - Authentication returning: ${statusCode}`, {
+          response,
+        });
+        return res.status(statusCode).send(JSON.stringify(response));
+      } catch (error) {
+        this.logger.error('Something bad happened on authentication', error);
+        return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
+      }
+    });
   }
 
   private initDynamicPropertyValuesQuery(): void {

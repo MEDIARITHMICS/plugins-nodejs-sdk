@@ -9,7 +9,7 @@ import rp from 'request-promise-native';
 import toobusy from 'toobusy-js';
 import winston from 'winston';
 
-import { Compartment, DataListResponse } from '../../';
+import { Compartment, DataListResponse, SimpleResponse } from '../../';
 import { Datamart } from '../../api/core/datamart/Datamart';
 import {
   AdLayoutProperty,
@@ -259,6 +259,17 @@ export abstract class BasePlugin<CacheValue = unknown> {
       'GET',
       `${this.outboundPlatformUrl}/v1/configuration/technical_name=${fileName}`,
       undefined,
+      undefined,
+      false,
+      true,
+    );
+  }
+
+  upsertConfigurationFile(fileName: string, fileContent: Buffer): Promise<SimpleResponse> {
+    return this.requestGatewayHelper(
+      'PUT',
+      `${this.outboundPlatformUrl}/v1/configuration/technical_name=${fileName}`,
+      fileContent,
       undefined,
       false,
       true,
