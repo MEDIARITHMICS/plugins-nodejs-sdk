@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# v0.31.0 2025-05-07
+
 - Add new optional route /v1/authentication that takes ExternalSegmentAuthenticationRequest and responds ExternalSegmentAuthenticationResponse giving plugins a route for receiving authentication callbacks from external provider
 
 # v0.30.0 2025-04-09
