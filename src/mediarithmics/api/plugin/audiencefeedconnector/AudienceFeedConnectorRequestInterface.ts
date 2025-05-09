@@ -67,7 +67,6 @@ export interface ExternalSegmentAuthenticationStatusQueryRequest {
 }
 
 export interface ExternalSegmentAuthenticationRequest {
-  datamart_id: string;
   user_id: string;
   params?: Map<string, string>;
 }

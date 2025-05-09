@@ -224,12 +224,11 @@ describe.only('Test Audience Feed example', function () {
     const rpMockup: sinon.SinonStub = sinon.stub();
     runner = new core.TestingPluginRunner(plugin, rpMockup);
 
-    const datamart_id = '1';
     const user_id = '1000';
 
     request(runner.plugin.app)
       .post('/v1/authentication')
-      .send({ datamart_id, user_id })
+      .send({ user_id })
       .end((error, response) => {
         const body: core.ExternalSegmentAuthenticationResponse = JSON.parse(response.text);
         expect(body.status).to.eq('ok');
