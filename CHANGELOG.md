@@ -2,6 +2,11 @@
 
 # Unreleased
 
+# v0.31.1 2025-05-12
+
+- Remove datamart_id from /v1/authentication. 
+- DO NOT USE v0.31.0
+
 # v0.31.0 2025-05-07
 
 - Add new optional route /v1/authentication that takes ExternalSegmentAuthenticationRequest and responds ExternalSegmentAuthenticationResponse giving plugins a route for receiving authentication callbacks from external provider
