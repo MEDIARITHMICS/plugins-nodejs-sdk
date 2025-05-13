@@ -68,7 +68,7 @@ export interface ExternalSegmentAuthenticationStatusQueryRequest {
 
 export interface ExternalSegmentAuthenticationRequest {
   user_id: string;
-  params?: Map<string, string>;
+  params?: { [key: string]: string };
 }
 
 export interface ExternalSegmentDynamicPropertyValuesQueryRequest {
