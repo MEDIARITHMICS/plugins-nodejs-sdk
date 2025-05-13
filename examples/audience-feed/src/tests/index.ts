@@ -220,7 +220,7 @@ describe.only('Test Audience Feed example', function () {
       });
   });
 
-  it('Test authentication', (done) => {
+  it('Test authentication ok', (done) => {
     const rpMockup: sinon.SinonStub = sinon.stub();
     runner = new core.TestingPluginRunner(plugin, rpMockup);
 
@@ -228,10 +228,26 @@ describe.only('Test Audience Feed example', function () {
 
     request(runner.plugin.app)
       .post('/v1/authentication')
-      .send({ user_id })
+      .send({ user_id, params: { creds: 'ok' } })
       .end((error, response) => {
         const body: core.ExternalSegmentAuthenticationResponse = JSON.parse(response.text);
         expect(body.status).to.eq('ok');
+        done();
+      });
+  });
+
+  it('Test authentication error', (done) => {
+    const rpMockup: sinon.SinonStub = sinon.stub();
+    runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    const user_id = '1000';
+
+    request(runner.plugin.app)
+      .post('/v1/authentication')
+      .send({ user_id, params: { creds: 'null' } })
+      .end((error, response) => {
+        const body: core.ExternalSegmentAuthenticationResponse = JSON.parse(response.text);
+        expect(body.status).to.eq('error');
         done();
       });
   });

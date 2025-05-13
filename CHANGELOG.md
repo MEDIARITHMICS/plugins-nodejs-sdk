@@ -2,9 +2,11 @@
 
 # Unreleased
 
+- Change params field type from /v1/authentication route
+
 # v0.31.1 2025-05-12
 
-- Remove datamart_id from /v1/authentication. 
+- Remove datamart_id from /v1/authentication.
 - DO NOT USE v0.31.0
 
 # v0.31.0 2025-05-07
