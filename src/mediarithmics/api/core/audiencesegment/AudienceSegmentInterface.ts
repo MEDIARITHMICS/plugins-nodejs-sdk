@@ -11,6 +11,7 @@ export interface AudienceSegmentExternalFeedResource {
   artifact_id: string;
   version_id: string;
   selected_identifying_resources?: IdentifyingResourceShape[];
+  created_by?: string;
 }
 
 export type AudienceSegmentResourceResponse = DataResponse<AudienceSegmentResource>;
