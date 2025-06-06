@@ -15,33 +15,35 @@ import {
 import { BatchUpdateHandler } from '../../api/core/batchupdate/BatchUpdateHandler';
 import { BatchUpdatePluginResponse, BatchUpdateRequest } from '../../api/core/batchupdate/BatchUpdateInterface';
 import {
-  BatchedUserSegmentUpdatePluginResponse,
-  ExternalSegmentConnectionPluginResponse,
-  ExternalSegmentCreationPluginResponse,
-  ExternalSegmentTroubleshootResponse,
-  ExternalSegmentAuthenticationStatusQueryResponse,
-  ExternalSegmentDynamicPropertyValuesQueryResponse,
-  MissingRealmError,
-  UserSegmentUpdatePluginResponse,
-  ExternalSegmentAuthenticationResponse as ExternalSegmentAuthenticationResponse,
-} from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
-import {
-  AudienceFeedBatchContext,
-  ExternalSegmentConnectionRequest,
-  ExternalSegmentCreationRequest,
-  ExternalSegmentTroubleshootActions,
-  ExternalSegmentTroubleshootRequest,
-  ExternalSegmentAuthenticationStatusQueryRequest,
-  ExternalSegmentDynamicPropertyValuesQueryRequest,
-  UserSegmentUpdateRequest,
-  ExternalSegmentAuthenticationRequest,
-} from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
-import { BasePlugin, PropertiesWrapper } from '../common';
-import {
   RealmFilter,
   UserAgentIdentifierRealmSelectionResource,
   UserAgentIdentifierRealmSelectionResourcesResponse,
 } from '../../api/core/webdomain/UserAgentIdentifierRealmSelectionInterface';
+import {
+  BatchedUserSegmentUpdatePluginResponse,
+  ExternalSegmentAuthenticationResponse,
+  ExternalSegmentAuthenticationStatusQueryResponse,
+  ExternalSegmentConnectionPluginResponse,
+  ExternalSegmentCreationPluginResponse,
+  ExternalSegmentDynamicPropertyValuesQueryResponse,
+  ExternalSegmentLogoutResponse,
+  ExternalSegmentTroubleshootResponse,
+  MissingRealmError,
+  UserSegmentUpdatePluginResponse,
+} from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
+import {
+  AudienceFeedBatchContext,
+  ExternalSegmentAuthenticationRequest,
+  ExternalSegmentAuthenticationStatusQueryRequest,
+  ExternalSegmentConnectionRequest,
+  ExternalSegmentCreationRequest,
+  ExternalSegmentDynamicPropertyValuesQueryRequest,
+  ExternalSegmentLogoutRequest,
+  ExternalSegmentTroubleshootActions,
+  ExternalSegmentTroubleshootRequest,
+  UserSegmentUpdateRequest,
+} from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
+import { BasePlugin, PropertiesWrapper } from '../common';
 
 export interface AudienceFeedConnectorBaseInstanceContext {
   feed: AudienceSegmentExternalFeedResource;
@@ -61,6 +63,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     this.initTroubleshoot();
     this.initAuthenticationStatusQuery();
     this.initAuthentication();
+    this.initLogoutQuery();
     this.initDynamicPropertyValuesQuery();
   }
 
@@ -184,6 +187,10 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   protected onAuthentication(
     request: ExternalSegmentAuthenticationRequest,
   ): Promise<ExternalSegmentAuthenticationResponse> {
+    return Promise.resolve({ status: 'not_implemented' });
+  }
+
+  protected onLogout(request: ExternalSegmentLogoutRequest): Promise<ExternalSegmentLogoutResponse> {
     return Promise.resolve({ status: 'not_implemented' });
   }
 
@@ -493,6 +500,36 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
         return res.status(statusCode).send(JSON.stringify(response));
       } catch (error) {
         this.logger.error('Something bad happened on authentication', error);
+        return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
+      }
+    });
+  }
+
+  private initLogoutQuery(): void {
+    this.app.post('/v1/logout', this.emptyBodyFilter, async (req: express.Request, res: express.Response) => {
+      try {
+        const request = req.body as ExternalSegmentLogoutRequest;
+        const response = await this.onLogout(request);
+        let statusCode: number;
+        switch (response.status) {
+          case 'ok':
+            statusCode = 200;
+            break;
+          case 'error':
+            statusCode = 500;
+            break;
+          case 'not_implemented':
+            statusCode = 400;
+            break;
+          default:
+            statusCode = 500;
+        }
+        this.logger.debug(`Request: ${JSON.stringify(request)} - Logout query returning: ${statusCode}`, {
+          response,
+        });
+        return res.status(statusCode).send(JSON.stringify(response));
+      } catch (error) {
+        this.logger.error('Something bad happened on logout query', error);
         return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
       }
     });
