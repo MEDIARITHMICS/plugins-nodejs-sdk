@@ -73,6 +73,12 @@ export interface ExternalSegmentAuthenticationRequest {
   params?: { [key: string]: string };
 }
 
+export interface ExternalSegmentLogoutRequest {
+  user_id: string;
+  plugin_version_id: string;
+  datamart_id: string;
+}
+
 export interface ExternalSegmentDynamicPropertyValuesQueryRequest {
   segment_id?: string;
   datamart_id: string;

@@ -167,6 +167,10 @@ export class ExampleAudienceFeed extends core.BatchedAudienceFeedConnectorBasePl
     return Promise.resolve({ status: 'error' });
   }
 
+  protected onLogout(request: core.ExternalSegmentLogoutRequest): Promise<core.ExternalSegmentLogoutResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
   protected onDynamicPropertyValuesQuery(
     request: core.ExternalSegmentDynamicPropertyValuesQueryRequest,
   ): Promise<core.ExternalSegmentDynamicPropertyValuesQueryResponse> {

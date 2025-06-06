@@ -2,6 +2,7 @@
 
 # Unreleased
 
+- Add new route /v1/logout for deleting authentication
 - Change params field type & add plugin_version_id to /v1/authentication route
 - Add plugin_version_id to /v1/authentication_status_queries route
 - Add optionnal created_by field to AudienceSegmentExternalFeedResource
