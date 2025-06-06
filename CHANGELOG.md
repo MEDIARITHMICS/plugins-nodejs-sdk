@@ -2,6 +2,10 @@
 
 # Unreleased
 
+# 0.31.2-authentication-alpha.1 2025-06-06
+
+- issue during the release of 0.31.2-authentication-alpha.0, re-releasing
+
 # 0.31.2-authentication-alpha.0 2025-06-06
 
 - Add new route /v1/logout for deleting authentication
