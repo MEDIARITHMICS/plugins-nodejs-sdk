@@ -209,10 +209,11 @@ describe.only('Test Audience Feed example', function () {
 
     const datamart_id = '1';
     const user_id = '1000';
+    const plugin_version_id = '123';
 
     request(runner.plugin.app)
       .post('/v1/authentication_status_queries')
-      .send({ datamart_id, user_id })
+      .send({ datamart_id, user_id, plugin_version_id })
       .end((error, response) => {
         const body: core.ExternalSegmentAuthenticationStatusQueryResponse = JSON.parse(response.text);
         expect(body.status).to.eq('authenticated');
@@ -225,10 +226,11 @@ describe.only('Test Audience Feed example', function () {
     runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     const user_id = '1000';
+    const plugin_version_id = '123';
 
     request(runner.plugin.app)
       .post('/v1/authentication')
-      .send({ user_id, params: { creds: 'ok' } })
+      .send({ user_id, plugin_version_id, params: { creds: 'ok' } })
       .end((error, response) => {
         const body: core.ExternalSegmentAuthenticationResponse = JSON.parse(response.text);
         expect(body.status).to.eq('ok');
@@ -241,13 +243,32 @@ describe.only('Test Audience Feed example', function () {
     runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     const user_id = '1000';
+    const plugin_version_id = '123';
 
     request(runner.plugin.app)
       .post('/v1/authentication')
-      .send({ user_id, params: { creds: 'null' } })
+      .send({ user_id, plugin_version_id, params: { creds: 'null' } })
       .end((error, response) => {
         const body: core.ExternalSegmentAuthenticationResponse = JSON.parse(response.text);
         expect(body.status).to.eq('error');
+        done();
+      });
+  });
+
+  it('Test logout ok', (done) => {
+    const rpMockup: sinon.SinonStub = sinon.stub();
+    runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    const datamart_id = '1';
+    const user_id = '1000';
+    const plugin_version_id = '123';
+
+    request(runner.plugin.app)
+      .post('/v1/logout')
+      .send({ user_id, plugin_version_id, datamart_id })
+      .end((error, response) => {
+        const body: core.ExternalSegmentLogoutResponse = JSON.parse(response.text);
+        expect(body.status).to.eq('ok');
         done();
       });
   });

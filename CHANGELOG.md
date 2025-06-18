@@ -2,7 +2,16 @@
 
 # Unreleased
 
-- Change params field type from /v1/authentication route
+# 0.31.2-authentication-alpha.1 2025-06-06
+
+- issue during the release of 0.31.2-authentication-alpha.0, re-releasing
+
+# 0.31.2-authentication-alpha.0 2025-06-06
+
+- Add new route /v1/logout for deleting authentication
+- Change params field type & add plugin_version_id to /v1/authentication route
+- Add plugin_version_id to /v1/authentication_status_queries route
+- Add optionnal created_by field to AudienceSegmentExternalFeedResource
 
 # v0.31.1 2025-05-12
 
