@@ -2,6 +2,10 @@
 
 # Unreleased
 
+# 0.31.2
+
+- release the authentication feature, see the authentication-alpha pre-releases
+
 # 0.31.2-authentication-alpha.1 2025-06-06
 
 - issue during the release of 0.31.2-authentication-alpha.0, re-releasing
