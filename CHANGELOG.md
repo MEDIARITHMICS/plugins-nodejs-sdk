@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Add 'UPSERT' in Operation (for Computed field) and deprecate usage of 'INSERT' & 'UPDATE' (use 'UPSERT' instead)
+
 # 0.31.2
 
 - release the authentication feature, see the authentication-alpha pre-releases

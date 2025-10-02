@@ -20,7 +20,7 @@ describe('ClientComputedField - json data', function () {
     const data = {
       update: {
         data_type: 'USER_ACTIVITY',
-        operation: 'INSERT',
+        operation: 'UPSERT',
         data: { events: [{ basketPrice: 1 }, { basketPrice: 2 }, { basketPrice: 3 }, { basketPrice: 2 }] },
       },
     };
@@ -43,7 +43,7 @@ describe('ClientComputedField - json data', function () {
       state: { totalSpentAmount: 10 },
       update: {
         data_type: 'USER_ACTIVITY',
-        operation: 'INSERT',
+        operation: 'UPSERT',
         data: {
           events: [{ basketPrice: 1 }, { basketPrice: 2 }, { basketPrice: 3 }, { basketPrice: 2 }],
         },
@@ -68,12 +68,12 @@ describe('ClientComputedField - json data', function () {
       updates: [
         {
           data_type: 'USER_ACTIVITY',
-          operation: 'INSERT',
+          operation: 'UPSERT',
           data: { events: [{ basketPrice: 1 }] },
         },
         {
           data_type: 'USER_ACTIVITY',
-          operation: 'INSERT',
+          operation: 'UPSERT',
           data: { events: [{ basketPrice: 2 }, { basketPrice: 3 }] },
         },
       ],
@@ -97,12 +97,12 @@ describe('ClientComputedField - json data', function () {
       updates: [
         {
           data_type: 'USER_ACTIVITY',
-          operation: 'INSERT',
+          operation: 'UPSERT',
           data: { events: [{ basketPrice: 1 }] },
         },
         {
           data_type: 'USER_ACTIVITY',
-          operation: 'INSERT',
+          operation: 'UPSERT',
           data: { events: [{ basketPrice: 2 }, { basketPrice: 3 }] },
         },
       ],
@@ -122,12 +122,12 @@ describe('ClientComputedField - json data', function () {
       updates: [
         {
           data_type: 'USER_ACTIVITY',
-          operation: 'INSERT',
+          operation: 'UPSERT',
           data: { events: [{ basketPrice: 2 }] },
         },
         {
           data_type: 'USER_ACTIVITY',
-          operation: 'INSERT',
+          operation: 'UPSERT',
           data: { events: [{ basketPrice: 4 }, { basketPrice: 6 }] },
         },
       ],

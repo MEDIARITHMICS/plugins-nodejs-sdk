@@ -30,7 +30,9 @@ export interface BaseUserProfile {}
 export interface BaseComputedField {}
 
 export type DataType = 'USER_ACTIVITY' | 'USER_PROFILE' | 'COMPUTED_FIELD';
-export type Operation = 'INSERT' | 'DELETE' | 'UPDATE';
+
+// only use UPSERT & DELETE, INSERT and UPDATE are deprecated
+export type Operation = 'INSERT' | 'DELETE' | 'UPDATE' | 'UPSERT';
 
 export interface Update {
   data_type: DataType;
