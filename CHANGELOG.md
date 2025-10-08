@@ -2,6 +2,8 @@
 
 # Unreleased
 
+remove deprecated 'INSERT' & 'UPDATE' from Computed Field Operation
+
 # 0.32.0
 
 - Add 'UPSERT' in Operation (for Computed field) and deprecate usage of 'INSERT' & 'UPDATE' (use 'UPSERT' instead)
