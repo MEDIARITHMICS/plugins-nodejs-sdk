@@ -2,13 +2,15 @@
 
 # Unreleased
 
-remove deprecated 'INSERT' & 'UPDATE' from Computed Field Operation
+# 0.33.0 2025-10-09
 
-# 0.32.0
+- remove deprecated 'INSERT' & 'UPDATE' from Computed Field Operation
+
+# 0.32.0 2025-10-02
 
 - Add 'UPSERT' in Operation (for Computed field) and deprecate usage of 'INSERT' & 'UPDATE' (use 'UPSERT' instead)
 
-# 0.31.2
+# 0.31.2 2025-06-18
 
 - release the authentication feature, see the authentication-alpha pre-releases
 
