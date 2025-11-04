@@ -1,3 +1,4 @@
+import * as sinon from 'sinon';
 import request from 'supertest';
 
 import 'mocha';
@@ -14,10 +15,44 @@ describe('ClientComputedField - json data', function () {
   const plugin = new MyComputedField();
   let runner: core.TestingPluginRunner;
 
+  const rpMockup: sinon.SinonStub = sinon.stub();
+
+  rpMockup
+    .withArgs(
+      sinon.match.has(
+        'uri',
+        sinon.match(function (value: string) {
+          return value.match(/\/v1\/computed_fields\/(.){1,10}/) !== null;
+        }),
+      ),
+    )
+    .returns({
+      status: 'ok',
+      data: {
+        id: '62',
+        organisation_id: '6262',
+        datamart_id: '626262',
+        group_id: '62_62',
+        artifact_id: '62-62',
+        plugin_id: '62',
+        version_id: '6262',
+        status: 'ACTIVE',
+        technical_name: 'testComputedField',
+        name: 'computedFieldForTest',
+        filter_graphql_query: '62',
+        cache_max_duration: 62,
+        version_value: '62',
+        created_ts: 62,
+        created_by: '62',
+        archived: false,
+      },
+    });
+
   it('update route with null state', async () => {
-    runner = new core.TestingPluginRunner(plugin);
+    runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     const data = {
+      computed_field_id: '62',
       update: {
         data_type: 'USER_ACTIVITY',
         operation: 'UPSERT',
@@ -37,9 +72,10 @@ describe('ClientComputedField - json data', function () {
   });
 
   it('update route with state', async () => {
-    runner = new core.TestingPluginRunner(plugin);
+    runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     const data = {
+      computed_field_id: '62',
       state: { totalSpentAmount: 10 },
       update: {
         data_type: 'USER_ACTIVITY',
@@ -61,9 +97,10 @@ describe('ClientComputedField - json data', function () {
   });
 
   it('update batch route', async () => {
-    runner = new core.TestingPluginRunner(plugin);
+    runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     const data = {
+      computed_field_id: '62',
       state: { totalSpentAmount: 55 },
       updates: [
         {
@@ -90,9 +127,10 @@ describe('ClientComputedField - json data', function () {
   });
 
   it('build result route', async () => {
-    runner = new core.TestingPluginRunner(plugin);
+    runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     const data1 = {
+      computed_field_id: '62',
       state: { totalSpentAmount: 55 },
       updates: [
         {
@@ -118,6 +156,7 @@ describe('ClientComputedField - json data', function () {
     });
 
     const data2 = {
+      computed_field_id: '62',
       state: update1.data.state,
       updates: [
         {

@@ -1,6 +1,8 @@
 import { BasePlugin } from '../common/BasePlugin';
 import * as ion from 'ion-js';
 import express from 'express';
+import { ComputedFieldResource } from './ComputedFieldInterface';
+import { DataResponse } from '../../api/core/common/Response';
 
 export type OnUpdatePluginStatus = 'ok' | 'error';
 
@@ -40,17 +42,24 @@ export interface Update {
 }
 
 export interface RequestData<S> {
+  computed_field_id: string;
   state: S;
   update: Update;
 }
 
 export interface RequestDataBatch<S> {
+  computed_field_id: string;
   state: S;
   updates: Update[];
 }
 
 export interface RequestResult<S> {
+  computed_field_id: string;
   state: S;
+}
+
+export interface ComputedFieldBaseInstanceContext {
+  computedField: ComputedFieldResource;
 }
 
 export abstract class ComputedFieldPlugin<
@@ -59,7 +68,7 @@ export abstract class ComputedFieldPlugin<
   UserActivity extends BaseUserActivity,
   UserProfile extends BaseUserProfile,
   ComputedField extends BaseComputedField,
-> extends BasePlugin {
+> extends BasePlugin<ComputedFieldBaseInstanceContext> {
   constructor() {
     super();
     this.initUpdateRoute();
@@ -67,28 +76,85 @@ export abstract class ComputedFieldPlugin<
     this.initBuildResultRoute();
   }
 
-  abstract onUpdateActivity(state: State | null, userActivity: UserActivity): State | null;
-  abstract onUpdateUserProfile(state: State | null, userProfile: UserProfile, operation: Operation): State | null;
-  abstract onUpdateComputedField(state: State | null, computedField: ComputedField): State | null;
+  abstract onUpdateActivity(
+    state: State | null,
+    userActivity: UserActivity,
+    instanceContext: ComputedFieldBaseInstanceContext,
+  ): State | null;
+  abstract onUpdateUserProfile(
+    state: State | null,
+    userProfile: UserProfile,
+    operation: Operation,
+    instanceContext: ComputedFieldBaseInstanceContext,
+  ): State | null;
+  abstract onUpdateComputedField(
+    state: State | null,
+    computedField: ComputedField,
+    instanceContext: ComputedFieldBaseInstanceContext,
+  ): State | null;
 
-  abstract buildResult(state: State | null): Result | null;
+  abstract buildResult(state: State | null, instanceContext: ComputedFieldBaseInstanceContext): Result | null;
 
-  private getUpdateMethod(state: State | null, update: Update): State | null {
+  protected fetchComputedField(computedFieldId: string): Promise<ComputedFieldResource> {
+    return super
+      .requestGatewayHelper<DataResponse<ComputedFieldResource>>(
+        'GET',
+        `${this.outboundPlatformUrl}/v1/computed_fields/${computedFieldId}`,
+      )
+      .then((res) => {
+        this.logger.debug(`Fetched computed field: ${computedFieldId}`, { res });
+        return res.data;
+      });
+  }
+
+  // This is a default provided implementation
+  protected instanceContextBuilder(computedFieldId: string): Promise<ComputedFieldBaseInstanceContext> {
+    return this.fetchComputedField(computedFieldId).then((computedField) => {
+      return {
+        computedField: computedField,
+      } as ComputedFieldBaseInstanceContext;
+    });
+  }
+
+  protected getInstanceContext(computedFieldId: string): Promise<ComputedFieldBaseInstanceContext> {
+    if (!this.pluginCache.get(computedFieldId)) {
+      void this.pluginCache.put(
+        computedFieldId,
+        this.instanceContextBuilder(computedFieldId).catch((error) => {
+          this.logger.error('Error while caching instance context', error);
+          this.pluginCache.del(computedFieldId);
+          throw error;
+        }),
+        this.getInstanceContextCacheExpiration(),
+      );
+    }
+    return this.pluginCache.get(computedFieldId) as Promise<ComputedFieldBaseInstanceContext>;
+  }
+
+  private getUpdateMethod(
+    state: State | null,
+    update: Update,
+    instanceContext: ComputedFieldBaseInstanceContext,
+  ): State | null {
     switch (update.data_type) {
       case 'USER_ACTIVITY':
-        return this.onUpdateActivity(state, update.data as UserActivity);
+        return this.onUpdateActivity(state, update.data as UserActivity, instanceContext);
       case 'USER_PROFILE':
-        return this.onUpdateUserProfile(state, update.data as UserProfile, update.operation);
+        return this.onUpdateUserProfile(state, update.data as UserProfile, update.operation, instanceContext);
       case 'COMPUTED_FIELD':
-        return this.onUpdateComputedField(state, update.data as ComputedField);
+        return this.onUpdateComputedField(state, update.data as ComputedField, instanceContext);
       default:
         return state;
     }
   }
 
-  private onUpdateBatch(state: State, updates: Update[]): State | null {
+  private onUpdateBatch(
+    state: State,
+    updates: Update[],
+    instanceContext: ComputedFieldBaseInstanceContext,
+  ): State | null {
     return updates.reduce((acc, curr) => {
-      return this.getUpdateMethod(acc, curr);
+      return this.getUpdateMethod(acc, curr, instanceContext);
     }, state);
   }
 
@@ -107,10 +173,11 @@ export abstract class ComputedFieldPlugin<
   private initUpdateRoute(): void {
     this.app.post(
       '/v1/computed_field/update/single',
-      (req: express.Request<unknown, unknown, string>, res: express.Response) => {
+      async (req: express.Request<unknown, unknown, string>, res: express.Response) => {
         try {
           const body = this.formatRequestData<RequestData<State>>(req);
-          const updatedState = this.getUpdateMethod(body.state, body.update);
+          const instanceContext = await this.getInstanceContext(body.computed_field_id);
+          const updatedState = this.getUpdateMethod(body.state, body.update, instanceContext);
           const pluginResponse: OnUpdatePluginResponse<State | null> = {
             status: 'ok',
             data: {
@@ -130,10 +197,11 @@ export abstract class ComputedFieldPlugin<
   private initUpdateBatchRoute(): void {
     this.app.post(
       '/v1/computed_field/update/batch',
-      (req: express.Request<unknown, unknown, string>, res: express.Response) => {
+      async (req: express.Request<unknown, unknown, string>, res: express.Response) => {
         try {
           const body = this.formatRequestData<RequestDataBatch<State>>(req);
-          const updatedState = this.onUpdateBatch(body.state, body.updates);
+          const instanceContext = await this.getInstanceContext(body.computed_field_id);
+          const updatedState = this.onUpdateBatch(body.state, body.updates, instanceContext);
           const pluginResponse: OnUpdatePluginResponse<State | null> = {
             status: 'ok',
             data: {
@@ -152,10 +220,11 @@ export abstract class ComputedFieldPlugin<
   private initBuildResultRoute(): void {
     this.app.post(
       '/v1/computed_field/build_result',
-      (req: express.Request<unknown, unknown, string>, res: express.Response) => {
+      async (req: express.Request<unknown, unknown, string>, res: express.Response) => {
         try {
           const body = this.formatRequestData<RequestResult<State>>(req);
-          const buildResult = this.buildResult(body.state);
+          const instanceContext = await this.getInstanceContext(body.computed_field_id);
+          const buildResult = this.buildResult(body.state, instanceContext);
           const pluginResponse: BuildResultPluginResponse<Result | null> = {
             status: 'ok',
             data: {
