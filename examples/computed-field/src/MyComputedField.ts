@@ -3,6 +3,7 @@ import {
   BaseUserActivity,
   BaseUserProfile,
   BaseComputedField,
+  ComputedFieldBaseInstanceContext
 } from '../../../lib/mediarithmics/plugins/computed-field/ComputedFieldBasePlugin';
 
 interface Event {
@@ -30,7 +31,7 @@ export class MyComputedField extends core.ComputedFieldPlugin<State, Result, Use
     super();
   }
 
-  onUpdateActivity(state: State, userActivity: UserActivity): State {
+  onUpdateActivity(state: State, userActivity: UserActivity, context: ComputedFieldBaseInstanceContext): State {
     if (!state) {
       state = { totalSpentAmount: 0 };
     }
@@ -39,14 +40,14 @@ export class MyComputedField extends core.ComputedFieldPlugin<State, Result, Use
 
     return state;
   }
-  onUpdateUserProfile(state: State, userProfile: UserProfile, operation: core.Operation): State {
+  onUpdateUserProfile(state: State, userProfile: UserProfile, operation: core.Operation, context: ComputedFieldBaseInstanceContext): State {
     return state;
   }
-  onUpdateComputedField(state: State, computedField: ComputedField): State {
+  onUpdateComputedField(state: State, computedField: ComputedField, context: ComputedFieldBaseInstanceContext): State {
     return state;
   }
 
-  buildResult(state: State | null): Result {
+  buildResult(state: State | null, context: ComputedFieldBaseInstanceContext): Result {
     return { score: state ? state.totalSpentAmount : null };
   }
 }

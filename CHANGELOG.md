@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Add an instanceContextBuilder to the computed field base plugin
+
 # 0.33.0 2025-10-09
 
 - remove deprecated 'INSERT' & 'UPDATE' from Computed Field Operation
