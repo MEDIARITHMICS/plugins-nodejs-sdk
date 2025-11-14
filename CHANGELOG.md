@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 0.34.0 2025-11-14
+
 - Add an instanceContextBuilder to the computed field base plugin
 
 # 0.33.0 2025-10-09
