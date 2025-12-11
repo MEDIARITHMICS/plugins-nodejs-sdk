@@ -6,10 +6,10 @@ import {
   BooleanPropertyResource,
   DataFilePropertyResource,
   DoublePropertyResource,
-  IntPropertyResource,
   NativeDataPropertyResource,
   NativeImagePropertyResource,
   NativeTitlePropertyResource,
+  NumberPropertyResource,
   PixelTagPropertyResource,
   RecommenderPropertyResource,
   StringPropertyResource,
@@ -29,6 +29,7 @@ export type PluginProperty =
   | DataFileProperty
   | UrlProperty
   | StringProperty
+  | NumberProperty
   | AdLayoutProperty
   | StyleSheetProperty
   | PixelTagProperty
@@ -47,6 +48,7 @@ export type PropertyType =
   | 'DATA_FILE'
   | 'URL'
   | 'STRING'
+  | 'NUMBER'
   | 'AD_LAYOUT'
   | 'STYLE_SHEET'
   | 'PIXEL_TAG'
@@ -92,6 +94,11 @@ export interface StringProperty extends AbstractProperty {
   value: StringPropertyResource;
 }
 
+export interface NumberProperty extends AbstractProperty {
+  property_type: 'NUMBER';
+  value: NumberPropertyResource;
+}
+
 export interface AdLayoutProperty extends AbstractProperty {
   property_type: 'AD_LAYOUT';
   value: AdLayoutPropertyResource;
@@ -119,7 +126,7 @@ export interface BooleanProperty extends AbstractProperty {
 
 export interface IntProperty extends AbstractProperty {
   property_type: 'INT';
-  value: IntPropertyResource;
+  value: NumberPropertyResource;
 }
 
 export interface RecommenderProperty extends AbstractProperty {
@@ -172,6 +179,10 @@ export const asRecommenderProperty = (p: PluginProperty): Option<RecommenderProp
 
 export const asStringProperty = (p: PluginProperty): Option<StringProperty> => {
   return p.property_type === 'STRING' ? p : undefined;
+};
+
+export const asNumberProperty = (p: PluginProperty): Option<NumberProperty> => {
+  return p.property_type === 'NUMBER' ? p : undefined;
 };
 
 export const asNativeDataProperty = (p: PluginProperty): Option<NativeDataProperty> => {
