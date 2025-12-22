@@ -254,15 +254,27 @@ export abstract class BasePlugin<CacheValue = unknown> {
 
   // Log level update implementation
 
-  fetchConfigurationFile(fileName: string): Promise<Buffer> {
-    return this.requestGatewayHelper(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/configuration/technical_name=${fileName}`,
-      undefined,
-      undefined,
-      false,
-      true,
-    );
+  async fetchConfigurationFile(fileName: string): Promise<Buffer> {
+    try {
+      return await this.requestGatewayHelper(
+        'GET',
+        `${this.outboundPlatformUrl}/v1/configuration/technical_name=${fileName}`,
+        undefined,
+        undefined,
+        false,
+        true,
+      );
+    } catch (e) {
+      if (e instanceof ResourceNotFoundError) {
+        const technicalDetails = e.message;
+        const clearMessage =
+          `[Plugin SDK] Configuration file '${fileName}' not found. ` +
+          `Please ensure a file with this technical_name exists on the Platform.`;
+
+        throw new ResourceNotFoundError(`${clearMessage}\nDetails: ${technicalDetails}`);
+      }
+      throw e;
+    }
   }
 
   upsertConfigurationFile(fileName: string, fileContent: Buffer): Promise<SimpleResponse> {

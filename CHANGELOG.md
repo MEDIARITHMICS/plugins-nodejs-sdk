@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Improve error message clarity for missing configuration files
+
 # 0.34.0 2025-11-14
 
 - Add an instanceContextBuilder to the computed field base plugin

@@ -208,22 +208,30 @@ describe('Data File helper Tests', function () {
     });
   });
 
-  it('ConfigurationFile: returns a TechnicalConfigNotFoundError on a 404', async () => {
+it('ConfigurationFile: returns a clear descriptive error on a 404', async () => {
     const confFileName = 'toto';
-    const method = 'GET';
-    const confFileGatewayURI = `/v1/configuration/technical_name=${confFileName}`;
-
     const rpMockup = sinon.stub().throws({
       name: 'StatusCodeError',
-      response: { statusCode: 404, statusMessage: '', body: '' },
+      response: { 
+        statusCode: 404, 
+        statusMessage: 'Not Found', 
+        body: '{"error":"resource_not_found"}' 
+      },
     });
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
 
     try {
       await runner.plugin.fetchConfigurationFile(confFileName);
-      fail();
+      fail('Should have thrown a ResourceNotFoundError');
     } catch (e) {
       expect(e).to.be.instanceof(ResourceNotFoundError);
+
+      const error = e as Error;
+      expect(error.message).to.contain(`[Plugin SDK] Configuration file '${confFileName}' not found`);
+      expect(error.message).to.contain(`Please ensure a file with this technical_name exists on the Platform`);
+      
+      expect(error.message).to.contain('Details: Error while calling GET');
+      expect(error.message).to.contain('got a 404 Not Found');
     }
   });
 });
