@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Update `UserDeviceTechnicalIdentifierType` with `IP_V4_ADDRESS_ID` & `IP_V6_ADDRESS_ID`
+
 # 0.34.0 2025-11-14
 
 - Add an instanceContextBuilder to the computed field base plugin
