@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Add fetchConfigurationFileOptional
+
 # 0.35.0 2026-01-15
 
 - Update `UserDeviceTechnicalIdentifierType` with `IP_V4_ADDRESS_ID` & `IP_V6_ADDRESS_ID`

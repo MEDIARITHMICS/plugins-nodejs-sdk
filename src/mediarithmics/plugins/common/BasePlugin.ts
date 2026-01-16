@@ -252,6 +252,18 @@ export abstract class BasePlugin<CacheValue = unknown> {
     );
   }
 
+  async fetchConfigurationFileOptional(fileName: string): Promise<Buffer | undefined> {
+    try {
+      return await this.fetchConfigurationFile(fileName);
+    } catch (e) {
+      const err = e as Error;
+      if (err instanceof ResourceNotFoundError) {
+        return undefined;
+      }
+      throw e;
+    }
+  }
+
   // Log level update implementation
 
   fetchConfigurationFile(fileName: string): Promise<Buffer> {
