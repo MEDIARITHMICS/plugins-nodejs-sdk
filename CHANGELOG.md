@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 0.36.0 2026-01-22
+
 - Add fetchConfigurationFileOptional
 
 # 0.35.0 2026-01-15
