@@ -64,7 +64,7 @@ export interface UserAccountIdentifierInfo {
   type: 'USER_ACCOUNT';
   user_account_id: string;
   creation_ts: TimeStamp;
-  compartment_id?: number; //To Be changed to `string` when the back will be updated
+  compartment_id?: string;
 }
 
 export interface UserAgentIdentifierInfo {
