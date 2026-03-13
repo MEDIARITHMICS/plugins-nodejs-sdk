@@ -1,14 +1,13 @@
 #!/bin/bash
 set -eu
 
-rm -rf node_modules
-npm install
+npm clean-install
 npm run prepublishOnly
 
 export TS_NODE_TYPE_CHECK=1
 for t in src/tests/*.ts; do
   echo "■■■ Testing $t..."
-  mocha -r ts-node/register $t
+  mocha --no-forbid-only -r ts-node/register $t
 done
 
 npm link

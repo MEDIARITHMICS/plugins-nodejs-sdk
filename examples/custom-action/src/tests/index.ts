@@ -15,7 +15,7 @@ const PLUGIN_WORKER_ID = 'Calavera';
 process.env.PLUGIN_AUTHENTICATION_TOKEN = PLUGIN_AUTHENTICATION_TOKEN;
 process.env.PLUGIN_WORKER_ID = PLUGIN_WORKER_ID;
 
-describe.only('Test Custom Action example', function () {
+describe('Test Custom Action example', function () {
   // All the magic is here
   const plugin = new MyCustomActionPlugin(false);
   let runner: core.TestingPluginRunner;

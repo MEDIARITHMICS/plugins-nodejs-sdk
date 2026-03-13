@@ -15,7 +15,7 @@ const PLUGIN_WORKER_ID = 'Calavera';
 process.env.PLUGIN_AUTHENTICATION_TOKEN = PLUGIN_AUTHENTICATION_TOKEN;
 process.env.PLUGIN_WORKER_ID = PLUGIN_WORKER_ID;
 
-describe.only('Test Audience Feed example', function () {
+describe('Test Audience Feed example', function () {
   this.timeout(10000);
   const plugin = new ExampleAudienceFeed();
   let runner: core.TestingPluginRunner;
