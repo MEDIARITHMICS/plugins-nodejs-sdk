@@ -12,6 +12,10 @@ import {
   AudienceSegmentResource,
   AudienceSegmentResourceResponse,
 } from '../../api/core/audiencesegment/AudienceSegmentInterface';
+import {
+  FeedDestinationCredentials,
+  FeedDestinationCredentialsResponse,
+} from '../../api/core/audiencesegment/FeedDestinationInterface';
 import { BatchUpdateHandler } from '../../api/core/batchupdate/BatchUpdateHandler';
 import { BatchUpdatePluginResponse, BatchUpdateRequest } from '../../api/core/batchupdate/BatchUpdateInterface';
 import {
@@ -21,6 +25,7 @@ import {
 } from '../../api/core/webdomain/UserAgentIdentifierRealmSelectionInterface';
 import {
   BatchedUserSegmentUpdatePluginResponse,
+  TestAuthenticationPluginResponse,
   ExternalSegmentAuthenticationResponse,
   ExternalSegmentAuthenticationStatusQueryResponse,
   ExternalSegmentConnectionPluginResponse,
@@ -33,6 +38,7 @@ import {
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
 import {
   AudienceFeedBatchContext,
+  TestAuthenticationRequest,
   ExternalSegmentAuthenticationRequest,
   ExternalSegmentAuthenticationStatusQueryRequest,
   ExternalSegmentConnectionRequest,
@@ -65,6 +71,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     this.initAuthentication();
     this.initLogoutQuery();
     this.initDynamicPropertyValuesQuery();
+    this.initTestAuthentication();
   }
 
   async fetchAudienceSegment(feedId: string): Promise<AudienceSegmentResource> {
@@ -115,6 +122,15 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       `${this.outboundPlatformUrl}/v1/audience_segment_external_feeds/${feedId}/properties`,
     );
     this.logger.debug(`Fetched External Feed Properties: ${feedId}`, { response });
+    return response.data;
+  }
+
+  async fetchFeedDestinationCredentials(feedDestinationId: string): Promise<FeedDestinationCredentials> {
+    const response = await super.requestGatewayHelper<FeedDestinationCredentialsResponse>(
+      'GET',
+      `${this.outboundPlatformUrl}/v1/feed_destinations/${feedDestinationId}/credentials`,
+    );
+    this.logger.debug(`Fetched credentials for feed destination: ${feedDestinationId}`);
     return response.data;
   }
 
@@ -197,6 +213,13 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   protected onDynamicPropertyValuesQuery(
     request: ExternalSegmentDynamicPropertyValuesQueryRequest,
   ): Promise<ExternalSegmentDynamicPropertyValuesQueryResponse> {
+    return Promise.resolve({ status: 'not_implemented' });
+  }
+
+  protected onTestAuthentication(
+    request: TestAuthenticationRequest,
+    credentials: FeedDestinationCredentials,
+  ): Promise<TestAuthenticationPluginResponse> {
     return Promise.resolve({ status: 'not_implemented' });
   }
 
@@ -533,6 +556,62 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
         return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
       }
     });
+  }
+
+  private initTestAuthentication(): void {
+    this.app.post(
+      '/v1/test_authentication',
+      this.emptyBodyFilter,
+      async (req: express.Request, res: express.Response) => {
+        try {
+          this.logger.debug('POST /v1/test_authentication', { request: req.body });
+
+          if (!this.httpIsReady()) {
+            throw new Error('Plugin not initialized');
+          }
+
+          const request = req.body as TestAuthenticationRequest;
+
+          let credentials: FeedDestinationCredentials;
+          try {
+            credentials = await this.fetchFeedDestinationCredentials(request.feed_destination_id);
+          } catch {
+            const response: TestAuthenticationPluginResponse = {
+              status: 'not_implemented',
+              message: 'Could not fetch feed destination credentials',
+            };
+            return res.status(400).send(JSON.stringify(response));
+          }
+
+          const response = await this.onTestAuthentication(request, credentials);
+
+          let statusCode: number;
+          switch (response.status) {
+            case 'ok':
+              statusCode = 200;
+              break;
+            case 'error':
+              statusCode = 500;
+              break;
+            case 'not_implemented':
+              statusCode = 400;
+              break;
+            default:
+              statusCode = 500;
+          }
+
+          this.logger.debug(
+            `FeedDestinationId: ${request.feed_destination_id} - Check destination credentials returning: ${statusCode}`,
+            { response },
+          );
+
+          return res.status(statusCode).send(JSON.stringify(response));
+        } catch (error) {
+          this.logger.error('Something bad happened on check destination credentials', error);
+          return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
+        }
+      },
+    );
   }
 
   private initDynamicPropertyValuesQuery(): void {

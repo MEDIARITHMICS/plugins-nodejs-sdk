@@ -10,6 +10,11 @@ import request from 'supertest';
 import { core } from '../';
 import { AudienceFeedBatchContext, UserSegmentUpdatePluginFileDeliveryResponseData } from '../mediarithmics';
 import { BatchUpdateRequest } from '../mediarithmics/api/core/batchupdate/BatchUpdateInterface';
+import {
+  TestAuthenticationPluginResponse,
+  TestAuthenticationRequest,
+  FeedDestinationCredentials,
+} from '../mediarithmics';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
 const PLUGIN_WORKER_ID = 'Calavera';
@@ -61,6 +66,105 @@ const rpMockup: sinon.SinonStub = sinon.stub().returns(
     resolve('Yolo');
   }),
 );
+
+class MyFakeAudienceFeedConnectorWithCredentialsCheck extends core.AudienceFeedConnectorBasePlugin {
+  protected onExternalSegmentCreation(
+    request: core.ExternalSegmentCreationRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<core.ExternalSegmentCreationPluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onExternalSegmentConnection(
+    request: core.ExternalSegmentConnectionRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<core.ExternalSegmentConnectionPluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onUserSegmentUpdate(
+    request: core.UserSegmentUpdateRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<core.UserSegmentUpdatePluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onTestAuthentication(
+    request: TestAuthenticationRequest,
+    credentials: FeedDestinationCredentials,
+  ): Promise<TestAuthenticationPluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+}
+
+describe('Check Destination Credentials', function () {
+  it('should return not_implemented (400) when no credentials are stored', function (done) {
+    const rpMockup: sinon.SinonStub = sinon.stub().rejects(new Error('Not Found'));
+    const plugin = new MyFakeAudienceFeedConnectorWithCredentialsCheck(false);
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    const checkRequest: TestAuthenticationRequest = { feed_destination_id: '42' };
+
+    void request(runner.plugin.app)
+      .post('/v1/test_authentication')
+      .send(checkRequest)
+      .end(function (err, res) {
+        expect(res.status).to.equal(400);
+        expect(JSON.parse(res.text).status).to.be.eq('not_implemented');
+        expect(JSON.parse(res.text).message).to.be.eq('Could not fetch feed destination credentials');
+        done();
+      });
+  });
+
+  it('should call onTestAuthentication with fetched credentials and return ok', function (done) {
+    const credentials: FeedDestinationCredentials = {
+      scheme: 'API_TOKEN',
+      credentials: { token: 'my-secret-token' },
+    };
+
+    const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve({ status: 'ok', data: credentials }));
+
+    const plugin = new MyFakeAudienceFeedConnectorWithCredentialsCheck(false);
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    const checkRequest: TestAuthenticationRequest = { feed_destination_id: '42' };
+
+    void request(runner.plugin.app)
+      .post('/v1/test_authentication')
+      .send(checkRequest)
+      .end(function (err, res) {
+        expect(res.status).to.equal(200);
+        expect(JSON.parse(res.text).status).to.be.eq('ok');
+        expect(rpMockup.args[0][0].uri).to.be.eq(
+          `${runner.plugin.outboundPlatformUrl}/v1/feed_destinations/42/credentials`,
+        );
+        done();
+      });
+  });
+
+  it('should return not_implemented (400) when onTestAuthentication is not overridden', function (done) {
+    const credentials: FeedDestinationCredentials = {
+      scheme: 'API_TOKEN',
+      credentials: { token: 'my-secret-token' },
+    };
+
+    const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve({ status: 'ok', data: credentials }));
+
+    const plugin = new MyFakeAudienceFeedConnector(false);
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    const checkRequest: TestAuthenticationRequest = { feed_destination_id: '42' };
+
+    void request(runner.plugin.app)
+      .post('/v1/test_authentication')
+      .send(checkRequest)
+      .end(function (err, res) {
+        expect(res.status).to.equal(400);
+        expect(JSON.parse(res.text).status).to.be.eq('not_implemented');
+        done();
+      });
+  });
+});
 
 describe('Fetch Audience Feed Gateway API', () => {
   // All the magic is here

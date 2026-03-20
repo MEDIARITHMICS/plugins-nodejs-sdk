@@ -2,6 +2,9 @@
 
 # Unreleased
 
+- Add `POST /v1/test_authentication` route: fetches feed destination credentials and delegates to `onTestAuthentication()`
+- Add `fetchFeedDestinationCredentials()` helper method
+
 # 0.39.0 2026-04-27
 
 - `AudienceFeedConnectorDynamicPropertyValuesQueryStatus` now supports `'empty'` status in `onDynamicPropertyValuesQuery`

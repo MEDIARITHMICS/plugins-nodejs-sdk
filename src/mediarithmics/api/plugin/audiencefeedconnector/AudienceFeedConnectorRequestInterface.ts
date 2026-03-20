@@ -85,3 +85,7 @@ export interface ExternalSegmentDynamicPropertyValuesQueryRequest {
   user_id: string;
   properties?: PluginProperty[];
 }
+
+export interface TestAuthenticationRequest {
+  feed_destination_id: string;
+}

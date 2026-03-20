@@ -102,6 +102,13 @@ export interface ExternalSegmentDynamicPropertyValuesQueryResponse {
   }[];
 }
 
+export type TestAuthenticationStatus = 'ok' | 'error' | 'not_implemented';
+
+export interface TestAuthenticationPluginResponse {
+  status: TestAuthenticationStatus;
+  message?: string;
+}
+
 export interface AudienceFeedStatTag {
   key: string;
   value: string;
