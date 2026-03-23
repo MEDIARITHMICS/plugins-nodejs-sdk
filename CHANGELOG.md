@@ -2,6 +2,10 @@
 
 # Unreleased
 
+# 0.36.1 2026-03-23
+
+- add findNumberProperty to BasePlugin
+
 # 0.36.0 2026-01-22
 
 - Add fetchConfigurationFileOptional
