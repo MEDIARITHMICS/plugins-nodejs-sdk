@@ -22,6 +22,8 @@ export enum UserDeviceTechnicalIdentifierType {
   CUSTOM_DEVICE_ID = 'CUSTOM_DEVICE_ID',
   NETWORK_DEVICE_ID = 'NETWORK_DEVICE_ID',
   TV_ADVERTISING_ID = 'TV_ADVERTISING_ID',
+  IP_V4_ADDRESS_ID = 'IP_V4_ADDRESS_ID',
+  IP_V6_ADDRESS_ID = 'IP_V6_ADDRESS_ID',
 }
 
 export interface UserDevicePointIdentifierTechnicalIdentifierResource {
