@@ -28,6 +28,10 @@ export interface StringPropertyResource {
   value?: string;
 }
 
+export interface NumberPropertyResource {
+  value?: number;
+}
+
 export interface AdLayoutPropertyResource {
   id?: string;
   version?: string;
@@ -50,7 +54,7 @@ export interface BooleanPropertyResource {
   value?: boolean;
 }
 
-export interface IntPropertyResource {
+export interface NumberPropertyResource {
   value?: number;
 }
 

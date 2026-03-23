@@ -21,6 +21,7 @@ import {
   asNativeDataProperty,
   asNativeImageProperty,
   asNativeTitleProperty,
+  asNumberProperty,
   AssetFileProperty,
   AssetFolderProperty,
   asStringProperty,
@@ -30,6 +31,7 @@ import {
   NativeDataProperty,
   NativeImageProperty,
   NativeTitleProperty,
+  NumberProperty,
   PluginProperty,
   PropertyType,
   StringProperty,
@@ -102,6 +104,11 @@ export class PropertiesWrapper {
   findStringProperty = (key?: string): Option<StringProperty> => {
     const p = key ? this.get(key) : this.ofType('STRING');
     return flatMap(p, asStringProperty);
+  };
+
+  findNumberProperty = (key?: string): Option<NumberProperty> => {
+    const p = key ? this.get(key) : this.ofType('NUMBER');
+    return flatMap(p, asNumberProperty);
   };
 
   findAdLayoutProperty = (key?: string): Option<AdLayoutProperty> => {
