@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- findDoubleProperty and findIntProperty added to PropertyWrapper
+
 # 0.36.0 2026-01-22
 
 - Add fetchConfigurationFileOptional

@@ -174,6 +174,14 @@ export const asStringProperty = (p: PluginProperty): Option<StringProperty> => {
   return p.property_type === 'STRING' ? p : undefined;
 };
 
+export const asDoubleProperty = (p: PluginProperty): Option<DoubleProperty> => {
+  return p.property_type === 'DOUBLE' ? p : undefined;
+};
+
+export const asIntProperty = (p: PluginProperty): Option<IntProperty> => {
+  return p.property_type === 'INT' ? p : undefined;
+};
+
 export const asNativeDataProperty = (p: PluginProperty): Option<NativeDataProperty> => {
   return p.property_type === 'NATIVE_DATA' ? p : undefined;
 };
