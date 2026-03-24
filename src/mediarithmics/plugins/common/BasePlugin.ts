@@ -18,6 +18,8 @@ import {
   asAssetFolderProperty,
   asBooleanProperty,
   asDataFileProperty,
+  asDoubleProperty,
+  asIntProperty,
   asNativeDataProperty,
   asNativeImageProperty,
   asNativeTitleProperty,
@@ -27,6 +29,8 @@ import {
   asUrlProperty,
   BooleanProperty,
   DataFileProperty,
+  DoubleProperty,
+  IntProperty,
   NativeDataProperty,
   NativeImageProperty,
   NativeTitleProperty,
@@ -112,6 +116,16 @@ export class PropertiesWrapper {
   findBooleanProperty = (key?: string): Option<BooleanProperty> => {
     const p = key ? this.get(key) : this.ofType('BOOLEAN');
     return flatMap(p, asBooleanProperty);
+  };
+
+  findDoubleProperty = (key?: string): Option<DoubleProperty> => {
+    const p = key ? this.get(key) : this.ofType('DOUBLE');
+    return flatMap(p, asDoubleProperty);
+  };
+
+  findIntProperty = (key?: string): Option<IntProperty> => {
+    const p = key ? this.get(key) : this.ofType('INT');
+    return flatMap(p, asIntProperty);
   };
 
   findNativeDataProperty = (key?: string): Option<NativeDataProperty> => {
