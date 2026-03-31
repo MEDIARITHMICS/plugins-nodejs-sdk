@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 0.38.0 2026-03-31
+
 - Update dependencies, mainly mocha. The min nodejs version is now 20.19.0.
   In mocha tests, use of `only()` is now blocked by default: remove them or use --no-forbid-only`.
 
