@@ -92,7 +92,7 @@ describe('Fetch Audience Feed Gateway API', () => {
   });
 });
 
-describe.only('External Audience Feed API test', function () {
+describe('External Audience Feed API test', function () {
   // All the magic is here
   const plugin = new MyFakeAudienceFeedConnector(false);
   let runner: core.TestingPluginRunner;

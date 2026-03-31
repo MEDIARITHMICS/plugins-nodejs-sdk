@@ -3,7 +3,7 @@ set -eu
 
 
 function doTest(){
-    ./node_modules/.bin/mocha -r ts-node/register src/tests/$1
+    ./node_modules/.bin/mocha --no-forbid-only -r ts-node/register src/tests/$1
 }
 
 if [ "$#" -gt 0 ]

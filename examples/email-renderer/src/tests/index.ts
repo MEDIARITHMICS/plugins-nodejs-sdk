@@ -14,7 +14,7 @@ const PLUGIN_WORKER_ID = 'Calavera';
 process.env.PLUGIN_AUTHENTICATION_TOKEN = PLUGIN_AUTHENTICATION_TOKEN;
 process.env.PLUGIN_WORKER_ID = PLUGIN_WORKER_ID;
 
-describe.only('Test Email Renderer example', function () {
+describe('Test Email Renderer example', function () {
   const plugin = new ExampleEmailRenderer(false);
   let runner: core.TestingPluginRunner;
 
