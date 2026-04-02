@@ -12,7 +12,11 @@ import { AudienceFeedBatchContext, UserSegmentUpdatePluginFileDeliveryResponseDa
 import { BatchUpdateRequest } from '../mediarithmics/api/core/batchupdate/BatchUpdateInterface';
 import {
   TestAuthenticationPluginResponse,
+} from '../mediarithmics/api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
+import {
   TestAuthenticationRequest,
+} from '../mediarithmics/api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
+import {
   FeedDestinationCredentials,
 } from '../mediarithmics';
 
@@ -163,6 +167,25 @@ describe('Check Destination Credentials', function () {
         expect(JSON.parse(res.text).status).to.be.eq('not_implemented');
         done();
       });
+  });
+});
+
+describe('upsertFeedDestinationCredentials', function () {
+  it('should POST to the correct URL with credentials', function (done) {
+    const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve({}));
+    const plugin = new MyFakeAudienceFeedConnector(false);
+    new core.TestingPluginRunner(plugin, rpMockup);
+
+    void plugin.upsertFeedDestinationCredentials('42', {
+      scheme: 'OAUTH2',
+      credentials: { refresh_token: 'my-token' },
+    }).then(() => {
+      expect(rpMockup.args[0][0].uri).to.be.eq(
+        `${plugin.outboundPlatformUrl}/v1/feed_destinations/42/credentials`,
+      );
+      expect(rpMockup.args[0][0].method).to.be.eq('POST');
+      done();
+    });
   });
 });
 

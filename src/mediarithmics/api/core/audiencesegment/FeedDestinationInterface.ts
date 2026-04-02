@@ -8,3 +8,8 @@ export interface FeedDestinationCredentials {
 }
 
 export type FeedDestinationCredentialsResponse = DataResponse<FeedDestinationCredentials>;
+
+export interface UpsertFeedDestinationCredentialsRequest {
+  feed_destination_id: string;
+  credentials: FeedDestinationCredentials;
+}

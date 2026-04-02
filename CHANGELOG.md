@@ -2,6 +2,7 @@
 
 # Unreleased
 
+- Add `upsertFeedDestinationCredentials()` helper method
 - Add `POST /v1/test_authentication` route: fetches feed destination credentials and delegates to `onTestAuthentication()`
 - Add `fetchFeedDestinationCredentials()` helper method
 

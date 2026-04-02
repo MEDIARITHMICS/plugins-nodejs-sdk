@@ -15,6 +15,7 @@ import {
 import {
   FeedDestinationCredentials,
   FeedDestinationCredentialsResponse,
+  UpsertFeedDestinationCredentialsRequest,
 } from '../../api/core/audiencesegment/FeedDestinationInterface';
 import { BatchUpdateHandler } from '../../api/core/batchupdate/BatchUpdateHandler';
 import { BatchUpdatePluginResponse, BatchUpdateRequest } from '../../api/core/batchupdate/BatchUpdateInterface';
@@ -134,6 +135,19 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     return response.data;
   }
 
+  async upsertFeedDestinationCredentials(
+    feedDestinationId: string,
+    credentials: FeedDestinationCredentials,
+  ): Promise<void> {
+    const body: UpsertFeedDestinationCredentialsRequest = { feed_destination_id: feedDestinationId, credentials };
+    await super.requestGatewayHelper<void>(
+      'POST',
+      `${this.outboundPlatformUrl}/v1/feed_destinations/${feedDestinationId}/credentials`,
+      body,
+    );
+    this.logger.debug(`Upserted credentials for feed destination: ${feedDestinationId}`);
+  }
+
   async createAudienceFeedProperties(feedId: string, property: PluginProperty): Promise<PluginProperty[]> {
     const response = await super.requestGatewayHelper<PluginPropertyResponse>(
       'POST',
@@ -222,6 +236,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   ): Promise<TestAuthenticationPluginResponse> {
     return Promise.resolve({ status: 'not_implemented' });
   }
+
 
   protected async getInstanceContext(
     feedId: string,
@@ -503,6 +518,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       try {
         const request = req.body as ExternalSegmentAuthenticationRequest;
         const response = await this.onAuthentication(request);
+
         let statusCode: number;
         switch (response.status) {
           case 'ok':
