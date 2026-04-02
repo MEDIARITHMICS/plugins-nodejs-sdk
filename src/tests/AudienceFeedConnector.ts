@@ -11,9 +11,12 @@ import { core } from '../';
 import { AudienceFeedBatchContext, UserSegmentUpdatePluginFileDeliveryResponseData } from '../mediarithmics';
 import { BatchUpdateRequest } from '../mediarithmics/api/core/batchupdate/BatchUpdateInterface';
 import {
+  CreateOAuthRedirectUrlPluginResponse,
   TestAuthenticationPluginResponse,
 } from '../mediarithmics/api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
 import {
+  CreateOAuthRedirectUrlRequest,
+  ExternalSegmentAuthenticationRequest,
   TestAuthenticationRequest,
 } from '../mediarithmics/api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
 import {
@@ -102,7 +105,7 @@ class MyFakeAudienceFeedConnectorWithCredentialsCheck extends core.AudienceFeedC
 }
 
 describe('Check Destination Credentials', function () {
-  it('should return not_implemented (400) when no credentials are stored', function (done) {
+  it('should return error (500) when no credentials are stored', function (done) {
     const rpMockup: sinon.SinonStub = sinon.stub().rejects(new Error('Not Found'));
     const plugin = new MyFakeAudienceFeedConnectorWithCredentialsCheck(false);
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
@@ -113,8 +116,8 @@ describe('Check Destination Credentials', function () {
       .post('/v1/test_authentication')
       .send(checkRequest)
       .end(function (err, res) {
-        expect(res.status).to.equal(400);
-        expect(JSON.parse(res.text).status).to.be.eq('not_implemented');
+        expect(res.status).to.equal(500);
+        expect(JSON.parse(res.text).status).to.be.eq('error');
         expect(JSON.parse(res.text).message).to.be.eq('Could not fetch feed destination credentials');
         done();
       });
@@ -165,6 +168,228 @@ describe('Check Destination Credentials', function () {
       .end(function (err, res) {
         expect(res.status).to.equal(400);
         expect(JSON.parse(res.text).status).to.be.eq('not_implemented');
+        done();
+      });
+  });
+});
+
+class MyFakeAudienceFeedConnectorWithOAuth extends core.AudienceFeedConnectorBasePlugin {
+  protected onExternalSegmentCreation(
+    request: core.ExternalSegmentCreationRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<core.ExternalSegmentCreationPluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onExternalSegmentConnection(
+    request: core.ExternalSegmentConnectionRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<core.ExternalSegmentConnectionPluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onUserSegmentUpdate(
+    request: core.UserSegmentUpdateRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<core.UserSegmentUpdatePluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onCreateOAuthRedirectUrl(
+    request: CreateOAuthRedirectUrlRequest,
+  ): Promise<CreateOAuthRedirectUrlPluginResponse> {
+    return Promise.resolve({
+      login_url: `https://accounts.google.com/o/oauth2/v2/auth?state=${request.feed_destination_id}&client_id=my-client`,
+    });
+  }
+
+  protected onAuthentication(
+    request: ExternalSegmentAuthenticationRequest,
+  ): Promise<core.ExternalSegmentAuthenticationResponse> {
+    return Promise.resolve({
+      status: 'ok',
+      refresh_token: 'my-refresh-token',
+    });
+  }
+}
+
+class MyFakeAudienceFeedConnectorWithBadOAuthUrl extends core.AudienceFeedConnectorBasePlugin {
+  protected onExternalSegmentCreation(
+    request: core.ExternalSegmentCreationRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<core.ExternalSegmentCreationPluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onExternalSegmentConnection(
+    request: core.ExternalSegmentConnectionRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<core.ExternalSegmentConnectionPluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onUserSegmentUpdate(
+    request: core.UserSegmentUpdateRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<core.UserSegmentUpdatePluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onCreateOAuthRedirectUrl(
+    request: CreateOAuthRedirectUrlRequest,
+  ): Promise<CreateOAuthRedirectUrlPluginResponse> {
+    return Promise.resolve({
+      login_url: `https://accounts.google.com/o/oauth2/v2/auth?state=other_param&client_id=my-client`,
+    });
+  }
+}
+
+class MyFakeAudienceFeedConnectorWithOAuthNoCredentials extends core.AudienceFeedConnectorBasePlugin {
+  protected onExternalSegmentCreation(
+    request: core.ExternalSegmentCreationRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<core.ExternalSegmentCreationPluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onExternalSegmentConnection(
+    request: core.ExternalSegmentConnectionRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<core.ExternalSegmentConnectionPluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onUserSegmentUpdate(
+    request: core.UserSegmentUpdateRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+  ): Promise<core.UserSegmentUpdatePluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onAuthentication(
+    request: ExternalSegmentAuthenticationRequest,
+  ): Promise<core.ExternalSegmentAuthenticationResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+}
+
+describe('createOAuthRedirectUrl', function () {
+  it('should return 200 with login_url when feed_destination_id is in state', function (done) {
+    const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve({}));
+    const plugin = new MyFakeAudienceFeedConnectorWithOAuth(false);
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    const req: CreateOAuthRedirectUrlRequest = { feed_destination_id: '42', plugin_version_id: '99' };
+
+    void request(runner.plugin.app)
+      .post('/v1/oauth_redirect_url')
+      .send(req)
+      .end(function (err, res) {
+        expect(res.status).to.equal(200);
+        expect(JSON.parse(res.text).login_url).to.include('42');
+        done();
+      });
+  });
+
+  it('should return 500 when login_url state does not contain feed_destination_id', function (done) {
+    const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve({}));
+    const plugin = new MyFakeAudienceFeedConnectorWithBadOAuthUrl(false);
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    const req: CreateOAuthRedirectUrlRequest = { feed_destination_id: '42', plugin_version_id: '99' };
+
+    void request(runner.plugin.app)
+      .post('/v1/oauth_redirect_url')
+      .send(req)
+      .end(function (err, res) {
+        expect(res.status).to.equal(500);
+        expect(JSON.parse(res.text).message).to.include('feed_destination_id');
+        done();
+      });
+  });
+
+  it('should return 500 when feed_destination_id is missing from request', function (done) {
+    const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve({}));
+    const plugin = new MyFakeAudienceFeedConnectorWithOAuth(false);
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    void request(runner.plugin.app)
+      .post('/v1/oauth_redirect_url')
+      .send({ plugin_version_id: '99' })
+      .end(function (err, res) {
+        expect(res.status).to.equal(500);
+        expect(JSON.parse(res.text).message).to.include('feed_destination_id');
+        done();
+      });
+  });
+});
+
+describe('authenticate wrapper', function () {
+  it('should call upsertFeedDestinationCredentials and strip credentials when feed_destination_id present', function (done) {
+    const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve({}));
+    const plugin = new MyFakeAudienceFeedConnectorWithOAuth(false);
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    const req: ExternalSegmentAuthenticationRequest = {
+      user_id: 'user1',
+      plugin_version_id: '99',
+      feed_destination_id: '42',
+      params: { code: 'auth-code', state: '42' },
+    };
+
+    void request(runner.plugin.app)
+      .post('/v1/authentication')
+      .send(req)
+      .end(function (err, res) {
+        expect(res.status).to.equal(200);
+        expect(JSON.parse(res.text).status).to.be.eq('ok');
+        expect(JSON.parse(res.text).credentials).to.be.undefined;
+        expect(rpMockup.calledOnce).to.be.true;
+        expect(rpMockup.args[0][0].uri).to.include('/v1/feed_destinations/42/credentials');
+        expect(rpMockup.args[0][0].method).to.be.eq('POST');
+        done();
+      });
+  });
+
+  it('should not call upsertFeedDestinationCredentials when feed_destination_id is absent', function (done) {
+    const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve({}));
+    const plugin = new MyFakeAudienceFeedConnectorWithOAuth(false);
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    const req: ExternalSegmentAuthenticationRequest = {
+      user_id: 'user1',
+      plugin_version_id: '99',
+      params: { code: 'auth-code', state: 'some-state' },
+    };
+
+    void request(runner.plugin.app)
+      .post('/v1/authentication')
+      .send(req)
+      .end(function (err, res) {
+        expect(res.status).to.equal(200);
+        expect(rpMockup.called).to.be.false;
+        done();
+      });
+  });
+
+  it('should return 500 when feed_destination_id is present but plugin returns no credentials', function (done) {
+    const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve({}));
+    const plugin = new MyFakeAudienceFeedConnectorWithOAuthNoCredentials(false);
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    const req: ExternalSegmentAuthenticationRequest = {
+      user_id: 'user1',
+      plugin_version_id: '99',
+      feed_destination_id: '42',
+      params: { code: 'auth-code', state: '42' },
+    };
+
+    void request(runner.plugin.app)
+      .post('/v1/authentication')
+      .send(req)
+      .end(function (err, res) {
+        expect(res.status).to.equal(500);
+        expect(JSON.parse(res.text).message).to.include('refresh_token');
         done();
       });
   });

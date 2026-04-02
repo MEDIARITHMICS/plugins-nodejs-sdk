@@ -158,13 +158,45 @@ export class ExampleAudienceFeed extends core.BatchedAudienceFeedConnectorBasePl
     return Promise.resolve({ status: 'authenticated' });
   }
 
+  protected onCreateOAuthRedirectUrl(
+    request: core.CreateOAuthRedirectUrlRequest,
+  ): Promise<core.CreateOAuthRedirectUrlPluginResponse> {
+    // Build your OAuth2 authorization URL here.
+    // The state parameter MUST contain feed_destination_id so the SDK can validate it.
+    const state = request.feed_destination_id;
+    const loginUrl = `https://accounts.example.com/oauth2/authorize?client_id=MY_CLIENT_ID&state=${state}&redirect_uri=MY_REDIRECT_URI&response_type=code`;
+    return Promise.resolve({ login_url: loginUrl });
+  }
+
   protected onAuthentication(
     request: core.ExternalSegmentAuthenticationRequest,
   ): Promise<core.ExternalSegmentAuthenticationResponse> {
-    if (request.params.creds == 'ok') {
+    if (request.feed_destination_id) {
+      // New OAuth2 flow: feed_destination_id is present, the SDK expects credentials
+      // in the response so it can upsert them to TenantCredentials automatically.
+      const refreshToken = 'MY_REFRESH_TOKEN'; // exchange request.params.code for a refresh token here
+      return Promise.resolve({
+        status: 'ok',
+        credentials: { scheme: 'OAUTH2', data: { refresh_token: refreshToken } },
+      });
+    }
+    // Legacy flow: no feed_destination_id, plugin manages credentials itself.
+    if (request.params && request.params.creds == 'ok') {
       return Promise.resolve({ status: 'ok' });
     }
     return Promise.resolve({ status: 'error' });
+  }
+
+  protected onTestAuthentication(
+    request: core.TestAuthenticationRequest,
+    credentials: core.FeedDestinationCredentials,
+  ): Promise<core.TestAuthenticationPluginResponse> {
+    // Use the credentials fetched from TenantCredentials to test the connection.
+    // credentials.credentials contains the data stored during onAuthentication (e.g. refresh_token).
+    if (credentials && credentials.credentials) {
+      return Promise.resolve({ status: 'ok' });
+    }
+    return Promise.resolve({ status: 'error', message: 'No credentials found' });
   }
 
   protected onLogout(request: core.ExternalSegmentLogoutRequest): Promise<core.ExternalSegmentLogoutResponse> {

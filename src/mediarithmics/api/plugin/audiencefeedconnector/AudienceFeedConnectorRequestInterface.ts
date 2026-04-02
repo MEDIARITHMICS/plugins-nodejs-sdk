@@ -71,6 +71,7 @@ export interface ExternalSegmentAuthenticationRequest {
   user_id: string;
   plugin_version_id: string;
   params?: { [key: string]: string };
+  feed_destination_id?: string;
 }
 
 export interface ExternalSegmentLogoutRequest {
@@ -88,4 +89,9 @@ export interface ExternalSegmentDynamicPropertyValuesQueryRequest {
 
 export interface TestAuthenticationRequest {
   feed_destination_id: string;
+}
+
+export interface CreateOAuthRedirectUrlRequest {
+  feed_destination_id: string;
+  plugin_version_id: string;
 }

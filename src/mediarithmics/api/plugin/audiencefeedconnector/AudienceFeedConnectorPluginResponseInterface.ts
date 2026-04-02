@@ -85,6 +85,7 @@ export interface ExternalSegmentAuthenticationStatusQueryResponse {
 export interface ExternalSegmentAuthenticationResponse {
   status: AudienceFeedAuthenticationStatus;
   message?: string;
+  refresh_token?: string;
 }
 
 export interface ExternalSegmentLogoutResponse {
@@ -100,6 +101,10 @@ export interface ExternalSegmentDynamicPropertyValuesQueryResponse {
     enum: { label: string; value: string }[];
     [key: string]: any;
   }[];
+}
+
+export interface CreateOAuthRedirectUrlPluginResponse {
+  login_url: string;
 }
 
 export type TestAuthenticationStatus = 'ok' | 'error' | 'not_implemented';
