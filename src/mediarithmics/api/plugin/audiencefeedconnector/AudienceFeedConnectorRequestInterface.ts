@@ -10,6 +10,7 @@ export interface UserSegmentUpdateRequest {
   session_id: string;
   datamart_id: string;
   segment_id: string;
+  feed_destination_id?: string;
   user_identifiers: UserIdentifierInfo[];
   user_profiles: UserProfileInfo[];
   ts: number;
@@ -20,12 +21,14 @@ export interface ExternalSegmentConnectionRequest {
   feed_id: string;
   datamart_id: string;
   segment_id: string;
+  feed_destination_id?: string;
 }
 
 export interface ExternalSegmentCreationRequest {
   feed_id: string;
   datamart_id: string;
   segment_id: string;
+  feed_destination_id?: string;
 }
 
 export interface AudienceFeedBatchContext extends BatchUpdateContext {

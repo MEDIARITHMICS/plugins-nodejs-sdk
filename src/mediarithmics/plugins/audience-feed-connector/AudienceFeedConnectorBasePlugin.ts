@@ -15,7 +15,6 @@ import {
 import {
   FeedDestinationCredentials,
   FeedDestinationCredentialsResponse,
-  UpsertFeedDestinationCredentialsRequest,
 } from '../../api/core/audiencesegment/FeedDestinationInterface';
 import { BatchUpdateHandler } from '../../api/core/batchupdate/BatchUpdateHandler';
 import { BatchUpdatePluginResponse, BatchUpdateRequest } from '../../api/core/batchupdate/BatchUpdateInterface';
@@ -142,7 +141,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     feedDestinationId: string,
     credentials: FeedDestinationCredentials,
   ): Promise<void> {
-    const body: UpsertFeedDestinationCredentialsRequest = { feed_destination_id: feedDestinationId, credentials };
+    const body = { scheme: credentials.scheme, credentials: credentials.credentials };
     await super.requestGatewayHelper<void>(
       'POST',
       `${this.outboundPlatformUrl}/v1/feed_destinations/${feedDestinationId}/credentials`,
@@ -673,10 +672,10 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
           const response = await this.onCreateOAuthRedirectUrl(request);
 
           const url = new URL(response.login_url);
-          const state = url.searchParams.get('state');
-          if (!state || !state.includes(request.feed_destination_id)) {
+          const feedDestinationIdParam = url.searchParams.get('feed_destination_id');
+          if (feedDestinationIdParam !== request.feed_destination_id) {
             throw new Error(
-              `login_url state must contain feed_destination_id: ${request.feed_destination_id}`,
+              `login_url must contain feed_destination_id as query param: ${request.feed_destination_id}`,
             );
           }
 

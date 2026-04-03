@@ -199,7 +199,7 @@ class MyFakeAudienceFeedConnectorWithOAuth extends core.AudienceFeedConnectorBas
     request: CreateOAuthRedirectUrlRequest,
   ): Promise<CreateOAuthRedirectUrlPluginResponse> {
     return Promise.resolve({
-      login_url: `https://accounts.google.com/o/oauth2/v2/auth?state=${request.feed_destination_id}&client_id=my-client`,
+      login_url: `https://accounts.google.com/o/oauth2/v2/auth?feed_destination_id=${request.feed_destination_id}&client_id=my-client`,
     });
   }
 
@@ -239,7 +239,7 @@ class MyFakeAudienceFeedConnectorWithBadOAuthUrl extends core.AudienceFeedConnec
     request: CreateOAuthRedirectUrlRequest,
   ): Promise<CreateOAuthRedirectUrlPluginResponse> {
     return Promise.resolve({
-      login_url: `https://accounts.google.com/o/oauth2/v2/auth?state=other_param&client_id=my-client`,
+      login_url: `https://accounts.google.com/o/oauth2/v2/auth?state=other_param&client_id=my-client&feed_destination_id=wrong_id`,
     });
   }
 }
@@ -274,7 +274,7 @@ class MyFakeAudienceFeedConnectorWithOAuthNoCredentials extends core.AudienceFee
 }
 
 describe('createOAuthRedirectUrl', function () {
-  it('should return 200 with login_url when feed_destination_id is in state', function (done) {
+  it('should return 200 with login_url when feed_destination_id is a query param', function (done) {
     const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve({}));
     const plugin = new MyFakeAudienceFeedConnectorWithOAuth(false);
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
@@ -291,7 +291,7 @@ describe('createOAuthRedirectUrl', function () {
       });
   });
 
-  it('should return 500 when login_url state does not contain feed_destination_id', function (done) {
+  it('should return 500 when login_url feed_destination_id query param does not match', function (done) {
     const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve({}));
     const plugin = new MyFakeAudienceFeedConnectorWithBadOAuthUrl(false);
     const runner = new core.TestingPluginRunner(plugin, rpMockup);
