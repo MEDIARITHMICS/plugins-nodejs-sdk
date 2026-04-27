@@ -2,6 +2,10 @@
 
 # Unreleased
 
+- `AudienceFeedConnectorDynamicPropertyValuesQueryStatus` now supports `'empty'` status in `onDynamicPropertyValuesQuery`
+  - Use it when a dynamic property has no available options
+  - Return `{ status: 'empty', message: 'Reason why the field is empty' }` to display an explanatory message to the user
+
 # 0.38.0 2026-03-31
 
 - Update dependencies, mainly mocha. The min nodejs version is now 20.19.0.

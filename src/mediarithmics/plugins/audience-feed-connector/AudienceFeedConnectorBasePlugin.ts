@@ -546,6 +546,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
           let statusCode: number;
           switch (response.status) {
             case 'ok':
+            case 'empty':
               statusCode = 200;
               break;
             case 'error':
