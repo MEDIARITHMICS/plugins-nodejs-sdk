@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 0.39.0 2026-04-27
+
 - `AudienceFeedConnectorDynamicPropertyValuesQueryStatus` now supports `'empty'` status in `onDynamicPropertyValuesQuery`
   - Use it when a dynamic property has no available options
   - Return `{ status: 'empty', message: 'Reason why the field is empty' }` to display an explanatory message to the user
