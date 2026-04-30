@@ -12,6 +12,10 @@ import {
   AudienceSegmentResource,
   AudienceSegmentResourceResponse,
 } from '../../api/core/audiencesegment/AudienceSegmentInterface';
+import {
+  FeedDestinationCredentials,
+  FeedDestinationCredentialsResponse,
+} from '../../api/core/audiencesegment/FeedDestinationInterface';
 import { BatchUpdateHandler } from '../../api/core/batchupdate/BatchUpdateHandler';
 import { BatchUpdatePluginResponse, BatchUpdateRequest } from '../../api/core/batchupdate/BatchUpdateInterface';
 import {
@@ -21,6 +25,8 @@ import {
 } from '../../api/core/webdomain/UserAgentIdentifierRealmSelectionInterface';
 import {
   BatchedUserSegmentUpdatePluginResponse,
+  CreateOAuthRedirectUrlPluginResponse,
+  TestAuthenticationPluginResponse,
   ExternalSegmentAuthenticationResponse,
   ExternalSegmentAuthenticationStatusQueryResponse,
   ExternalSegmentConnectionPluginResponse,
@@ -33,6 +39,8 @@ import {
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorPluginResponseInterface';
 import {
   AudienceFeedBatchContext,
+  CreateOAuthRedirectUrlRequest,
+  TestAuthenticationRequest,
   ExternalSegmentAuthenticationRequest,
   ExternalSegmentAuthenticationStatusQueryRequest,
   ExternalSegmentConnectionRequest,
@@ -65,6 +73,8 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     this.initAuthentication();
     this.initLogoutQuery();
     this.initDynamicPropertyValuesQuery();
+    this.initTestAuthentication();
+    this.initCreateOAuthRedirectUrl();
   }
 
   async fetchAudienceSegment(feedId: string): Promise<AudienceSegmentResource> {
@@ -116,6 +126,28 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     );
     this.logger.debug(`Fetched External Feed Properties: ${feedId}`, { response });
     return response.data;
+  }
+
+  async fetchFeedDestinationCredentials(feedDestinationId: string): Promise<FeedDestinationCredentials> {
+    const response = await super.requestGatewayHelper<FeedDestinationCredentialsResponse>(
+      'GET',
+      `${this.outboundPlatformUrl}/v1/feed_destinations/${feedDestinationId}/credentials`,
+    );
+    this.logger.debug(`Fetched credentials for feed destination: ${feedDestinationId}`);
+    return response.data;
+  }
+
+  async upsertFeedDestinationCredentials(
+    feedDestinationId: string,
+    credentials: FeedDestinationCredentials,
+  ): Promise<void> {
+    const body = { scheme: credentials.scheme, credentials: credentials.credentials };
+    await super.requestGatewayHelper<void>(
+      'POST',
+      `${this.outboundPlatformUrl}/v1/feed_destinations/${feedDestinationId}/credentials`,
+      body,
+    );
+    this.logger.debug(`Upserted credentials for feed destination: ${feedDestinationId}`);
   }
 
   async createAudienceFeedProperties(feedId: string, property: PluginProperty): Promise<PluginProperty[]> {
@@ -200,6 +232,19 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     return Promise.resolve({ status: 'not_implemented' });
   }
 
+  protected onTestAuthentication(
+    request: TestAuthenticationRequest,
+    credentials: FeedDestinationCredentials,
+  ): Promise<TestAuthenticationPluginResponse> {
+    return Promise.resolve({ status: 'not_implemented' });
+  }
+
+  protected onCreateOAuthRedirectUrl(
+    request: CreateOAuthRedirectUrlRequest,
+  ): Promise<CreateOAuthRedirectUrlPluginResponse> {
+    return Promise.reject(new Error('onCreateOAuthRedirectUrl is not implemented'));
+  }
+
   protected async getInstanceContext(
     feedId: string,
     forceRefresh?: boolean,
@@ -218,7 +263,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     return this.pluginCache.get(feedId) as Promise<AudienceFeedConnectorBaseInstanceContext>;
   }
 
-  protected emptyBodyFilter(req: express.Request, res: express.Response, next: express.NextFunction) {
+  protected emptyBodyFilter = (req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (!req.body || _.isEmpty(req.body)) {
       const msg = {
         error: 'Missing request body',
@@ -480,6 +525,23 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       try {
         const request = req.body as ExternalSegmentAuthenticationRequest;
         const response = await this.onAuthentication(request);
+
+        if (request.feed_destination_id && response.status === 'ok') {
+          if (!response.refresh_token) {
+            throw new Error(
+              `Plugin must return a refresh_token when feed_destination_id is present`,
+            );
+          }
+          await this.upsertFeedDestinationCredentials(request.feed_destination_id, {
+            scheme: 'OAUTH2',
+            credentials: { refresh_token: response.refresh_token },
+          });
+          this.logger.debug(
+            `FeedDestinationId: ${request.feed_destination_id} - Credentials upserted after authentication`,
+          );
+        }
+
+        const { refresh_token: _refresh_token, ...responseWithoutCredentials } = response;
         let statusCode: number;
         switch (response.status) {
           case 'ok':
@@ -495,9 +557,9 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
             statusCode = 500;
         }
         this.logger.debug(`Request: ${JSON.stringify(req.body)} - Authentication returning: ${statusCode}`, {
-          response,
+          response: responseWithoutCredentials,
         });
-        return res.status(statusCode).send(JSON.stringify(response));
+        return res.status(statusCode).send(JSON.stringify(responseWithoutCredentials));
       } catch (error) {
         this.logger.error('Something bad happened on authentication', error);
         return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
@@ -533,6 +595,101 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
         return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
       }
     });
+  }
+
+  private initTestAuthentication(): void {
+    this.app.post(
+      '/v1/test_authentication',
+      this.emptyBodyFilter,
+      async (req: express.Request, res: express.Response) => {
+        try {
+          this.logger.debug('POST /v1/test_authentication', { request: req.body });
+
+          if (!this.httpIsReady()) {
+            throw new Error('Plugin not initialized');
+          }
+
+          const request = req.body as TestAuthenticationRequest;
+
+          let credentials: FeedDestinationCredentials;
+          try {
+            credentials = await this.fetchFeedDestinationCredentials(request.feed_destination_id);
+          } catch {
+            const response: TestAuthenticationPluginResponse = {
+              status: 'error',
+              message: 'Could not fetch feed destination credentials',
+            };
+            return res.status(500).send(JSON.stringify(response));
+          }
+
+          const response = await this.onTestAuthentication(request, credentials);
+
+          let statusCode: number;
+          switch (response.status) {
+            case 'ok':
+              statusCode = 200;
+              break;
+            case 'error':
+              statusCode = 500;
+              break;
+            case 'not_implemented':
+              statusCode = 400;
+              break;
+            default:
+              statusCode = 500;
+          }
+
+          this.logger.debug(
+            `FeedDestinationId: ${request.feed_destination_id} - Check destination credentials returning: ${statusCode}`,
+            { response },
+          );
+
+          return res.status(statusCode).send(JSON.stringify(response));
+        } catch (error) {
+          this.logger.error('Something bad happened on check destination credentials', error);
+          return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
+        }
+      },
+    );
+  }
+
+  private initCreateOAuthRedirectUrl(): void {
+    this.app.post(
+      '/v1/oauth_redirect_url',
+      this.emptyBodyFilter,
+      async (req: express.Request, res: express.Response) => {
+        try {
+          this.logger.debug('POST /v1/oauth_redirect_url', { request: req.body });
+
+          if (!this.httpIsReady()) {
+            throw new Error('Plugin not initialized');
+          }
+
+          const request = req.body as CreateOAuthRedirectUrlRequest;
+          if (!request.feed_destination_id) {
+            throw new Error('feed_destination_id is required');
+          }
+          const response = await this.onCreateOAuthRedirectUrl(request);
+
+          const url = new URL(response.login_url);
+          const feedDestinationIdParam = url.searchParams.get('feed_destination_id');
+          if (feedDestinationIdParam !== request.feed_destination_id) {
+            throw new Error(
+              `login_url must contain feed_destination_id as query param: ${request.feed_destination_id}`,
+            );
+          }
+
+          this.logger.debug(
+            `FeedDestinationId: ${request.feed_destination_id} - OAuth redirect URL generated`,
+          );
+
+          return res.status(200).send(JSON.stringify(response));
+        } catch (error) {
+          this.logger.error('Something bad happened on create OAuth redirect URL', error);
+          return res.status(500).send({ status: 'error', message: `${(error as Error).message}` });
+        }
+      },
+    );
   }
 
   private initDynamicPropertyValuesQuery(): void {

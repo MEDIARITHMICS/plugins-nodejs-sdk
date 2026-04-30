@@ -2,6 +2,15 @@
 
 # Unreleased
 
+- Add optional `feed_destination_id` to `UserSegmentUpdateRequest`, `ExternalSegmentConnectionRequest`, `ExternalSegmentCreationRequest`, and `ExternalSegmentAuthenticationRequest`
+- Add `POST /v1/oauth_redirect_url` route: delegates to `onCreateOAuthRedirectUrl()` to generate an OAuth2 authorization URL
+- `onAuthentication()` now auto-upserts credentials when `feed_destination_id` is present in the request
+- Use `FeedDestinationCredentials` type in `ExternalSegmentAuthenticationResponse.credentials`
+- `onCreateOAuthRedirectUrl()` now throws by default if not overridden
+- Add `upsertFeedDestinationCredentials()` helper method
+- Add `POST /v1/test_authentication` route: fetches feed destination credentials and delegates to `onTestAuthentication()`
+- Add `fetchFeedDestinationCredentials()` helper method
+
 # 0.39.0 2026-04-27
 
 - `AudienceFeedConnectorDynamicPropertyValuesQueryStatus` now supports `'empty'` status in `onDynamicPropertyValuesQuery`
