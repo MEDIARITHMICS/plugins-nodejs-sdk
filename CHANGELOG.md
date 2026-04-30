@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 0.40.0 2026-04-30
+
 - Add optional `feed_destination_id` to `UserSegmentUpdateRequest`, `ExternalSegmentConnectionRequest`, `ExternalSegmentCreationRequest`, and `ExternalSegmentAuthenticationRequest`
 - Add `POST /v1/oauth_redirect_url` route: delegates to `onCreateOAuthRedirectUrl()` to generate an OAuth2 authorization URL
 - `onAuthentication()` now auto-upserts credentials when `feed_destination_id` is present in the request
