@@ -210,8 +210,8 @@ export abstract class BasePlugin<CacheValue = unknown> {
       });
     }
 
-    this.app.use(bodyParser.raw({ type: 'application/ion', limit: '5mb' }));
-    this.app.use(bodyParser.json({ type: '*/*', limit: '5mb' }));
+    this.app.use(bodyParser.raw({ type: 'application/ion', limit: '12mb' }));
+    this.app.use(bodyParser.json({ type: '*/*', limit: '12mb' }));
 
     this.logger = winston.createLogger({
       transports: [

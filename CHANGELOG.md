@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Increase size limit for incoming payloads
+
 # 0.40.0 2026-04-30
 
 - Add optional `feed_destination_id` to `UserSegmentUpdateRequest`, `ExternalSegmentConnectionRequest`, `ExternalSegmentCreationRequest`, and `ExternalSegmentAuthenticationRequest`
