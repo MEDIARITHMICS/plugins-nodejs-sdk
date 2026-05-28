@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 0.40.1 2026-05-28
+
 - Increase size limit for incoming payloads
 
 # 0.40.0 2026-04-30
