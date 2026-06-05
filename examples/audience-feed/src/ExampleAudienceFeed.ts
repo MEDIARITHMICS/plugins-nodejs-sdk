@@ -193,10 +193,18 @@ export class ExampleAudienceFeed extends core.BatchedAudienceFeedConnectorBasePl
   ): Promise<core.TestAuthenticationPluginResponse> {
     // Use the credentials fetched from TenantCredentials to test the connection.
     // credentials.credentials contains the data stored during onAuthentication (e.g. refresh_token).
-    if (credentials && credentials.credentials) {
-      return Promise.resolve({ status: 'ok' });
+    if (!credentials || !credentials.credentials) {
+      // No credentials stored / cannot perform the check -> operational error (HTTP 500)
+      return Promise.resolve({ status: 'error', message: 'No credentials found' });
     }
-    return Promise.resolve({ status: 'error', message: 'No credentials found' });
+    // Call the external system with the credentials. If it rejects them -> invalid_credentials
+    // (HTTP 401), which is distinct from an operational error (HTTP 500).
+    const areCredentialsValid = true; // replace with the real check against the destination
+    return Promise.resolve(
+      areCredentialsValid
+        ? { status: 'ok' }
+        : { status: 'invalid_credentials', message: 'Credentials rejected by the destination' },
+    );
   }
 
   protected onLogout(request: core.ExternalSegmentLogoutRequest): Promise<core.ExternalSegmentLogoutResponse> {
