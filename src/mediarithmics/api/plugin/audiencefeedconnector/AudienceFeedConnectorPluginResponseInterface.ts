@@ -107,7 +107,7 @@ export interface CreateOAuthRedirectUrlPluginResponse {
   login_url: string;
 }
 
-export type TestAuthenticationStatus = 'ok' | 'error' | 'not_implemented';
+export type TestAuthenticationStatus = 'ok' | 'invalid_credentials' | 'error' | 'not_implemented';
 
 export interface TestAuthenticationPluginResponse {
   status: TestAuthenticationStatus;

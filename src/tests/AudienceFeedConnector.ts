@@ -104,6 +104,15 @@ class MyFakeAudienceFeedConnectorWithCredentialsCheck extends core.AudienceFeedC
   }
 }
 
+class MyFakeAudienceFeedConnectorWithInvalidCredentials extends MyFakeAudienceFeedConnectorWithCredentialsCheck {
+  protected onTestAuthentication(
+    request: TestAuthenticationRequest,
+    credentials: FeedDestinationCredentials,
+  ): Promise<TestAuthenticationPluginResponse> {
+    return Promise.resolve({ status: 'invalid_credentials', message: 'Invalid credentials' });
+  }
+}
+
 describe('Check Destination Credentials', function () {
   it('should return error (500) when no credentials are stored', function (done) {
     const rpMockup: sinon.SinonStub = sinon.stub().rejects(new Error('Not Found'));
@@ -145,6 +154,29 @@ describe('Check Destination Credentials', function () {
         expect(rpMockup.args[0][0].uri).to.be.eq(
           `${runner.plugin.outboundPlatformUrl}/v1/feed_destinations/42/credentials`,
         );
+        done();
+      });
+  });
+
+  it('should return invalid_credentials (401) when onTestAuthentication rejects the credentials', function (done) {
+    const credentials: FeedDestinationCredentials = {
+      scheme: 'API_TOKEN',
+      credentials: { token: 'bad-token' },
+    };
+
+    const rpMockup: sinon.SinonStub = sinon.stub().returns(Promise.resolve({ status: 'ok', data: credentials }));
+
+    const plugin = new MyFakeAudienceFeedConnectorWithInvalidCredentials(false);
+    const runner = new core.TestingPluginRunner(plugin, rpMockup);
+
+    const checkRequest: TestAuthenticationRequest = { feed_destination_id: '42' };
+
+    void request(runner.plugin.app)
+      .post('/v1/test_authentication')
+      .send(checkRequest)
+      .end(function (err, res) {
+        expect(res.status).to.equal(401);
+        expect(JSON.parse(res.text).status).to.be.eq('invalid_credentials');
         done();
       });
   });

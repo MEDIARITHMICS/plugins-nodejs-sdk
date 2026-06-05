@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- `onTestAuthentication` now supports the `'invalid_credentials'` status, mapped to HTTP 401, to distinguish invalid credentials from operational errors (`'error'` → HTTP 500)
+
 # 0.40.1 2026-05-28
 
 - Increase size limit for incoming payloads

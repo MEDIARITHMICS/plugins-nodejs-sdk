@@ -629,6 +629,9 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
             case 'ok':
               statusCode = 200;
               break;
+            case 'invalid_credentials':
+              statusCode = 401;
+              break;
             case 'error':
               statusCode = 500;
               break;
