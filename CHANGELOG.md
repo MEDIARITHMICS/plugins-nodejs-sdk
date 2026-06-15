@@ -2,6 +2,10 @@
 
 # Unreleased
 
+- Fetch the feed destination credentials when a request carries `feed_destination_id`, and pass them to `onUserSegmentUpdate()`, `onTroubleshoot()`, `onDynamicPropertyValuesQuery()` and the instance context builder, so plugins can use the vault credentials and fall back to their legacy credentials
+- Add optional `feed_destination_id` to `AudienceFeedBatchContext`, `ExternalSegmentTroubleshootRequest` and `ExternalSegmentDynamicPropertyValuesQueryRequest`
+- Rename `getFeedDestinationCredentialsCached()` to `getFeedDestinationCredentials()`
+
 # 0.40.2 2026-06-09
 
 - `onTestAuthentication` now supports the `'invalid_credentials'` status, mapped to HTTP 401, to distinguish invalid credentials from operational errors (`'error'` → HTTP 500)

@@ -19,9 +19,7 @@ import {
   ExternalSegmentAuthenticationRequest,
   TestAuthenticationRequest,
 } from '../mediarithmics/api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
-import {
-  FeedDestinationCredentials,
-} from '../mediarithmics';
+import { FeedDestinationCredentials } from '../mediarithmics';
 
 const PLUGIN_AUTHENTICATION_TOKEN = 'Manny';
 const PLUGIN_WORKER_ID = 'Calavera';
@@ -433,16 +431,16 @@ describe('upsertFeedDestinationCredentials', function () {
     const plugin = new MyFakeAudienceFeedConnector(false);
     new core.TestingPluginRunner(plugin, rpMockup);
 
-    void plugin.upsertFeedDestinationCredentials('42', {
-      scheme: 'OAUTH2',
-      credentials: { refresh_token: 'my-token' },
-    }).then(() => {
-      expect(rpMockup.args[0][0].uri).to.be.eq(
-        `${plugin.outboundPlatformUrl}/v1/feed_destinations/42/credentials`,
-      );
-      expect(rpMockup.args[0][0].method).to.be.eq('POST');
-      done();
-    });
+    void plugin
+      .upsertFeedDestinationCredentials('42', {
+        scheme: 'OAUTH2',
+        credentials: { refresh_token: 'my-token' },
+      })
+      .then(() => {
+        expect(rpMockup.args[0][0].uri).to.be.eq(`${plugin.outboundPlatformUrl}/v1/feed_destinations/42/credentials`);
+        expect(rpMockup.args[0][0].method).to.be.eq('POST');
+        done();
+      });
   });
 });
 
@@ -658,5 +656,195 @@ describe('External Audience Feed API test', function () {
   afterEach(() => {
     // We clear the cache so that we don't have any processing still running in the background
     runner.plugin.pluginCache.clear();
+  });
+});
+
+class CapturingAudienceFeedConnector extends core.AudienceFeedConnectorBasePlugin {
+  public capturedFeedDestinationCredentials?: FeedDestinationCredentials;
+  public onUserSegmentUpdateCalled = false;
+  public onTroubleshootCalled = false;
+
+  protected onExternalSegmentCreation(): Promise<core.ExternalSegmentCreationPluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onExternalSegmentConnection(): Promise<core.ExternalSegmentConnectionPluginResponse> {
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onUserSegmentUpdate(
+    request: core.UserSegmentUpdateRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+    feedDestinationCredentials?: FeedDestinationCredentials,
+  ): Promise<core.UserSegmentUpdatePluginResponse> {
+    this.onUserSegmentUpdateCalled = true;
+    this.capturedFeedDestinationCredentials = feedDestinationCredentials;
+    return Promise.resolve({ status: 'ok' });
+  }
+
+  protected onTroubleshoot(
+    request: core.ExternalSegmentTroubleshootRequest,
+    instanceContext: core.AudienceFeedConnectorBaseInstanceContext,
+    feedDestinationCredentials?: FeedDestinationCredentials,
+  ): Promise<core.ExternalSegmentTroubleshootResponse> {
+    this.onTroubleshootCalled = true;
+    this.capturedFeedDestinationCredentials = feedDestinationCredentials;
+    return Promise.resolve({ status: 'ok' });
+  }
+}
+
+describe('Live path feed destination credentials', function () {
+  const feedId = '512';
+
+  const feedResponse: core.DataResponse<core.AudienceSegmentExternalFeedResource> = {
+    status: 'ok',
+    data: {
+      id: feedId,
+      plugin_id: '984',
+      organisation_id: '95',
+      group_id: 'com.mediarithmics.audience-feed',
+      artifact_id: 'awesome-audience-feed',
+      version_id: '1254',
+    },
+  };
+
+  const propertiesResponse: core.DataListResponse<core.PluginProperty> = { status: 'ok', count: 0, data: [] };
+
+  function userSegmentUpdateRequest(feedDestinationId?: string): core.UserSegmentUpdateRequest {
+    return {
+      feed_id: feedId,
+      session_id: 'session',
+      datamart_id: '1023',
+      segment_id: '451256',
+      user_identifiers: [],
+      user_profiles: [],
+      ts: 1,
+      operation: 'UPSERT',
+      feed_destination_id: feedDestinationId,
+    };
+  }
+
+  function buildRunner(plugin: CapturingAudienceFeedConnector, credentialsImpl: () => Promise<unknown>) {
+    const credentialsCall = sinon.spy(credentialsImpl);
+    const rpMockup: sinon.SinonStub = sinon.stub();
+    rpMockup
+      .withArgs(
+        sinon.match.has(
+          'uri',
+          sinon.match((value: string) => /\/v1\/audience_segment_external_feeds\/(.){1,10}$/.test(value)),
+        ),
+      )
+      .returns(Promise.resolve(feedResponse));
+    rpMockup
+      .withArgs(
+        sinon.match.has(
+          'uri',
+          sinon.match((value: string) => /\/v1\/audience_segment_external_feeds\/(.){1,10}\/properties/.test(value)),
+        ),
+      )
+      .returns(Promise.resolve(propertiesResponse));
+    rpMockup
+      .withArgs(
+        sinon.match.has(
+          'uri',
+          sinon.match((value: string) => /\/v1\/feed_destinations\/(.+)\/credentials/.test(value)),
+        ),
+      )
+      .callsFake(credentialsCall);
+    return { runner: new core.TestingPluginRunner(plugin, rpMockup), credentialsCall };
+  }
+
+  it('passes vault credentials to the handler when the request has feed_destination_id', function (done) {
+    const credentials: FeedDestinationCredentials = { scheme: 'API_TOKEN', credentials: { token: 'secret' } };
+    const plugin = new CapturingAudienceFeedConnector(false);
+    const { runner } = buildRunner(plugin, () => Promise.resolve({ status: 'ok', data: credentials }));
+
+    void request(runner.plugin.app)
+      .post('/v1/user_segment_update')
+      .send(userSegmentUpdateRequest('42'))
+      .end(function (err, res) {
+        expect(res.status).to.equal(200);
+        expect(plugin.capturedFeedDestinationCredentials).to.deep.equal(credentials);
+        runner.plugin.pluginCache.clear();
+        done();
+      });
+  });
+
+  it('passes undefined credentials to the handler when the vault returns 404', function (done) {
+    const notFound = { name: 'StatusCodeError', response: { statusCode: 404, statusMessage: 'Not Found', body: {} } };
+    const plugin = new CapturingAudienceFeedConnector(false);
+    const { runner } = buildRunner(plugin, () => Promise.reject(notFound));
+
+    void request(runner.plugin.app)
+      .post('/v1/user_segment_update')
+      .send(userSegmentUpdateRequest('42'))
+      .end(function (err, res) {
+        expect(res.status).to.equal(200);
+        expect(plugin.onUserSegmentUpdateCalled).to.be.true;
+        expect(plugin.capturedFeedDestinationCredentials).to.be.undefined;
+        runner.plugin.pluginCache.clear();
+        done();
+      });
+  });
+
+  it('does not fetch credentials when the request has no feed_destination_id', function (done) {
+    const plugin = new CapturingAudienceFeedConnector(false);
+    const { runner, credentialsCall } = buildRunner(plugin, () => Promise.resolve({ status: 'ok', data: {} }));
+
+    void request(runner.plugin.app)
+      .post('/v1/user_segment_update')
+      .send(userSegmentUpdateRequest(undefined))
+      .end(function (err, res) {
+        expect(res.status).to.equal(200);
+        expect(plugin.onUserSegmentUpdateCalled).to.be.true;
+        expect(plugin.capturedFeedDestinationCredentials).to.be.undefined;
+        expect(credentialsCall.called).to.be.false;
+        runner.plugin.pluginCache.clear();
+        done();
+      });
+  });
+
+  function troubleshootRequest(feedDestinationId?: string): core.ExternalSegmentTroubleshootRequest {
+    return {
+      feed_id: feedId,
+      datamart_id: '1023',
+      segment_id: '451256',
+      action: 'FETCH_DESTINATION_AUDIENCE',
+      feed_destination_id: feedDestinationId,
+    };
+  }
+
+  it('passes vault credentials to the troubleshoot handler when the request has feed_destination_id', function (done) {
+    const credentials: FeedDestinationCredentials = { scheme: 'API_TOKEN', credentials: { token: 'secret' } };
+    const plugin = new CapturingAudienceFeedConnector(false);
+    const { runner } = buildRunner(plugin, () => Promise.resolve({ status: 'ok', data: credentials }));
+
+    void request(runner.plugin.app)
+      .post('/v1/troubleshoot')
+      .send(troubleshootRequest('42'))
+      .end(function (err, res) {
+        expect(res.status).to.equal(200);
+        expect(plugin.onTroubleshootCalled).to.be.true;
+        expect(plugin.capturedFeedDestinationCredentials).to.deep.equal(credentials);
+        runner.plugin.pluginCache.clear();
+        done();
+      });
+  });
+
+  it('does not fetch credentials for troubleshoot when the request has no feed_destination_id', function (done) {
+    const plugin = new CapturingAudienceFeedConnector(false);
+    const { runner, credentialsCall } = buildRunner(plugin, () => Promise.resolve({ status: 'ok', data: {} }));
+
+    void request(runner.plugin.app)
+      .post('/v1/troubleshoot')
+      .send(troubleshootRequest(undefined))
+      .end(function (err, res) {
+        expect(res.status).to.equal(200);
+        expect(plugin.onTroubleshootCalled).to.be.true;
+        expect(plugin.capturedFeedDestinationCredentials).to.be.undefined;
+        expect(credentialsCall.called).to.be.false;
+        runner.plugin.pluginCache.clear();
+        done();
+      });
   });
 });
