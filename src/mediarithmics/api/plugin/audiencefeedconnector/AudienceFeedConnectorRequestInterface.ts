@@ -11,6 +11,7 @@ export interface UserSegmentUpdateRequest {
   datamart_id: string;
   segment_id: string;
   feed_destination_id?: string;
+  preset_id?: string;
   user_identifiers: UserIdentifierInfo[];
   user_profiles: UserProfileInfo[];
   ts: number;
@@ -38,6 +39,7 @@ export interface AudienceFeedBatchContext extends BatchUpdateContext {
   segment_id: string;
   datamart_id: string;
   grouping_key: string;
+  feed_destination_id?: string;
 }
 
 export const ExternalSegmentTroubleshootActions = ['FETCH_DESTINATION_AUDIENCE'] as const;
@@ -47,6 +49,7 @@ type ExternalSegmentTroubleshootBaseRequest = {
   feed_id: string;
   datamart_id: string;
   segment_id: string;
+  feed_destination_id?: string;
 };
 
 export type TroubleshootActionFetchDestinationAudience = ExternalSegmentTroubleshootBaseRequest & {
@@ -88,6 +91,7 @@ export interface ExternalSegmentDynamicPropertyValuesQueryRequest {
   datamart_id: string;
   user_id: string;
   properties?: PluginProperty[];
+  feed_destination_id?: string;
 }
 
 export interface TestAuthenticationRequest {

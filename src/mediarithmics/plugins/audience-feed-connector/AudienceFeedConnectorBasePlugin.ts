@@ -51,7 +51,7 @@ import {
   ExternalSegmentTroubleshootRequest,
   UserSegmentUpdateRequest,
 } from '../../api/plugin/audiencefeedconnector/AudienceFeedConnectorRequestInterface';
-import { BasePlugin, PropertiesWrapper } from '../common';
+import { BasePlugin, PropertiesWrapper, ResourceNotFoundError } from '../common';
 
 export interface AudienceFeedConnectorBaseInstanceContext {
   feed: AudienceSegmentExternalFeedResource;
@@ -137,6 +137,20 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     return response.data;
   }
 
+  async fetchFeedDestinationCredentialsOptional(
+    feedDestinationId: string,
+  ): Promise<FeedDestinationCredentials | undefined> {
+    try {
+      return await this.fetchFeedDestinationCredentials(feedDestinationId);
+    } catch (e) {
+      if (e instanceof ResourceNotFoundError) {
+        this.logger.debug(`No credentials found for feed destination: ${feedDestinationId}`);
+        return undefined;
+      }
+      throw e;
+    }
+  }
+
   async upsertFeedDestinationCredentials(
     feedDestinationId: string,
     credentials: FeedDestinationCredentials,
@@ -171,7 +185,10 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   }
 
   // This is a default provided implementation
-  protected async instanceContextBuilder(feedId: string): Promise<AudienceFeedConnectorBaseInstanceContext> {
+  protected async instanceContextBuilder(
+    feedId: string,
+    feedDestinationCredentials?: FeedDestinationCredentials,
+  ): Promise<AudienceFeedConnectorBaseInstanceContext> {
     const audienceFeedP = this.fetchAudienceFeed(feedId);
     const audienceFeedPropsP = this.fetchAudienceFeedProperties(feedId);
 
@@ -201,11 +218,13 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   protected abstract onUserSegmentUpdate(
     request: UserSegmentUpdateRequest,
     instanceContext: AudienceFeedConnectorBaseInstanceContext,
+    feedDestinationCredentials?: FeedDestinationCredentials,
   ): Promise<R>;
 
   protected onTroubleshoot(
     request: ExternalSegmentTroubleshootRequest,
     instanceContext: AudienceFeedConnectorBaseInstanceContext,
+    feedDestinationCredentials?: FeedDestinationCredentials,
   ): Promise<ExternalSegmentTroubleshootResponse> {
     return Promise.resolve({ status: 'not_implemented' });
   }
@@ -228,6 +247,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
   protected onDynamicPropertyValuesQuery(
     request: ExternalSegmentDynamicPropertyValuesQueryRequest,
+    feedDestinationCredentials?: FeedDestinationCredentials,
   ): Promise<ExternalSegmentDynamicPropertyValuesQueryResponse> {
     return Promise.resolve({ status: 'not_implemented' });
   }
@@ -248,11 +268,12 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   protected async getInstanceContext(
     feedId: string,
     forceRefresh?: boolean,
+    feedDestinationCredentials?: FeedDestinationCredentials,
   ): Promise<AudienceFeedConnectorBaseInstanceContext> {
     if (forceRefresh || !this.pluginCache.get(feedId)) {
       void this.pluginCache.put(
         feedId,
-        this.instanceContextBuilder(feedId).catch((error) => {
+        this.instanceContextBuilder(feedId, feedDestinationCredentials).catch((error) => {
           this.logger.error(`Error while caching instance context`, error);
           this.pluginCache.del(feedId);
           throw error;
@@ -261,6 +282,22 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       );
     }
     return this.pluginCache.get(feedId) as Promise<AudienceFeedConnectorBaseInstanceContext>;
+  }
+
+  async getFeedDestinationCredentials(feedDestinationId: string): Promise<FeedDestinationCredentials | undefined> {
+    const cacheKey = `feed_destination_credentials:${feedDestinationId}`;
+    if (!this.pluginCache.get(cacheKey)) {
+      void this.pluginCache.put(
+        cacheKey,
+        this.fetchFeedDestinationCredentialsOptional(feedDestinationId).catch((error) => {
+          this.logger.error(`Error while caching feed destination credentials`, error);
+          this.pluginCache.del(cacheKey);
+          throw error;
+        }) as unknown as Promise<AudienceFeedConnectorBaseInstanceContext>,
+        this.getInstanceContextCacheExpiration(),
+      );
+    }
+    return this.pluginCache.get(cacheKey) as unknown as Promise<FeedDestinationCredentials | undefined>;
   }
 
   protected emptyBodyFilter = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -273,7 +310,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
     } else {
       next();
     }
-  }
+  };
 
   private initExternalSegmentCreation(): void {
     this.app.post(
@@ -293,7 +330,11 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
             throw new Error('No External Segment Creation listener registered!');
           }
 
-          const instanceContext = await this.getInstanceContext(request.feed_id, true);
+          const feedDestinationCredentials = request.feed_destination_id
+            ? await this.getFeedDestinationCredentials(request.feed_destination_id)
+            : undefined;
+
+          const instanceContext = await this.getInstanceContext(request.feed_id, true, feedDestinationCredentials);
 
           const response = await this.onExternalSegmentCreation(request, instanceContext);
 
@@ -344,7 +385,11 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
             throw new Error('No External Segment Connection listener registered!');
           }
 
-          const instanceContext = await this.getInstanceContext(request.feed_id);
+          const feedDestinationCredentials = request.feed_destination_id
+            ? await this.getFeedDestinationCredentials(request.feed_destination_id)
+            : undefined;
+
+          const instanceContext = await this.getInstanceContext(request.feed_id, false, feedDestinationCredentials);
 
           const response = await this.onExternalSegmentConnection(request, instanceContext);
 
@@ -399,9 +444,13 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
             throw new Error('No User Segment Update listener registered!');
           }
 
-          const instanceContext = await this.getInstanceContext(request.feed_id);
+          const feedDestinationCredentials = request.feed_destination_id
+            ? await this.getFeedDestinationCredentials(request.feed_destination_id)
+            : undefined;
 
-          const response: R = await this.onUserSegmentUpdate(request, instanceContext);
+          const instanceContext = await this.getInstanceContext(request.feed_id, false, feedDestinationCredentials);
+
+          const response: R = await this.onUserSegmentUpdate(request, instanceContext, feedDestinationCredentials);
 
           if (response.next_msg_delay_in_ms) {
             res.set('x-mics-next-msg-delay', response.next_msg_delay_in_ms.toString());
@@ -453,9 +502,13 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
           return res.status(400).send(JSON.stringify(response));
         }
 
-        const instanceContext = await this.getInstanceContext(request.feed_id);
+        const feedDestinationCredentials = request.feed_destination_id
+          ? await this.getFeedDestinationCredentials(request.feed_destination_id)
+          : undefined;
 
-        const response = await this.onTroubleshoot(request, instanceContext);
+        const instanceContext = await this.getInstanceContext(request.feed_id, false, feedDestinationCredentials);
+
+        const response = await this.onTroubleshoot(request, instanceContext, feedDestinationCredentials);
 
         let statusCode: number;
         switch (response.status) {
@@ -528,9 +581,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
 
         if (request.feed_destination_id && response.status === 'ok') {
           if (!response.refresh_token) {
-            throw new Error(
-              `Plugin must return a refresh_token when feed_destination_id is present`,
-            );
+            throw new Error(`Plugin must return a refresh_token when feed_destination_id is present`);
           }
           await this.upsertFeedDestinationCredentials(request.feed_destination_id, {
             scheme: 'OAUTH2',
@@ -682,9 +733,7 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
             );
           }
 
-          this.logger.debug(
-            `FeedDestinationId: ${request.feed_destination_id} - OAuth redirect URL generated`,
-          );
+          this.logger.debug(`FeedDestinationId: ${request.feed_destination_id} - OAuth redirect URL generated`);
 
           return res.status(200).send(JSON.stringify(response));
         } catch (error) {
@@ -702,7 +751,10 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
       async (req: express.Request, res: express.Response) => {
         try {
           const request = req.body as ExternalSegmentDynamicPropertyValuesQueryRequest;
-          const response = await this.onDynamicPropertyValuesQuery(request);
+          const feedDestinationCredentials = request.feed_destination_id
+            ? await this.getFeedDestinationCredentials(request.feed_destination_id)
+            : undefined;
+          const response = await this.onDynamicPropertyValuesQuery(request, feedDestinationCredentials);
           let statusCode: number;
           switch (response.status) {
             case 'ok':
@@ -748,7 +800,10 @@ export abstract class BatchedAudienceFeedConnectorBasePlugin<T> extends GenericA
     );
 
     batchUpdateHandler.registerRoute(async (request) => {
-      const instanceContext = await this.getInstanceContext(request.context.feed_id);
+      const feedDestinationCredentials = request.context.feed_destination_id
+        ? await this.getFeedDestinationCredentials(request.context.feed_destination_id)
+        : undefined;
+      const instanceContext = await this.getInstanceContext(request.context.feed_id, false, feedDestinationCredentials);
       return this.onBatchUpdate(request, instanceContext);
     });
   }
