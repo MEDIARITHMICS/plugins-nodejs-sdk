@@ -133,6 +133,33 @@ export class MyActivityAnalyzerPlugin extends core.ActivityAnalyzerPlugin {
 }
 ```
 
+##### Dropping an activity
+
+An activity analyzer can ask the platform to discard the activity it was given, by answering
+`core.dropActivity()` instead of the analyzed activity. It is a success, not an error: the platform does
+not retry the call, does not apply the error recovery strategy of the activity analyzer, and does not
+record an analyzer error. Use it for intentional filtering, for instance to keep bot traffic out of the
+audiences.
+
+```js
+export class MyBotFilteringPlugin extends core.ActivityAnalyzerPlugin {
+  protected onActivityAnalysis(
+    request: core.ActivityAnalyzerRequest,
+    instanceContext: core.ActivityAnalyzerBaseInstanceContext
+  ): Promise<core.ActivityAnalyzerPluginResponse> {
+    if (isBot(request.activity)) {
+      return Promise.resolve(core.dropActivity());
+    }
+    return Promise.resolve({ status: 'ok', data: request.activity });
+  }
+}
+```
+
+The activity is not ingested in the datamart of the analyzed channel. When several activity analyzers are
+chained on that channel, the ones after the dropping analyzer are not called. The drop stays local to that
+channel: a copy dispatched to a subscriber channel of another datamart is unaffected, and the activity
+analyzers of the destination channel decide on their own.
+
 ### Plugin Runner for production
 
 Once you have implemented your own Plugin class, you have to instantiate it and to provide the instance to a Plugin Runner. For Production use, here is how you need to do it:

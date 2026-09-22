@@ -97,88 +97,109 @@ describe('Activity Analysis API test', function () {
   // All the magic is here
   const plugin = new MyFakeSimpleActivityAnalyzerPlugin(false);
 
-  it('Check that the plugin is giving good results with a simple activityAnalysis handler', function (done) {
+  const mockGateway = () => {
     const rpMockup = sinon.stub();
 
     rpMockup.onCall(0).returns(
-      new Promise((resolve, reject) => {
-        const pluginInfo: core.DataResponse<core.ActivityAnalyzer> = {
-          status: 'ok',
-          data: {
-            id: '42',
-            organisation_id: '1001',
-            name: 'Yolo',
-            group_id: '5445',
-            artifact_id: '5441',
-            visit_analyzer_plugin_id: 555777,
-          },
-        };
-        resolve(pluginInfo);
-      }),
+      Promise.resolve({
+        status: 'ok',
+        data: {
+          id: '42',
+          organisation_id: '1001',
+          name: 'Yolo',
+          group_id: '5445',
+          artifact_id: '5441',
+          visit_analyzer_plugin_id: 555777,
+        },
+      } as core.DataResponse<core.ActivityAnalyzer>),
     );
 
     rpMockup.onCall(1).returns(
-      new Promise((resolve, reject) => {
-        const pluginInfo: core.PluginPropertyResponse = {
-          status: 'ok',
-          count: 45,
-          data: [
-            {
-              technical_name: 'hello_world',
-              value: {
-                value: 'Yay',
-              },
-              property_type: 'STRING',
-              origin: 'PLUGIN',
-              writable: true,
-              deletable: false,
-            },
-          ],
-        };
-        resolve(pluginInfo);
-      }),
-    );
-
-    runner = new core.TestingPluginRunner(plugin, rpMockup);
-
-    const requestBody = {
-      activity_analyzer_id: 1923,
-      datamart_id: 1034,
-      channel_id: '1268',
-      activity: {
-        $email_hash: null,
-        $events: [
+      Promise.resolve({
+        status: 'ok',
+        count: 45,
+        data: [
           {
-            $event_name: 'page HP',
-            $properties: {
-              $referrer: 'https://www.google.fr/',
-              $url: 'https://estcequecestbientotlapero.fr/',
-              produit: 'SANTE',
-              'session id': 'tQ6GQojf',
+            technical_name: 'hello_world',
+            value: {
+              value: 'Yay',
             },
-            $ts: 1479820606900,
+            property_type: 'STRING',
+            origin: 'PLUGIN',
+            writable: true,
+            deletable: false,
           },
         ],
-        $location: null,
-        $session_duration: 302,
-        $session_status: 'CLOSED_SESSION',
-        $site_id: '1268',
-        $topics: {},
-        $ts: 1479820606901,
-        $ttl: 0,
-        $type: 'SITE_VISIT',
-        $user_account_id: null,
-        $user_agent_id: 'vec:289388396',
-      },
-    };
+      } as core.PluginPropertyResponse),
+    );
+
+    return rpMockup;
+  };
+
+  const analysisRequestBody = {
+    activity_analyzer_id: 1923,
+    datamart_id: 1034,
+    channel_id: '1268',
+    activity: {
+      $email_hash: null,
+      $events: [
+        {
+          $event_name: 'page HP',
+          $properties: {
+            $referrer: 'https://www.google.fr/',
+            $url: 'https://estcequecestbientotlapero.fr/',
+            produit: 'SANTE',
+            'session id': 'tQ6GQojf',
+          },
+          $ts: 1479820606900,
+        },
+      ],
+      $location: null,
+      $session_duration: 302,
+      $session_status: 'CLOSED_SESSION',
+      $site_id: '1268',
+      $topics: {},
+      $ts: 1479820606901,
+      $ttl: 0,
+      $type: 'SITE_VISIT',
+      $user_account_id: null,
+      $user_agent_id: 'vec:289388396',
+    },
+  };
+
+  it('Check that the plugin is giving good results with a simple activityAnalysis handler', function (done) {
+    runner = new core.TestingPluginRunner(plugin, mockGateway());
 
     void request(runner.plugin.app)
       .post('/v1/activity_analysis')
-      .send(requestBody)
+      .send(analysisRequestBody)
       .end(function (err, res) {
         expect(res.status).to.equal(200);
 
-        expect(JSON.parse(res.text).data).to.deep.eq(requestBody.activity);
+        expect(JSON.parse(res.text).data).to.deep.eq(analysisRequestBody.activity);
+
+        done();
+      });
+  });
+
+  it('Check that the plugin can drop an activity with an HTTP 200 and a drop status', function (done) {
+    class MyDroppingActivityAnalyzerPlugin extends core.ActivityAnalyzerPlugin {
+      protected onActivityAnalysis() {
+        return Promise.resolve(core.dropActivity());
+      }
+    }
+
+    runner = new core.TestingPluginRunner(new MyDroppingActivityAnalyzerPlugin(false), mockGateway());
+
+    void request(runner.plugin.app)
+      .post('/v1/activity_analysis')
+      .send(analysisRequestBody)
+      .end(function (err, res) {
+        expect(res.status).to.equal(200);
+
+        const response = JSON.parse(res.text) as core.ActivityAnalyzerPluginResponse;
+        expect(response).to.deep.eq({ status: 'drop' });
+        expect(core.isDroppedActivity(response)).to.equal(true);
 
         done();
       });

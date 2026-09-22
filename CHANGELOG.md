@@ -2,6 +2,10 @@
 
 # Unreleased
 
+- Add the `drop` status to the activity analyzer response: `onActivityAnalysis()` can answer `core.dropActivity()` (`{"status":"drop"}` with an HTTP 200) to have the platform discard the activity. `ActivityAnalyzerPluginResponse` is now `DataResponse<UserActivity> | DropResponse`, and `core.isDroppedActivity()` narrows it
+- A drop is a success, not an error: the platform does not retry the call, does not apply the error recovery strategy of the activity analyzer and records no analyzer error. It counts the activity on a dedicated metric instead. The generic `StatusCode` is left untouched, so `drop` stays unavailable on the responses where it is meaningless
+- A drop discards the activity for the analyzed channel only: the upcoming activity analyzers chained on that channel are not called, while the copies dispatched to subscriber channels of other datamarts are unaffected and analyzed on their own
+
 # 0.42.0 2026-09-10
 
 - Add the optional `onDestinationAudienceDeletion()` hook, served on `POST /v1/destination_audience_deletion`, so a connector can delete the audience it created on the destination platform. Defaults to `'not_implemented'` (HTTP 400) like the other optional hooks
