@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- Fix security issue: gateway error details (internal URL, query string, response body) are no longer included in the error message thrown to callers; they are moved to a `debug`-level log entry instead, so refresh tokens and internal URLs stay out of logs and error responses. The two global error handlers (catch-all Express middleware and the metadata route) now return a generic `"An internal error occurred"` message instead of leaking `err.message` or the full stack trace
+
 # 0.43.0 2026-09-22
 
 - Add the `drop` status to the activity analyzer response: `onActivityAnalysis()` can answer `core.dropActivity()` (`{"status":"drop"}` with an HTTP 200) to have the platform discard the activity. `ActivityAnalyzerPluginResponse` is now `DataResponse<UserActivity> | DropResponse`, and `core.isDroppedActivity()` narrows it
