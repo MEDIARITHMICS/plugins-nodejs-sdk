@@ -133,12 +133,22 @@ abstract class GenericAudienceFeedConnectorBasePlugin<
   }
 
   async fetchFeedDestinationCredentials(feedDestinationId: string): Promise<FeedDestinationCredentials> {
-    const response = await super.requestGatewayHelper<FeedDestinationCredentialsResponse>(
-      'GET',
-      `${this.outboundPlatformUrl}/v1/feed_destinations/${feedDestinationId}/credentials`,
-    );
-    this.logger.debug(`Fetched credentials for feed destination: ${feedDestinationId}`);
-    return response.data;
+    try {
+      const response = await super.requestGatewayHelper<FeedDestinationCredentialsResponse>(
+        'GET',
+        `${this.outboundPlatformUrl}/v1/feed_destinations/${feedDestinationId}/credentials`,
+      );
+      this.logger.debug(`Fetched credentials for feed destination: ${feedDestinationId}`);
+      return response.data;
+    } catch (e) {
+      if (e instanceof ResourceNotFoundError) {
+        throw e;
+      }
+      this.logger.error(
+        `Failed to fetch credentials for feed destination ${feedDestinationId}: ${(e as Error).message}`,
+      );
+      throw new Error('Unable to load the destination credentials. Please try again later.');
+    }
   }
 
   async fetchFeedDestinationCredentialsOptional(

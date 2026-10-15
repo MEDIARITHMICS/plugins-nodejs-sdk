@@ -39,7 +39,7 @@ import {
   StringProperty,
   UrlProperty,
 } from '../../api/core/plugin/PluginPropertyInterface';
-import { flatMap, Index, obfuscateString, Option } from '../../utils';
+import { flatMap, Index, Option } from '../../utils';
 import { normalizeArray } from '../../utils/Normalizer';
 import { MsgCmd, SocketMsg } from './index';
 
@@ -340,14 +340,10 @@ export abstract class BasePlugin<CacheValue = unknown> {
     } catch (e) {
       const error = e as ResponseError;
       if (error.name === 'StatusCodeError') {
-        const bodyString = (isJson !== undefined && !isJson ? body : JSON.stringify(body)) as string;
-        const message = `Error while calling ${method} '${uri}' with the request body '${bodyString || ''}', the qs '${
-          JSON.stringify(qs) || ''
-        }', the auth user '${
-          obfuscateString(options.auth ? options.auth.user : undefined) || ''
-        }', the auth password '${obfuscateString(options.auth ? options.auth.pass : undefined) || ''}': got a ${
-          error.response.statusCode
-        } ${error.response.statusMessage} with the response body ${JSON.stringify(error.response.body)}`;
+        const message = `Error while calling ${method}: got a ${error.response.statusCode} ${error.response.statusMessage}`;
+        this.logger.debug(
+          `Gateway error details - uri: '${uri}', qs: '${JSON.stringify(qs) || ''}', response body: ${JSON.stringify(error.response.body)}`,
+        );
 
         if (error.response.statusCode === 404) {
           throw new ResourceNotFoundError(message);
@@ -500,7 +496,7 @@ export abstract class BasePlugin<CacheValue = unknown> {
   protected setErrorHandler() {
     this.app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
       this.logger.error(`Something bad happened : ${err.message} - ${err.stack ? err.stack : 'stack undefined'}`);
-      return res.status(500).send(`${err.message} \n ${err.stack ? err.stack : 'stack undefined'}`);
+      return res.status(500).send('An internal error occurred. Please try again later.');
     });
   }
 
@@ -571,7 +567,8 @@ export abstract class BasePlugin<CacheValue = unknown> {
         try {
           res.status(200).send(this.getMetadata());
         } catch (err) {
-          res.status(500).send({ status: 'error', message: `${(err as Error).message}` });
+          this.logger.error(`Error building metadata: ${(err as Error).message}`);
+          res.status(500).send({ status: 'error', message: 'An internal error occurred. Please try again later.' });
         }
       }),
     );

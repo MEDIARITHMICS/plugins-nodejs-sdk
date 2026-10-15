@@ -1117,3 +1117,41 @@ describe('Destination audience deletion', function () {
       });
   });
 });
+
+describe('Credentials gateway 5xx - message sanitization', function () {
+  const gateway5xxError = {
+    name: 'StatusCodeError',
+    response: { statusCode: 500, statusMessage: 'Internal Server Error', body: 'core-plugins-private-api unavailable' },
+  };
+
+  function build5xxCredentialsStub(): sinon.SinonStub {
+    const rpMockup: sinon.SinonStub = sinon.stub();
+    rpMockup
+      .withArgs(
+        sinon.match.has(
+          'uri',
+          sinon.match((value: string) => /\/v1\/feed_destinations\/(.+)\/credentials/.test(value)),
+        ),
+      )
+      .rejects(gateway5xxError);
+    return rpMockup;
+  }
+
+  it('dynamic_property_values_queries returns generic message on credentials 5xx — no internal URL or token leaked', function (done) {
+    const plugin = new CapturingAudienceFeedConnector(false);
+    const runner = new core.TestingPluginRunner(plugin, build5xxCredentialsStub());
+
+    void request(runner.plugin.app)
+      .post('/v1/dynamic_property_values_queries')
+      .send({ datamart_id: '1', user_id: 'u1', feed_destination_id: '42' })
+      .end(function (err, res) {
+        expect(res.status).to.equal(500);
+        const body = JSON.parse(res.text) as { status: string; message: string };
+        expect(body.status).to.equal('error');
+        expect(body.message).to.equal('Unable to load the destination credentials. Please try again later.');
+        expect(body.message).to.not.include('plugin-gateway');
+        expect(body.message).to.not.include('http://');
+        done();
+      });
+  });
+});
